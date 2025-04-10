@@ -68,12 +68,7 @@ const DeleteDocumentDialog = ({
   // Use AlertDialog for better accessibility and modal behavior
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent onPointerDownOutside={(e) => {
-        // Prevent closing when clicking outside during delete operation
-        if (isDeletingRef.current || keepOpenRef.current) {
-          e.preventDefault();
-        }
-      }}>
+      <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
           <AlertDialogDescription>
