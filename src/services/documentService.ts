@@ -90,7 +90,11 @@ export const uploadDocument = async (
       return null;
     }
     
-    toast.success("Documento enviado com sucesso");
+    // Delay toast to prevent UI issues
+    setTimeout(() => {
+      toast.success("Documento enviado com sucesso");
+    }, 100);
+    
     return data;
   } catch (error) {
     console.error("Unexpected error uploading document:", error);
@@ -117,7 +121,11 @@ export const updateDocumentMetadata = async (
       return null;
     }
     
-    toast.success("Documento atualizado com sucesso");
+    // Delay toast to prevent UI issues
+    setTimeout(() => {
+      toast.success("Documento atualizado com sucesso");
+    }, 100);
+    
     return data;
   } catch (error) {
     console.error("Unexpected error updating document:", error);
@@ -153,7 +161,11 @@ export const deleteDocument = async (documentId: string, filePath: string | null
       }
     }
     
-    toast.success("Documento excluído com sucesso");
+    // Delay toast to prevent UI issues
+    setTimeout(() => {
+      toast.success("Documento excluído com sucesso");
+    }, 100);
+    
     return true;
   } catch (error) {
     console.error("Unexpected error deleting document:", error);

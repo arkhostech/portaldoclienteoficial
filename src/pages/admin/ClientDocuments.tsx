@@ -97,11 +97,12 @@ const ClientDocuments = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   
-  // State for tracking operations - added to fix UI locking issues
+  // State for tracking operations - important for preventing UI locking
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
+  
+  // Improved form hooks with proper reset handling
   const uploadForm = useForm<DocumentFormData & { file: File }>({
     resolver: zodResolver(documentFormSchema),
     defaultValues: {
@@ -130,23 +131,34 @@ const ClientDocuments = () => {
     loadClientData();
   }, [isAdmin, clientId, navigate]);
   
-  // Reset state when dialogs close
+  // Improved cleanup when dialogs close
   useEffect(() => {
     if (!openEditDialog) {
-      setIsUpdating(false);
+      setTimeout(() => {
+        setIsUpdating(false);
+      }, 100);
     }
   }, [openEditDialog]);
   
   useEffect(() => {
     if (!openDeleteDialog) {
-      setIsDeleting(false);
+      setTimeout(() => {
+        setIsDeleting(false);
+      }, 100);
     }
   }, [openDeleteDialog]);
   
   useEffect(() => {
     if (!openUploadDialog) {
-      setIsSubmitting(false);
-      setSelectedFile(null);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setSelectedFile(null);
+        uploadForm.reset({
+          title: "",
+          description: "",
+          status: "active"
+        });
+      }, 100);
     }
   }, [openUploadDialog]);
 
@@ -191,22 +203,18 @@ const ClientDocuments = () => {
       const result = await uploadDocument(clientId, data.file, documentData);
       
       if (result) {
-        setDocuments([result, ...documents]);
+        setDocuments(prevDocs => [result, ...prevDocs]);
         // Delay closing the dialog to prevent UI issues
         setTimeout(() => {
           setOpenUploadDialog(false);
-          uploadForm.reset();
-          setSelectedFile(null);
-          setIsSubmitting(false);
         }, 300);
-      } else {
-        setIsSubmitting(false);
       }
     } catch (error) {
       console.error("Error uploading document:", error);
       toast.error("Erro ao enviar documento");
-      setIsSubmitting(false);
     }
+    
+    // We don't reset isSubmitting here - it will be handled by the useEffect when dialog closes
   };
 
   const handleEditDocument = (document: Document) => {
@@ -228,21 +236,18 @@ const ClientDocuments = () => {
       const result = await updateDocumentMetadata(selectedDocument.id, data);
       
       if (result) {
-        setDocuments(documents.map(doc => doc.id === result.id ? result : doc));
+        setDocuments(prevDocs => prevDocs.map(doc => doc.id === result.id ? result : doc));
         // Delay closing the dialog to prevent UI issues
         setTimeout(() => {
           setOpenEditDialog(false);
-          setSelectedDocument(null);
-          setIsUpdating(false);
         }, 300);
-      } else {
-        setIsUpdating(false);
       }
     } catch (error) {
       console.error("Error updating document:", error);
       toast.error("Erro ao atualizar documento");
-      setIsUpdating(false);
     }
+    
+    // We don't reset isUpdating here - it will be handled by the useEffect when dialog closes
   };
 
   const handleConfirmDelete = (document: Document) => {
@@ -259,21 +264,18 @@ const ClientDocuments = () => {
       const success = await deleteDocument(selectedDocument.id, selectedDocument.file_path);
       
       if (success) {
-        setDocuments(documents.filter(doc => doc.id !== selectedDocument.id));
+        setDocuments(prevDocs => prevDocs.filter(doc => doc.id !== selectedDocument.id));
         // Delay closing the dialog to prevent UI issues
         setTimeout(() => {
           setOpenDeleteDialog(false);
-          setSelectedDocument(null);
-          setIsDeleting(false);
         }, 300);
-      } else {
-        setIsDeleting(false);
       }
     } catch (error) {
       console.error("Error deleting document:", error);
       toast.error("Erro ao excluir documento");
-      setIsDeleting(false);
     }
+    
+    // We don't reset isDeleting here - it will be handled by the useEffect when dialog closes
   };
 
   const handleDownloadDocument = async (document: Document) => {
@@ -285,13 +287,15 @@ const ClientDocuments = () => {
     const url = await getDocumentUrl(document.file_path);
     
     if (url) {
-      window.open(url, '_blank');
+      // Open in a new tab to avoid navigation issues
+      const win = window.open(url, '_blank');
+      if (win) win.focus();
     }
   };
 
-  // Safe dialog close handlers that prevent closing during operations
+  // Improved dialog close handlers that prevent closing during operations
   const handleUploadDialogChange = (open: boolean) => {
-    if (!open && !isSubmitting) {
+    if (!isSubmitting) {
       setOpenUploadDialog(open);
     } else if (open) {
       setOpenUploadDialog(open);
@@ -299,7 +303,7 @@ const ClientDocuments = () => {
   };
   
   const handleEditDialogChange = (open: boolean) => {
-    if (!open && !isUpdating) {
+    if (!isUpdating) {
       setOpenEditDialog(open);
     } else if (open) {
       setOpenEditDialog(open);
@@ -307,7 +311,7 @@ const ClientDocuments = () => {
   };
   
   const handleDeleteDialogChange = (open: boolean) => {
-    if (!open && !isDeleting) {
+    if (!isDeleting) {
       setOpenDeleteDialog(open);
     } else if (open) {
       setOpenDeleteDialog(open);
@@ -392,7 +396,7 @@ const ClientDocuments = () => {
                       <FormItem>
                         <FormLabel>Título*</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Título do documento" />
+                          <Input {...field} placeholder="Título do documento" disabled={isSubmitting} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -405,7 +409,7 @@ const ClientDocuments = () => {
                       <FormItem>
                         <FormLabel>Descrição</FormLabel>
                         <FormControl>
-                          <Textarea {...field} placeholder="Descrição do documento" />
+                          <Textarea {...field} placeholder="Descrição do documento" disabled={isSubmitting} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -435,7 +439,11 @@ const ClientDocuments = () => {
                     <Button 
                       type="button" 
                       variant="outline" 
-                      onClick={() => handleUploadDialogChange(false)}
+                      onClick={() => {
+                        if (!isSubmitting) {
+                          setOpenUploadDialog(false);
+                        }
+                      }}
                       disabled={isSubmitting}
                     >
                       Cancelar
@@ -604,7 +612,11 @@ const ClientDocuments = () => {
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => handleEditDialogChange(false)}
+                  onClick={() => {
+                    if (!isUpdating) {
+                      setOpenEditDialog(false);
+                    }
+                  }}
                   disabled={isUpdating}
                 >
                   Cancelar
@@ -634,7 +646,11 @@ const ClientDocuments = () => {
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={() => handleDeleteDialogChange(false)}
+              onClick={() => {
+                if (!isDeleting) {
+                  setOpenDeleteDialog(false);
+                }
+              }}
               disabled={isDeleting}
             >
               Cancelar
