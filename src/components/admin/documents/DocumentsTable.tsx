@@ -1,30 +1,9 @@
 
-import React from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { 
-  MoreHorizontal, 
-  FileText, 
-  Clock, 
-  Download, 
-  Pencil, 
-  Trash2,
-  Loader2 
-} from "lucide-react";
-import { Document } from "@/services/documents";
+import { Clock, Download, FileText, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Document } from "@/types/document";
 
 interface DocumentsTableProps {
   documents: Document[];
@@ -35,19 +14,19 @@ interface DocumentsTableProps {
   onDelete: (document: Document) => void;
 }
 
-const DocumentsTable = ({
+export default function DocumentsTable({
   documents,
   isLoading,
   searchTerm,
   onDownload,
   onEdit,
   onDelete
-}: DocumentsTableProps) => {
+}: DocumentsTableProps) {
   const filteredDocuments = documents.filter(doc =>
     doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-
+  
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return "N/A";
     
@@ -59,7 +38,7 @@ const DocumentsTable = ({
     const mb = kb / 1024;
     return `${mb.toFixed(2)} MB`;
   };
-
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('pt-BR', {
@@ -70,7 +49,7 @@ const DocumentsTable = ({
       minute: '2-digit'
     }).format(date);
   };
-
+  
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -78,15 +57,18 @@ const DocumentsTable = ({
       </div>
     );
   }
-
+  
   if (filteredDocuments.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        {searchTerm ? "Nenhum documento encontrado para a busca." : "Nenhum documento cadastrado."}
+        {searchTerm
+          ? "Nenhum documento encontrado para a busca."
+          : "Nenhum documento cadastrado."
+        }
       </div>
     );
   }
-
+  
   return (
     <Table>
       <TableHeader>
@@ -99,7 +81,7 @@ const DocumentsTable = ({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {filteredDocuments.map((doc) => (
+        {filteredDocuments.map(doc => (
           <TableRow key={doc.id}>
             <TableCell className="font-medium">
               <div className="flex items-center">
@@ -150,6 +132,4 @@ const DocumentsTable = ({
       </TableBody>
     </Table>
   );
-};
-
-export default DocumentsTable;
+}

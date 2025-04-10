@@ -7,42 +7,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, Upload } from "lucide-react";
 import { fetchClientById } from "@/services/clientService";
-import { useClientDocuments } from "@/hooks/documents";
+import { useClientDocuments } from "@/hooks/useClientDocuments";
 import { useAuth } from "@/contexts/AuthContext";
 import DocumentsTable from "@/components/admin/documents/DocumentsTable";
 import DocumentUploadDialog from "@/components/admin/documents/DocumentUploadDialog";
-import EditDocumentDialog from "@/components/admin/documents/EditDocumentDialog";
-import DeleteDocumentDialog from "@/components/admin/documents/DeleteDocumentDialog";
+import DocumentEditDialog from "@/components/admin/documents/DocumentEditDialog";
+import DocumentDeleteDialog from "@/components/admin/documents/DocumentDeleteDialog";
 
 const ClientDocuments = () => {
   const { clientId } = useParams<{ clientId: string }>();
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   
-  const [client, setClient] = useState(null);
+  const [client, setClient] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [clientLoading, setClientLoading] = useState(true);
-  const [selectedFile, setSelectedFile] = useState(null);
-
+  
   const {
     documents,
-    isLoading,
     selectedDocument,
+    isLoading,
+    isUploading,
+    isUpdating,
+    isDeleting,
     openUploadDialog,
     openEditDialog,
     openDeleteDialog,
-    isSubmitting,
-    isUpdating,
-    isDeleting,
     setOpenUploadDialog,
     setOpenEditDialog,
     setOpenDeleteDialog,
     handleUploadDocument,
-    handleEditDocument,
     handleUpdateDocument,
-    handleConfirmDelete,
     handleDeleteDocument,
     handleDownloadDocument,
+    handleEditDocument,
+    handleConfirmDelete,
   } = useClientDocuments(clientId || "");
 
   // Redirect non-admin users
@@ -71,7 +70,7 @@ const ClientDocuments = () => {
   };
 
   return (
-    <MainLayout title={`Documentos - ${client?.full_name || ''}`}>
+    <MainLayout title={`Documentos - ${client?.full_name || ""}`}>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={() => navigate("/admin/clients")}>
@@ -124,26 +123,26 @@ const ClientDocuments = () => {
       <DocumentUploadDialog
         open={openUploadDialog}
         onOpenChange={setOpenUploadDialog}
-        isSubmitting={isSubmitting}
-        onSubmit={handleUploadDocument}
+        onUpload={handleUploadDocument}
+        isUploading={isUploading}
       />
 
       {/* Edit Document Dialog */}
-      <EditDocumentDialog
+      <DocumentEditDialog
         open={openEditDialog}
         onOpenChange={setOpenEditDialog}
-        isUpdating={isUpdating}
-        onSubmit={handleUpdateDocument}
         document={selectedDocument}
+        onSave={handleUpdateDocument}
+        isUpdating={isUpdating}
       />
 
       {/* Delete Confirmation Dialog */}
-      <DeleteDocumentDialog
+      <DocumentDeleteDialog
         open={openDeleteDialog}
         onOpenChange={setOpenDeleteDialog}
-        isDeleting={isDeleting}
-        onConfirmDelete={handleDeleteDocument}
         document={selectedDocument}
+        onConfirmDelete={handleDeleteDocument}
+        isDeleting={isDeleting}
       />
     </MainLayout>
   );

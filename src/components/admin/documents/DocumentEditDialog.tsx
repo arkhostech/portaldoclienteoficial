@@ -1,84 +1,69 @@
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Document } from "@/types/document";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
-  description: z.string().optional(),
-  file: z.instanceof(File, { message: "Arquivo é obrigatório" })
+  description: z.string().optional()
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface DocumentUploadDialogProps {
+interface DocumentEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpload: (file: File, data: { title: string; description?: string }) => Promise<void>;
-  isUploading: boolean;
+  document: Document | null;
+  onSave: (data: { title: string; description?: string }) => Promise<void>;
+  isUpdating: boolean;
 }
 
-export default function DocumentUploadDialog({
+export default function DocumentEditDialog({
   open,
   onOpenChange,
-  onUpload,
-  isUploading
-}: DocumentUploadDialogProps) {
-  const [fileError, setFileError] = useState<string | null>(null);
-  
+  document,
+  onSave,
+  isUpdating
+}: DocumentEditDialogProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      description: ""
+      title: document?.title || "",
+      description: document?.description || ""
     }
   });
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFileError(null);
-    
-    if (e.target.files && e.target.files[0]) {
-      form.setValue("file", e.target.files[0]);
+  // Update form values when document changes
+  useEffect(() => {
+    if (document) {
+      form.reset({
+        title: document.title,
+        description: document.description || ""
+      });
     }
-  };
+  }, [document, form]);
   
   const onSubmit = async (data: FormValues) => {
-    if (!data.file) {
-      setFileError("Selecione um arquivo");
-      return;
-    }
-    
-    await onUpload(data.file, {
-      title: data.title,
-      description: data.description
-    });
-    
-    form.reset();
+    await onSave(data);
   };
   
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!isUploading) {
+      if (!isUpdating) {
         onOpenChange(newOpen);
-        if (!newOpen) {
-          form.reset();
-          setFileError(null);
-        }
       }
     }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Enviar Novo Documento</DialogTitle>
-          <DialogDescription>
-            Preencha as informações e selecione o arquivo para upload
-          </DialogDescription>
+          <DialogTitle>Editar Documento</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
@@ -92,7 +77,7 @@ export default function DocumentUploadDialog({
                   <FormControl>
                     <Input 
                       placeholder="Nome do documento" 
-                      disabled={isUploading} 
+                      disabled={isUpdating} 
                       {...field} 
                     />
                   </FormControl>
@@ -110,8 +95,9 @@ export default function DocumentUploadDialog({
                   <FormControl>
                     <Textarea 
                       placeholder="Descrição do documento (opcional)" 
-                      disabled={isUploading} 
+                      disabled={isUpdating} 
                       {...field} 
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -119,42 +105,28 @@ export default function DocumentUploadDialog({
               )}
             />
             
-            <FormItem>
-              <FormLabel>Arquivo*</FormLabel>
-              <FormControl>
-                <Input 
-                  type="file" 
-                  onChange={handleFileChange} 
-                  disabled={isUploading} 
-                />
-              </FormControl>
-              {fileError && (
-                <p className="text-sm font-medium text-destructive">{fileError}</p>
-              )}
-            </FormItem>
-            
             <DialogFooter>
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => onOpenChange(false)}
-                disabled={isUploading}
+                disabled={isUpdating}
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
-                disabled={isUploading}
+                disabled={isUpdating}
               >
-                {isUploading ? (
+                {isUpdating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enviando...
+                    Salvando...
                   </>
                 ) : (
                   <>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Enviar
+                    <Save className="mr-2 h-4 w-4" />
+                    Salvar
                   </>
                 )}
               </Button>
