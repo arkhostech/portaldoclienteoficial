@@ -13,6 +13,7 @@ import DocumentDeleteDialog from "@/components/admin/documents/DocumentDeleteDia
 import { useClients } from "@/hooks/useClients";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Document as DocumentType } from "@/services/documents/types";
 
 export default function Documents() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,17 +43,17 @@ export default function Documents() {
   } = useDocuments(selectedClientId);
 
   // Function to handle document edit directly from the table
-  const handleDirectEdit = async (document: Document) => {
+  const handleDirectEdit = (document: DocumentType) => {
     handleEditDocument(document);
   };
 
   // Function to handle document deletion directly from the table
-  const handleDirectDelete = async (document: Document) => {
+  const handleDirectDelete = (document: DocumentType) => {
     handleConfirmDelete(document);
   };
 
   // Function to handle document download directly from the table
-  const handleDirectDownload = async (document: Document) => {
+  const handleDirectDownload = (document: DocumentType) => {
     toast.promise(
       handleDownloadDocument(document),
       {

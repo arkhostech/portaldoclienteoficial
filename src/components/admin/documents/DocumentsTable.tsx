@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Clock, Download, FileText, Loader2, Pencil, Trash2, User } from "lucide-react";
-import { Document } from "@/services/documents/types";
+import { Document as DocumentType } from "@/services/documents/types";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import DocumentEditDialog from "./DocumentEditDialog";
 
@@ -14,13 +14,13 @@ interface Client {
 }
 
 interface DocumentsTableProps {
-  documents: Document[];
+  documents: DocumentType[];
   isLoading: boolean;
   searchTerm: string;
   clients: Client[];
-  onDownload: (document: Document) => void;
-  onEdit: (document: Document) => void;
-  onDelete: (document: Document) => void;
+  onDownload: (document: DocumentType) => void;
+  onEdit: (document: DocumentType) => void;
+  onDelete: (document: DocumentType) => void;
 }
 
 export default function DocumentsTable({
@@ -32,7 +32,7 @@ export default function DocumentsTable({
   onEdit,
   onDelete
 }: DocumentsTableProps) {
-  const [editingDocument, setEditingDocument] = useState<Document | null>(null);
+  const [editingDocument, setEditingDocument] = useState<DocumentType | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const filteredDocuments = documents.filter(doc =>
@@ -68,7 +68,7 @@ export default function DocumentsTable({
     return client ? client.full_name : "Cliente não encontrado";
   };
 
-  const handleCellClick = (document: Document) => {
+  const handleCellClick = (document: DocumentType) => {
     setEditingDocument(document);
     onEdit(document);
     setIsDialogOpen(true);
