@@ -44,7 +44,7 @@ const AdminDashboard = () => {
 
         {/* Admin Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="hover:shadow-md transition-all">
+          <Card className="hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/clients')}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center">
                 <Users className="mr-2 h-5 w-5 text-brand-600" />
@@ -61,7 +61,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-all">
+          <Card className="hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/cases')}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center">
                 <FileText className="mr-2 h-5 w-5 text-brand-600" />

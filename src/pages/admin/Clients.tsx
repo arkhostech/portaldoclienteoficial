@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,32 +13,161 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserPlus, Search, MoreHorizontal, Filter } from "lucide-react";
+import { toast } from "sonner";
+import { 
+  UserPlus, 
+  Search, 
+  MoreHorizontal, 
+  Filter, 
+  Pencil, 
+  Trash2,
+  File,
+  X,
+  Loader2
+} from "lucide-react";
+import { fetchClients, createClient, updateClient, deleteClient, ClientFormData, Client } from "@/services/clientService";
 
-// Dummy data - in a real application this would come from an API
-const clients = [
-  { id: 1, name: "João Silva", email: "joao@exemplo.com", phone: "(11) 98765-4321", status: "Ativo", cases: 3 },
-  { id: 2, name: "Maria Santos", email: "maria@exemplo.com", phone: "(11) 91234-5678", status: "Ativo", cases: 1 },
-  { id: 3, name: "Pedro Oliveira", email: "pedro@exemplo.com", phone: "(11) 99876-5432", status: "Inativo", cases: 0 },
-  { id: 4, name: "Ana Costa", email: "ana@exemplo.com", phone: "(11) 95555-4444", status: "Ativo", cases: 2 },
-  { id: 5, name: "Carlos Pereira", email: "carlos@exemplo.com", phone: "(11) 93333-2222", status: "Ativo", cases: 1 },
-];
+// Form validation schema
+const clientFormSchema = z.object({
+  full_name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
+  email: z.string().email({ message: "Email inválido" }),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  status: z.string().default("active")
+});
 
 const Clients = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [openNewDialog, setOpenNewDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  const newClientForm = useForm<ClientFormData>({
+    resolver: zodResolver(clientFormSchema),
+    defaultValues: {
+      full_name: "",
+      email: "",
+      phone: "",
+      address: "",
+      status: "active"
+    }
+  });
+
+  const editClientForm = useForm<ClientFormData>({
+    resolver: zodResolver(clientFormSchema),
+    defaultValues: {
+      full_name: "",
+      email: "",
+      phone: "",
+      address: "",
+      status: "active"
+    }
+  });
 
   // Redirect non-admin users
-  if (!isAdmin) {
-    navigate("/dashboard");
-    return null;
-  }
+  useEffect(() => {
+    if (!isAdmin) {
+      navigate("/dashboard");
+      return;
+    }
+    
+    loadClients();
+  }, [isAdmin, navigate]);
+
+  const loadClients = async () => {
+    setIsLoading(true);
+    const data = await fetchClients();
+    setClients(data);
+    setIsLoading(false);
+  };
+
+  const handleCreateClient = async (data: ClientFormData) => {
+    const result = await createClient(data);
+    if (result) {
+      setClients([result, ...clients]);
+      setOpenNewDialog(false);
+      newClientForm.reset();
+    }
+  };
+
+  const handleEditClient = (client: Client) => {
+    setSelectedClient(client);
+    editClientForm.reset({
+      full_name: client.full_name,
+      email: client.email,
+      phone: client.phone || "",
+      address: client.address || "",
+      status: client.status
+    });
+    setOpenEditDialog(true);
+  };
+
+  const handleUpdateClient = async (data: ClientFormData) => {
+    if (!selectedClient) return;
+    
+    const result = await updateClient(selectedClient.id, data);
+    if (result) {
+      setClients(clients.map(c => c.id === result.id ? result : c));
+      setOpenEditDialog(false);
+    }
+  };
+
+  const handleConfirmDelete = (client: Client) => {
+    setSelectedClient(client);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleDeleteClient = async () => {
+    if (!selectedClient) return;
+    
+    const success = await deleteClient(selectedClient.id);
+    if (success) {
+      setClients(clients.filter(c => c.id !== selectedClient.id));
+      setOpenDeleteDialog(false);
+      setSelectedClient(null);
+    }
+  };
+
+  const handleViewDocuments = (clientId: string) => {
+    navigate(`/admin/clients/${clientId}/documents`);
+  };
 
   const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase())
+    client.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.phone && client.phone.includes(searchTerm))
   );
 
   return (
@@ -61,10 +190,93 @@ const Clients = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Novo Cliente
-            </Button>
+            <Dialog open={openNewDialog} onOpenChange={setOpenNewDialog}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Novo Cliente
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Adicionar Novo Cliente</DialogTitle>
+                  <DialogDescription>
+                    Preencha os dados para cadastrar um novo cliente
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...newClientForm}>
+                  <form onSubmit={newClientForm.handleSubmit(handleCreateClient)} className="space-y-4">
+                    <FormField
+                      control={newClientForm.control}
+                      name="full_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome Completo*</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Nome Completo" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={newClientForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email*</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" placeholder="email@exemplo.com" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={newClientForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefone</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="(XX) XXXXX-XXXX" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={newClientForm.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Endereço</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Endereço completo" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <DialogFooter>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setOpenNewDialog(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button type="submit" disabled={newClientForm.formState.isSubmitting}>
+                        {newClientForm.formState.isSubmitting && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Salvar
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -79,45 +291,197 @@ const Clients = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Processos</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClients.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell className="font-medium">{client.name}</TableCell>
-                    <TableCell>{client.email}</TableCell>
-                    <TableCell>{client.phone}</TableCell>
-                    <TableCell>
-                      <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-                        client.status === "Ativo" 
-                          ? "bg-green-100 text-green-700" 
-                          : "bg-gray-100 text-gray-700"
-                      }`}>
-                        {client.status}
-                      </div>
-                    </TableCell>
-                    <TableCell>{client.cases}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : filteredClients.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {searchTerm ? "Nenhum cliente encontrado para a busca." : "Nenhum cliente cadastrado."}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredClients.map((client) => (
+                    <TableRow key={client.id}>
+                      <TableCell className="font-medium">{client.full_name}</TableCell>
+                      <TableCell>{client.email}</TableCell>
+                      <TableCell>{client.phone || "-"}</TableCell>
+                      <TableCell>
+                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                          client.status === "active" 
+                            ? "bg-green-100 text-green-700" 
+                            : "bg-gray-100 text-gray-700"
+                        }`}>
+                          {client.status === "active" ? "Ativo" : "Inativo"}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditClient(client)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewDocuments(client.id)}>
+                              <File className="mr-2 h-4 w-4" />
+                              Documentos
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleConfirmDelete(client)} 
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Client Dialog */}
+      <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Editar Cliente</DialogTitle>
+            <DialogDescription>
+              Atualize os dados do cliente
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editClientForm}>
+            <form onSubmit={editClientForm.handleSubmit(handleUpdateClient)} className="space-y-4">
+              <FormField
+                control={editClientForm.control}
+                name="full_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Completo*</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Nome Completo" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editClientForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email*</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" placeholder="email@exemplo.com" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editClientForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="(XX) XXXXX-XXXX" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editClientForm.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endereço</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Endereço completo" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editClientForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <FormControl>
+                      <select
+                        className="w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background"
+                        {...field}
+                      >
+                        <option value="active">Ativo</option>
+                        <option value="inactive">Inativo</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setOpenEditDialog(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={editClientForm.formState.isSubmitting}>
+                  {editClientForm.formState.isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Atualizar
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o cliente 
+              {selectedClient && ` "${selectedClient.full_name}"`} e todos os seus documentos.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenDeleteDialog(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteClient}>
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };
