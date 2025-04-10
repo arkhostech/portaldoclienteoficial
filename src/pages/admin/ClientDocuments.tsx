@@ -91,10 +91,16 @@ const ClientDocuments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  
+  // State for tracking operations - added to fix UI locking issues
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const uploadForm = useForm<DocumentFormData & { file: File }>({
     resolver: zodResolver(documentFormSchema),
@@ -123,6 +129,26 @@ const ClientDocuments = () => {
 
     loadClientData();
   }, [isAdmin, clientId, navigate]);
+  
+  // Reset state when dialogs close
+  useEffect(() => {
+    if (!openEditDialog) {
+      setIsUpdating(false);
+    }
+  }, [openEditDialog]);
+  
+  useEffect(() => {
+    if (!openDeleteDialog) {
+      setIsDeleting(false);
+    }
+  }, [openDeleteDialog]);
+  
+  useEffect(() => {
+    if (!openUploadDialog) {
+      setIsSubmitting(false);
+      setSelectedFile(null);
+    }
+  }, [openUploadDialog]);
 
   const loadClientData = async () => {
     if (!clientId) return;
@@ -151,21 +177,35 @@ const ClientDocuments = () => {
   const handleUploadDocument = async (data: DocumentFormData & { file: File }) => {
     if (!clientId || !data.file) return;
     
-    // Prepare document data
-    const documentData: DocumentFormData = {
-      title: data.title,
-      description: data.description,
-      status: data.status,
-      client_id: clientId
-    };
+    setIsSubmitting(true);
     
-    const result = await uploadDocument(clientId, data.file, documentData);
-    
-    if (result) {
-      setDocuments([result, ...documents]);
-      setOpenUploadDialog(false);
-      uploadForm.reset();
-      setSelectedFile(null);
+    try {
+      // Prepare document data
+      const documentData: DocumentFormData = {
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        client_id: clientId
+      };
+      
+      const result = await uploadDocument(clientId, data.file, documentData);
+      
+      if (result) {
+        setDocuments([result, ...documents]);
+        // Delay closing the dialog to prevent UI issues
+        setTimeout(() => {
+          setOpenUploadDialog(false);
+          uploadForm.reset();
+          setSelectedFile(null);
+          setIsSubmitting(false);
+        }, 300);
+      } else {
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      toast.error("Erro ao enviar documento");
+      setIsSubmitting(false);
     }
   };
 
@@ -182,11 +222,26 @@ const ClientDocuments = () => {
   const handleUpdateDocument = async (data: Omit<DocumentFormData, 'client_id'>) => {
     if (!selectedDocument) return;
     
-    const result = await updateDocumentMetadata(selectedDocument.id, data);
+    setIsUpdating(true);
     
-    if (result) {
-      setDocuments(documents.map(doc => doc.id === result.id ? result : doc));
-      setOpenEditDialog(false);
+    try {
+      const result = await updateDocumentMetadata(selectedDocument.id, data);
+      
+      if (result) {
+        setDocuments(documents.map(doc => doc.id === result.id ? result : doc));
+        // Delay closing the dialog to prevent UI issues
+        setTimeout(() => {
+          setOpenEditDialog(false);
+          setSelectedDocument(null);
+          setIsUpdating(false);
+        }, 300);
+      } else {
+        setIsUpdating(false);
+      }
+    } catch (error) {
+      console.error("Error updating document:", error);
+      toast.error("Erro ao atualizar documento");
+      setIsUpdating(false);
     }
   };
 
@@ -198,12 +253,26 @@ const ClientDocuments = () => {
   const handleDeleteDocument = async () => {
     if (!selectedDocument) return;
     
-    const success = await deleteDocument(selectedDocument.id, selectedDocument.file_path);
+    setIsDeleting(true);
     
-    if (success) {
-      setDocuments(documents.filter(doc => doc.id !== selectedDocument.id));
-      setOpenDeleteDialog(false);
-      setSelectedDocument(null);
+    try {
+      const success = await deleteDocument(selectedDocument.id, selectedDocument.file_path);
+      
+      if (success) {
+        setDocuments(documents.filter(doc => doc.id !== selectedDocument.id));
+        // Delay closing the dialog to prevent UI issues
+        setTimeout(() => {
+          setOpenDeleteDialog(false);
+          setSelectedDocument(null);
+          setIsDeleting(false);
+        }, 300);
+      } else {
+        setIsDeleting(false);
+      }
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      toast.error("Erro ao excluir documento");
+      setIsDeleting(false);
     }
   };
 
@@ -217,6 +286,31 @@ const ClientDocuments = () => {
     
     if (url) {
       window.open(url, '_blank');
+    }
+  };
+
+  // Safe dialog close handlers that prevent closing during operations
+  const handleUploadDialogChange = (open: boolean) => {
+    if (!open && !isSubmitting) {
+      setOpenUploadDialog(open);
+    } else if (open) {
+      setOpenUploadDialog(open);
+    }
+  };
+  
+  const handleEditDialogChange = (open: boolean) => {
+    if (!open && !isUpdating) {
+      setOpenEditDialog(open);
+    } else if (open) {
+      setOpenEditDialog(open);
+    }
+  };
+  
+  const handleDeleteDialogChange = (open: boolean) => {
+    if (!open && !isDeleting) {
+      setOpenDeleteDialog(open);
+    } else if (open) {
+      setOpenDeleteDialog(open);
     }
   };
 
@@ -275,7 +369,7 @@ const ClientDocuments = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Dialog open={openUploadDialog} onOpenChange={setOpenUploadDialog}>
+          <Dialog open={openUploadDialog} onOpenChange={handleUploadDialogChange}>
             <DialogTrigger asChild>
               <Button>
                 <Upload className="mr-2 h-4 w-4" />
@@ -329,6 +423,7 @@ const ClientDocuments = () => {
                               id="file-upload"
                               type="file"
                               onChange={handleFileChange} 
+                              disabled={isSubmitting}
                             />
                           </div>
                         </FormControl>
@@ -340,16 +435,13 @@ const ClientDocuments = () => {
                     <Button 
                       type="button" 
                       variant="outline" 
-                      onClick={() => {
-                        setOpenUploadDialog(false);
-                        setSelectedFile(null);
-                        uploadForm.reset();
-                      }}
+                      onClick={() => handleUploadDialogChange(false)}
+                      disabled={isSubmitting}
                     >
                       Cancelar
                     </Button>
-                    <Button type="submit" disabled={uploadForm.formState.isSubmitting}>
-                      {uploadForm.formState.isSubmitting && (
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
                       Enviar
@@ -452,7 +544,7 @@ const ClientDocuments = () => {
       </div>
 
       {/* Edit Document Dialog */}
-      <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
+      <Dialog open={openEditDialog} onOpenChange={handleEditDialogChange}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Editar Documento</DialogTitle>
@@ -469,7 +561,7 @@ const ClientDocuments = () => {
                   <FormItem>
                     <FormLabel>Título*</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Título do documento" />
+                      <Input {...field} placeholder="Título do documento" disabled={isUpdating} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -482,7 +574,7 @@ const ClientDocuments = () => {
                   <FormItem>
                     <FormLabel>Descrição</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Descrição do documento" />
+                      <Textarea {...field} placeholder="Descrição do documento" disabled={isUpdating} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -498,6 +590,7 @@ const ClientDocuments = () => {
                       <select
                         className="w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background"
                         {...field}
+                        disabled={isUpdating}
                       >
                         <option value="active">Ativo</option>
                         <option value="inactive">Inativo</option>
@@ -511,12 +604,13 @@ const ClientDocuments = () => {
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => setOpenEditDialog(false)}
+                  onClick={() => handleEditDialogChange(false)}
+                  disabled={isUpdating}
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={editForm.formState.isSubmitting}>
-                  {editForm.formState.isSubmitting && (
+                <Button type="submit" disabled={isUpdating}>
+                  {isUpdating && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
                   Atualizar
@@ -528,7 +622,7 @@ const ClientDocuments = () => {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+      <Dialog open={openDeleteDialog} onOpenChange={handleDeleteDialogChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar Exclusão</DialogTitle>
@@ -538,10 +632,21 @@ const ClientDocuments = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenDeleteDialog(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => handleDeleteDialogChange(false)}
+              disabled={isDeleting}
+            >
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleDeleteDocument}>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteDocument}
+              disabled={isDeleting}
+            >
+              {isDeleting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Excluir
             </Button>
           </DialogFooter>
