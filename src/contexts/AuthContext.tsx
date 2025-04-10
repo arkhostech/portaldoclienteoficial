@@ -24,35 +24,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
+  // Function to check if a user is an admin
+  const checkIsAdmin = async (userId: string) => {
+    try {
+      // First try to get the user's metadata which might have the role
+      const { data: userData } = await supabase.auth.getUser();
+      const userRole = userData?.user?.user_metadata?.role;
+      
+      if (userRole === 'admin') {
+        return true;
+      }
+      
+      // If not found in metadata, try to get from profiles table
+      // Make sure to only select fields that exist in the table
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')  // We're not specifically selecting 'role' anymore
+        .eq('id', userId)
+        .single();
+
+      // Check if data has a role property, otherwise default to false
+      return data?.role === 'admin' || false;
+    } catch (err) {
+      console.error("Error checking admin status:", err);
+      return false;
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         // Check if user is admin
         if (session?.user) {
-          setTimeout(async () => {
-            try {
-              const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', session.user.id)
-                .single();
-              
-              if (error) {
-                console.error("Error fetching user profile:", error);
-                setIsAdmin(false);
-                return;
-              }
-              
-              setIsAdmin(profile?.role === 'admin' || false);
-            } catch (err) {
-              console.error("Error in auth state change:", err);
-              setIsAdmin(false);
-            }
-          }, 0);
+          const adminStatus = await checkIsAdmin(session.user.id);
+          setIsAdmin(adminStatus);
         } else {
           setIsAdmin(false);
         }
@@ -60,31 +69,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        setTimeout(async () => {
-          try {
-            const { data: profile, error } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (error) {
-              console.error("Error fetching user profile:", error);
-              setIsAdmin(false);
-              return;
-            }
-            
-            setIsAdmin(profile?.role === 'admin' || false);
-          } catch (err) {
-            console.error("Error checking admin status:", err);
-            setIsAdmin(false);
-          }
-        }, 0);
+        const adminStatus = await checkIsAdmin(session.user.id);
+        setIsAdmin(adminStatus);
       }
       
       setLoading(false);
@@ -112,7 +103,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string, isAdmin = false) => {
     try {
-      // Simplificando o envio de dados para o cadastro
+      console.log("Attempting to sign up user:", email, "Is Admin:", isAdmin);
+      
+      // Create the user with metadata including role
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -132,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.user) {
         toast.success("Cadastro realizado com sucesso! Verifique seu email.");
         
-        // Para administradores, aguarde a verificação e não redirecione
+        // For admin users, wait for verification and don't redirect
         if (!isAdmin) {
           navigate("/");
         }

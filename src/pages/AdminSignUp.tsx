@@ -46,11 +46,17 @@ const AdminSignUp = () => {
         return;
       }
 
-      console.log("Criando conta de administrador com email:", email);
+      // Log all details for debugging
+      console.log("Criando conta de administrador:", {
+        email,
+        fullName,
+        isAdmin: true,
+        passwordLength: password.length
+      });
       
       await signUp(email, password, fullName, true);
       
-      // Mostrar mensagem de sucesso e redirecionar após um tempo
+      // Mostrar mensagem de sucesso
       toast.success("Administrador cadastrado com sucesso! Por favor, confira seu email para verificar sua conta.");
       setTimeout(() => navigate("/"), 3000);
     } catch (error: any) {
