@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
@@ -35,11 +36,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // If not found in metadata, try to get from profiles table
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .select('role')  // Now we can select 'role' explicitly
+        .select('role')
         .eq('id', userId)
         .single();
+
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return false;
+      }
 
       // Check if data has a role property, otherwise default to false
       return data?.role === 'admin' || false;
