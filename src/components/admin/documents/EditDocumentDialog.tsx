@@ -69,17 +69,36 @@ const EditDocumentDialog = ({
     }
   }, [document, editForm]);
 
-  const handleEditDialogChange = (open: boolean) => {
-    if (!isUpdating) {
-      onOpenChange(open);
-    } else if (open) {
-      onOpenChange(open);
+  // Using a ref to track if we're submitting to prevent dialog from closing prematurely
+  const submittingRef = React.useRef(false);
+
+  const handleSubmit = (data: DocumentMetadataFormData) => {
+    submittingRef.current = true;
+    onSubmit(data);
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    // Only allow close if we're not in the process of updating
+    if (!isUpdating && !submittingRef.current) {
+      onOpenChange(isOpen);
     }
   };
 
+  // Reset submitting state when isUpdating changes to false (update completed)
+  React.useEffect(() => {
+    if (!isUpdating) {
+      submittingRef.current = false;
+    }
+  }, [isUpdating]);
+
   return (
-    <Dialog open={open} onOpenChange={handleEditDialogChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[500px]" onInteractOutside={(e) => {
+        // Prevent closing when clicking outside during update
+        if (isUpdating || submittingRef.current) {
+          e.preventDefault();
+        }
+      }}>
         <DialogHeader>
           <DialogTitle>Editar Documento</DialogTitle>
           <DialogDescription>
@@ -87,7 +106,7 @@ const EditDocumentDialog = ({
           </DialogDescription>
         </DialogHeader>
         <Form {...editForm}>
-          <form onSubmit={editForm.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={editForm.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={editForm.control}
               name="title"
@@ -139,7 +158,7 @@ const EditDocumentDialog = ({
                 type="button" 
                 variant="outline" 
                 onClick={() => {
-                  if (!isUpdating) {
+                  if (!isUpdating && !submittingRef.current) {
                     onOpenChange(false);
                   }
                 }}

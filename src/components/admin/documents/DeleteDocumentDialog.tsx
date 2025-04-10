@@ -3,13 +3,15 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Document } from "@/services/documentService";
 
 interface DeleteDocumentDialogProps {
@@ -27,49 +29,41 @@ const DeleteDocumentDialog = ({
   onConfirmDelete,
   document
 }: DeleteDocumentDialogProps) => {
-  const handleDeleteDialogChange = (open: boolean) => {
-    if (!isDeleting) {
-      onOpenChange(open);
-    } else if (open) {
-      onOpenChange(open);
-    }
-  };
-
+  // Use AlertDialog instead of Dialog for better accessibility and modal behavior
   return (
-    <Dialog open={open} onOpenChange={handleDeleteDialogChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Confirmar Exclusão</DialogTitle>
-          <DialogDescription>
+    <AlertDialog open={open} onOpenChange={(isOpen) => {
+      if (!isDeleting) {
+        onOpenChange(isOpen);
+      }
+    }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+          <AlertDialogDescription>
             Esta ação não pode ser desfeita. Isso excluirá permanentemente o documento
             {document && ` "${document.title}"`}.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              if (!isDeleting) {
-                onOpenChange(false);
-              }
-            }}
-            disabled={isDeleting}
-          >
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>
             Cancelar
-          </Button>
-          <Button 
-            variant="destructive" 
-            onClick={onConfirmDelete}
+          </AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={(e) => {
+              e.preventDefault(); // Prevent default to handle manually
+              onConfirmDelete();
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             disabled={isDeleting}
           >
             {isDeleting && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
             Excluir
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

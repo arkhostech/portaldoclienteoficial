@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Document, 
   DocumentFormData,
@@ -25,11 +25,23 @@ export const useClientDocuments = (clientId: string) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // UI state management refs
+  const pendingOperationRef = useRef<NodeJS.Timeout | null>(null);
+  const operationCompletedRef = useRef(false);
 
   useEffect(() => {
     if (clientId) {
       loadClientDocuments();
     }
+    
+    // Cleanup function to clear any pending timeouts
+    return () => {
+      if (pendingOperationRef.current) {
+        clearTimeout(pendingOperationRef.current);
+        pendingOperationRef.current = null;
+      }
+    };
   }, [clientId]);
 
   const loadClientDocuments = async () => {
@@ -43,6 +55,7 @@ export const useClientDocuments = (clientId: string) => {
     if (!clientId || !data.file) return;
     
     setIsSubmitting(true);
+    operationCompletedRef.current = false;
     
     try {
       // Prepare document data
@@ -57,18 +70,23 @@ export const useClientDocuments = (clientId: string) => {
       
       if (result) {
         setDocuments(prevDocs => [result, ...prevDocs]);
+        operationCompletedRef.current = true;
+        
         // Delay closing the dialog to prevent UI issues
-        setTimeout(() => {
+        pendingOperationRef.current = setTimeout(() => {
           setOpenUploadDialog(false);
-        }, 300);
+          pendingOperationRef.current = null;
+        }, 500);
       }
     } catch (error) {
       console.error("Error uploading document:", error);
       toast.error("Erro ao enviar documento");
     } finally {
-      setTimeout(() => {
+      // Ensure we reset the submitting state after some delay
+      pendingOperationRef.current = setTimeout(() => {
         setIsSubmitting(false);
-      }, 300);
+        pendingOperationRef.current = null;
+      }, 500);
     }
   };
 
@@ -81,24 +99,30 @@ export const useClientDocuments = (clientId: string) => {
     if (!selectedDocument) return;
     
     setIsUpdating(true);
+    operationCompletedRef.current = false;
     
     try {
       const result = await updateDocumentMetadata(selectedDocument.id, data);
       
       if (result) {
         setDocuments(prevDocs => prevDocs.map(doc => doc.id === result.id ? result : doc));
+        operationCompletedRef.current = true;
+        
         // Delay closing the dialog to prevent UI issues
-        setTimeout(() => {
+        pendingOperationRef.current = setTimeout(() => {
           setOpenEditDialog(false);
-        }, 300);
+          pendingOperationRef.current = null;
+        }, 600); // Slightly longer delay for status changes
       }
     } catch (error) {
       console.error("Error updating document:", error);
       toast.error("Erro ao atualizar documento");
     } finally {
-      setTimeout(() => {
+      // Ensure we reset the updating state after some delay
+      pendingOperationRef.current = setTimeout(() => {
         setIsUpdating(false);
-      }, 300);
+        pendingOperationRef.current = null;
+      }, 600); // Slightly longer delay for status changes
     }
   };
 
@@ -111,24 +135,29 @@ export const useClientDocuments = (clientId: string) => {
     if (!selectedDocument) return;
     
     setIsDeleting(true);
+    operationCompletedRef.current = false;
     
     try {
       const success = await deleteDocument(selectedDocument.id, selectedDocument.file_path);
       
       if (success) {
         setDocuments(prevDocs => prevDocs.filter(doc => doc.id !== selectedDocument.id));
+        operationCompletedRef.current = true;
+        
         // Delay closing the dialog to prevent UI issues
-        setTimeout(() => {
+        pendingOperationRef.current = setTimeout(() => {
           setOpenDeleteDialog(false);
-        }, 300);
+          pendingOperationRef.current = null;
+        }, 500);
       }
     } catch (error) {
       console.error("Error deleting document:", error);
       toast.error("Erro ao excluir documento");
     } finally {
-      setTimeout(() => {
+      pendingOperationRef.current = setTimeout(() => {
         setIsDeleting(false);
-      }, 300);
+        pendingOperationRef.current = null;
+      }, 500);
     }
   };
 
@@ -147,31 +176,6 @@ export const useClientDocuments = (clientId: string) => {
     }
   };
 
-  // Dialog control helpers
-  const handleUploadDialogChange = (open: boolean) => {
-    if (!isSubmitting) {
-      setOpenUploadDialog(open);
-    } else if (open) {
-      setOpenUploadDialog(open);
-    }
-  };
-  
-  const handleEditDialogChange = (open: boolean) => {
-    if (!isUpdating) {
-      setOpenEditDialog(open);
-    } else if (open) {
-      setOpenEditDialog(open);
-    }
-  };
-  
-  const handleDeleteDialogChange = (open: boolean) => {
-    if (!isDeleting) {
-      setOpenDeleteDialog(open);
-    } else if (open) {
-      setOpenDeleteDialog(open);
-    }
-  };
-
   return {
     documents,
     isLoading,
@@ -182,9 +186,9 @@ export const useClientDocuments = (clientId: string) => {
     isSubmitting,
     isUpdating,
     isDeleting,
-    setOpenUploadDialog: handleUploadDialogChange,
-    setOpenEditDialog: handleEditDialogChange,
-    setOpenDeleteDialog: handleDeleteDialogChange,
+    setOpenUploadDialog,
+    setOpenEditDialog,
+    setOpenDeleteDialog,
     handleUploadDocument,
     handleEditDocument,
     handleUpdateDocument,
