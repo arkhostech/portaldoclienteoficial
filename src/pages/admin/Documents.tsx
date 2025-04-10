@@ -53,15 +53,13 @@ export default function Documents() {
   };
 
   // Function to handle document download directly from the table
-  const handleDirectDownload = (document: DocumentType) => {
-    toast.promise(
-      handleDownloadDocument(document),
-      {
-        loading: 'Preparando download...',
-        success: 'Download iniciado',
-        error: 'Erro ao baixar o documento'
-      }
-    );
+  const handleDirectDownload = async (document: DocumentType) => {
+    try {
+      await handleDownloadDocument(document);
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Erro ao baixar o documento");
+    }
   };
 
   return (

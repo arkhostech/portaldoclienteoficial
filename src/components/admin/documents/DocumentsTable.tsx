@@ -35,18 +35,6 @@ export default function DocumentsTable({
     (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
   
-  const formatFileSize = (bytes: number | null) => {
-    if (!bytes) return "N/A";
-    
-    const kb = bytes / 1024;
-    if (kb < 1024) {
-      return `${kb.toFixed(2)} KB`;
-    }
-    
-    const mb = kb / 1024;
-    return `${mb.toFixed(2)} MB`;
-  };
-  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('pt-BR', {
@@ -93,8 +81,6 @@ export default function DocumentsTable({
         <TableRow>
           <TableHead>Título</TableHead>
           <TableHead>Cliente</TableHead>
-          <TableHead>Tipo</TableHead>
-          <TableHead>Tamanho</TableHead>
           <TableHead>Data</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
@@ -126,8 +112,6 @@ export default function DocumentsTable({
                 <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
               </div>
             </TableCell>
-            <TableCell>{doc.file_type || "N/A"}</TableCell>
-            <TableCell>{formatFileSize(doc.file_size)}</TableCell>
             <TableCell>
               <div className="flex items-center">
                 <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
@@ -141,6 +125,7 @@ export default function DocumentsTable({
                     variant="ghost" 
                     size="icon" 
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       onDownload(doc);
                     }}
@@ -154,6 +139,7 @@ export default function DocumentsTable({
                   size="icon" 
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     onDelete(doc);
                   }}
