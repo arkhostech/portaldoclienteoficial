@@ -10,10 +10,12 @@ import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Documents from "./pages/Documents";
-import Messages from "./pages/Messages";
 import Payments from "./pages/Payments";
 import Knowledge from "./pages/Knowledge";
 import NotFound from "./pages/NotFound";
+import Clients from "./pages/admin/Clients";
+import Cases from "./pages/admin/Cases";
+import Reports from "./pages/admin/Reports";
 
 const queryClient = new QueryClient();
 
@@ -29,8 +31,10 @@ const App = () => (
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/clients" element={<Clients />} />
+            <Route path="/admin/cases" element={<Cases />} />
+            <Route path="/admin/reports" element={<Reports />} />
             <Route path="/documents" element={<Documents />} />
-            <Route path="/messages" element={<Messages />} />
             <Route path="/payments" element={<Payments />} />
             <Route path="/knowledge" element={<Knowledge />} />
             <Route path="*" element={<NotFound />} />

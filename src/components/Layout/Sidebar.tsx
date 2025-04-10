@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -6,14 +5,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { 
   LayoutDashboard, 
   FolderOpen, 
-  MessageSquare, 
   CreditCard,
   BookOpen,
   Menu,
   LogOut,
   Users,
   Settings,
-  BarChart
+  BarChart,
+  FileText
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -36,13 +35,8 @@ const Sidebar = () => {
         },
         { 
           title: 'Processos', 
-          icon: <FolderOpen className="h-5 w-5" />, 
+          icon: <FileText className="h-5 w-5" />, 
           href: '/admin/cases' 
-        },
-        { 
-          title: 'Mensagens', 
-          icon: <MessageSquare className="h-5 w-5" />, 
-          href: '/messages' 
         },
         { 
           title: 'Relatórios', 
@@ -65,11 +59,6 @@ const Sidebar = () => {
           title: 'Documentos', 
           icon: <FolderOpen className="h-5 w-5" />, 
           href: '/documents' 
-        },
-        { 
-          title: 'Mensagens', 
-          icon: <MessageSquare className="h-5 w-5" />, 
-          href: '/messages' 
         },
         { 
           title: 'Pagamentos', 
