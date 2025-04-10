@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
@@ -36,10 +35,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // If not found in metadata, try to get from profiles table
-      // Make sure to only select fields that exist in the table
       const { data } = await supabase
         .from('profiles')
-        .select('*')  // We're not specifically selecting 'role' anymore
+        .select('role')  // Now we can select 'role' explicitly
         .eq('id', userId)
         .single();
 
