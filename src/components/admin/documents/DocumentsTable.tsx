@@ -2,13 +2,20 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Clock, Download, FileText, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { Document } from "@/types/document";
+import { Clock, Download, FileText, Loader2, MoreHorizontal, Pencil, Trash2, User } from "lucide-react";
+import { Document } from "@/services/documents/types";
+
+interface Client {
+  id: string;
+  full_name: string;
+  email: string;
+}
 
 interface DocumentsTableProps {
   documents: Document[];
   isLoading: boolean;
   searchTerm: string;
+  clients: Client[];
   onDownload: (document: Document) => void;
   onEdit: (document: Document) => void;
   onDelete: (document: Document) => void;
@@ -18,6 +25,7 @@ export default function DocumentsTable({
   documents,
   isLoading,
   searchTerm,
+  clients,
   onDownload,
   onEdit,
   onDelete
@@ -50,6 +58,11 @@ export default function DocumentsTable({
     }).format(date);
   };
   
+  const getClientName = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    return client ? client.full_name : "Cliente não encontrado";
+  };
+  
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -74,6 +87,7 @@ export default function DocumentsTable({
       <TableHeader>
         <TableRow>
           <TableHead>Título</TableHead>
+          <TableHead>Cliente</TableHead>
           <TableHead>Tipo</TableHead>
           <TableHead>Tamanho</TableHead>
           <TableHead>Data</TableHead>
@@ -88,6 +102,14 @@ export default function DocumentsTable({
                 <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
                 <span className="truncate max-w-[200px]" title={doc.title}>
                   {doc.title}
+                </span>
+              </div>
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center">
+                <User className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span className="truncate max-w-[150px]">
+                  {getClientName(doc.client_id)}
                 </span>
               </div>
             </TableCell>

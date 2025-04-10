@@ -1,11 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Document, DocumentFormData } from "./types";
+import { Document } from "./types";
 import { createDelayedToast } from "./utils";
 
 export const updateDocumentMetadata = async (
   documentId: string,
-  documentData: Partial<DocumentFormData>
+  documentData: {
+    title: string;
+    description?: string;
+  }
 ): Promise<Document | null> => {
   try {
     const { data, error } = await supabase

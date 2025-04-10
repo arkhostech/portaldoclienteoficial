@@ -1,2 +1,2 @@
 
-export * from "./useClientDocuments";
+export * from "./useDocuments";

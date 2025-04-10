@@ -8,7 +8,7 @@ import { Loader2, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Document } from "@/types/document";
+import { Document } from "@/services/documents/types";
 import { useEffect } from "react";
 
 const formSchema = z.object({
@@ -22,7 +22,7 @@ interface DocumentEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   document: Document | null;
-  onSave: (data: { title: string; description?: string }) => Promise<void>;
+  onSave: (data: { title: string; description?: string }) => Promise<boolean>;
   isUpdating: boolean;
 }
 
@@ -52,7 +52,7 @@ export default function DocumentEditDialog({
   }, [document, form]);
   
   const onSubmit = async (data: FormValues) => {
-    // Ensure title is always a string (it will be due to validation, but this makes TypeScript happy)
+    // Ensure title is always passed as a string (TypeScript safety)
     await onSave({
       title: data.title,
       description: data.description

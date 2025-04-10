@@ -34,6 +34,11 @@ const Sidebar = () => {
           href: '/admin/clients' 
         },
         { 
+          title: 'Documentos', 
+          icon: <FileText className="h-5 w-5" />, 
+          href: '/admin/documents' 
+        },
+        { 
           title: 'Processos', 
           icon: <FileText className="h-5 w-5" />, 
           href: '/admin/cases' 
