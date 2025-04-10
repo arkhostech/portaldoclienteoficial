@@ -34,13 +34,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Check if user is admin
         if (session?.user) {
           setTimeout(async () => {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .single();
-            
-            setIsAdmin(profile?.role === 'admin' || false);
+            try {
+              const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', session.user.id)
+                .single();
+              
+              if (error) {
+                console.error("Error fetching user profile:", error);
+                setIsAdmin(false);
+                return;
+              }
+              
+              setIsAdmin(profile?.role === 'admin' || false);
+            } catch (err) {
+              console.error("Error in auth state change:", err);
+              setIsAdmin(false);
+            }
           }, 0);
         } else {
           setIsAdmin(false);
@@ -55,13 +66,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         setTimeout(async () => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-          
-          setIsAdmin(profile?.role === 'admin' || false);
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (error) {
+              console.error("Error fetching user profile:", error);
+              setIsAdmin(false);
+              return;
+            }
+            
+            setIsAdmin(profile?.role === 'admin' || false);
+          } catch (err) {
+            console.error("Error checking admin status:", err);
+            setIsAdmin(false);
+          }
         }, 0);
       }
       
@@ -90,7 +112,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string, isAdmin = false) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      // Define user data with proper role
+      const userData = {
         email,
         password,
         options: {
@@ -98,13 +121,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             full_name: fullName,
             role: isAdmin ? "admin" : "client",
           },
-        },
-      });
+        }
+      };
 
-      if (error) throw error;
+      console.log("Signing up with data:", { ...userData, password: "***" });
       
-      toast.success("Cadastro realizado com sucesso! Verifique seu email.");
+      const { data, error } = await supabase.auth.signUp(userData);
+
+      if (error) {
+        console.error("Signup error:", error);
+        throw error;
+      }
+      
+      if (data.user) {
+        toast.success("Cadastro realizado com sucesso! Verifique seu email.");
+        // For admin users, don't navigate away as they might need to be verified
+        if (!isAdmin) {
+          navigate("/");
+        }
+      } else {
+        toast.info("Por favor, verifique seu email para confirmar seu cadastro.");
+      }
     } catch (error: any) {
+      console.error("Error details:", error);
       toast.error(`Erro ao criar conta: ${error.message}`);
       throw error;
     }

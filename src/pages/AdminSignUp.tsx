@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,26 +27,29 @@ const AdminSignUp = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simple validation
-    if (!email || !password || !fullName) {
-      toast.error("Por favor, preencha todos os campos.");
-      setIsLoading(false);
-      return;
-    }
-
-    // Admin key validation (simple)
-    if (adminKey !== "legacygroup2023") {
-      toast.error("Chave de administrador inválida.");
-      setIsLoading(false);
-      return;
-    }
-
     try {
+      // Simple validation
+      if (!email || !password || !fullName) {
+        toast.error("Por favor, preencha todos os campos.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Admin key validation (simple)
+      if (adminKey !== "legacygroup2023") {
+        toast.error("Chave de administrador inválida.");
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("Creating admin account with email:", email);
       await signUp(email, password, fullName, true);
       toast.success("Administrador cadastrado com sucesso! Verifique seu email para confirmar.");
-      navigate("/");
+      
+      // Redirect to login page after successful registration
+      setTimeout(() => navigate("/"), 2000);
     } catch (error) {
-      console.error(error);
+      console.error("Admin signup error:", error);
     } finally {
       setIsLoading(false);
     }
