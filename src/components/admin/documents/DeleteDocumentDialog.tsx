@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Document } from "@/services/documentService";
+import { Document } from "@/services/documents";
 
 interface DeleteDocumentDialogProps {
   open: boolean;
