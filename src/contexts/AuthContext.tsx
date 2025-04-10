@@ -23,15 +23,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
-  // Function to check if a user is an admin
-  const checkIsAdmin = async (userId: string) => {
+  // Enhanced function to check if a user is an admin
+  const checkUserRole = async (userId: string): Promise<'admin' | 'client' | null> => {
     try {
-      // First check metadata
+      // First check app_metadata from auth user
       const { data: userData } = await supabase.auth.getUser();
-      const userRole = userData?.user?.user_metadata?.role;
+      const userRole = userData?.user?.app_metadata?.role;
       
       if (userRole === 'admin') {
-        return true;
+        return 'admin';
+      } else if (userRole === 'client') {
+        return 'client';
       }
       
       // Then check profiles table
@@ -43,13 +45,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error("Error fetching profile:", error);
-        return false;
+        return null;
       }
 
-      return data?.role === 'admin' || false;
+      return data?.role || null;
     } catch (err) {
-      console.error("Error checking admin status:", err);
-      return false;
+      console.error("Error checking user role:", err);
+      return null;
     }
   };
 
@@ -63,9 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
       
+      // The navigation and role check will be handled in the onAuthStateChange
       toast.success("Login bem-sucedido!");
-      
-      // Navigation will happen in useEffect after auth state changes
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error(`Erro ao fazer login: ${error.message}`);
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
         console.log("Auth state changed:", event, newSession?.user?.id);
         
         if (!mounted) return;
@@ -105,13 +106,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Use setTimeout to avoid potential deadlocks
           setTimeout(async () => {
             if (mounted && newSession.user) {
-              const adminStatus = await checkIsAdmin(newSession.user.id);
-              setIsAdmin(adminStatus);
+              const userRole = await checkUserRole(newSession.user.id);
+              const isUserAdmin = userRole === 'admin';
+              setIsAdmin(isUserAdmin);
               setLoading(false);
               
-              // Navigate based on role
+              // Navigation based on role and event
               if (event === 'SIGNED_IN') {
-                if (adminStatus) {
+                // Check if user is on the correct login page
+                const currentPath = window.location.pathname;
+                
+                if (currentPath === '/admin-login' && !isUserAdmin) {
+                  // Admin login page but user is not admin
+                  toast.error("Apenas administradores podem acessar este portal.");
+                  await signOut();
+                  return;
+                } 
+                else if (currentPath === '/' && isUserAdmin) {
+                  // Client login page but user is admin
+                  toast.error("Administradores devem acessar pelo portal administrativo.");
+                  await signOut();
+                  return;
+                }
+                
+                // Navigate to the correct dashboard
+                if (isUserAdmin) {
                   navigate("/admin");
                 } else {
                   navigate("/dashboard");
@@ -141,11 +160,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(session);
           setUser(session.user);
           
-          const adminStatus = await checkIsAdmin(session.user.id);
+          const userRole = await checkUserRole(session.user.id);
+          const isUserAdmin = userRole === 'admin';
+          
           if (mounted) {
-            setIsAdmin(adminStatus);
-            // Don't navigate here - user is already on a page
+            setIsAdmin(isUserAdmin);
             setLoading(false);
+            
+            // Check if user is on the correct page based on role
+            const currentPath = window.location.pathname;
+            
+            if ((currentPath === '/admin-login' || currentPath.startsWith('/admin')) && !isUserAdmin) {
+              // Admin page but user is not admin
+              toast.error("Apenas administradores podem acessar este portal.");
+              await signOut();
+            } 
+            else if ((currentPath === '/' || currentPath.startsWith('/dashboard')) && isUserAdmin) {
+              // Client page but user is admin
+              toast.error("Administradores devem acessar pelo portal administrativo.");
+              await signOut();
+            }
           }
         } else {
           setLoading(false);

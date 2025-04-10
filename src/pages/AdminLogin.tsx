@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,11 +18,24 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, user, isAdmin, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Redirect if already logged in as admin
+  useEffect(() => {
+    if (!loading && user) {
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        // If logged in but not admin, show error and logout
+        toast.error("Apenas administradores podem acessar este portal.");
+        // Let the AuthContext handle logout and redirection
+      }
+    }
+  }, [user, isAdmin, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,10 +44,7 @@ const AdminLogin = () => {
 
     try {
       await signIn(email, password);
-      
-      // A verificação se o usuário é administrador é feita no AuthContext
-      // e o redirecionamento para /admin é feito automaticamente
-      
+      // Role checking and redirects are handled in AuthContext
     } catch (error: any) {
       console.error(error);
       setError("Credenciais inválidas ou você não tem permissão de administrador.");
@@ -42,6 +52,18 @@ const AdminLogin = () => {
       setIsLoading(false);
     }
   };
+
+  // If loading, don't render the form yet
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-12 w-12 border-4 border-t-[#eac066] border-gray-200 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // If already logged in, let the useEffect handle redirection
+  if (user) return null;
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,34 +12,58 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, Mail, ShieldCheck, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { signIn, user } = useAuth();
+  const { signIn, user, isAdmin, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Redirect if already logged in
-  if (user) {
-    navigate("/dashboard");
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && user) {
+      if (!isAdmin) {
+        navigate("/dashboard");
+      } else {
+        // If admin trying to log in on client page, show error
+        toast.error("Administradores devem acessar pelo portal administrativo.");
+        // Let AuthContext handle logout and redirection
+      }
+    }
+  }, [user, isAdmin, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
     try {
       await signIn(email, password);
-    } catch (error) {
+      // Role checking and redirects are handled in AuthContext
+    } catch (error: any) {
       console.error(error);
+      setError("Credenciais inválidas ou ocorreu um erro ao tentar fazer login.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  // If loading, don't render the form yet
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-12 w-12 border-4 border-t-[#eac066] border-gray-200 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // If already logged in, let the useEffect handle redirection
+  if (user) return null;
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -64,6 +88,11 @@ const Index = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <div className="relative">
