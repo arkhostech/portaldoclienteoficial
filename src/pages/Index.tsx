@@ -93,14 +93,14 @@ const Index = () => {
               </div>
               <Button 
                 type="submit" 
-                className="w-full bg-[#8C52FF] hover:bg-[#7845E0] text-white"
+                className="w-full bg-[#EAC066] hover:bg-[#d9af5c] text-[#111111]"
                 disabled={isLoading}
               >
                 {isLoading ? "Entrando..." : "Entrar"}
               </Button>
             </form>
             <div className="mt-4 text-center text-sm">
-              <a href="#" className="text-[#8C52FF] hover:underline">
+              <a href="#" className="text-[#EAC066] hover:underline">
                 Esqueceu sua senha?
               </a>
             </div>
@@ -115,16 +115,16 @@ const Index = () => {
       </div>
       
       {/* Right side - Image and information */}
-      <div className="hidden md:flex flex-1 bg-[#8C52FF] text-white p-12 flex-col justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#9B65FF] to-[#7B45E0] opacity-90"></div>
+      <div className="hidden md:flex flex-1 bg-[#111111] text-white p-12 flex-col justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#222222] to-[#111111] opacity-90"></div>
         <div className="relative z-10 space-y-6">
           <h1 className="text-4xl font-bold">Bem-vindo ao Portal do Cliente</h1>
           <p className="text-xl">Gerencie seus processos, documentos e pagamentos em um só lugar.</p>
           
           <div className="mt-12 space-y-4">
             <div className="flex items-start space-x-4">
-              <div className="bg-white/20 rounded-full p-2">
-                <ShieldCheck className="h-6 w-6" />
+              <div className="bg-[#EAC066] rounded-full p-2">
+                <ShieldCheck className="h-6 w-6 text-[#111111]" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold">Acesso Seguro</h3>
@@ -133,8 +133,8 @@ const Index = () => {
             </div>
             
             <div className="flex items-start space-x-4">
-              <div className="bg-white/20 rounded-full p-2">
-                <Mail className="h-6 w-6" />
+              <div className="bg-[#EAC066] rounded-full p-2">
+                <Mail className="h-6 w-6 text-[#111111]" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold">Comunicação Centralizada</h3>
