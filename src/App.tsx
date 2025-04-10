@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import AdminSignUp from "./pages/AdminSignUp";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import Documents from "./pages/Documents";
 import Messages from "./pages/Messages";
 import Payments from "./pages/Payments";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/admin-signup" element={<AdminSignUp />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/payments" element={<Payments />} />

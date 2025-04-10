@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   LayoutDashboard, 
   FolderOpen, 
@@ -9,45 +10,83 @@ import {
   CreditCard,
   BookOpen,
   Menu,
-  LogOut
+  LogOut,
+  Users,
+  Settings,
+  BarChart
 } from 'lucide-react';
-
-const navItems = [
-  { 
-    title: 'Dashboard', 
-    icon: <LayoutDashboard className="h-5 w-5" />, 
-    href: '/dashboard' 
-  },
-  { 
-    title: 'Documentos', 
-    icon: <FolderOpen className="h-5 w-5" />, 
-    href: '/documents' 
-  },
-  { 
-    title: 'Mensagens', 
-    icon: <MessageSquare className="h-5 w-5" />, 
-    href: '/messages' 
-  },
-  { 
-    title: 'Pagamentos', 
-    icon: <CreditCard className="h-5 w-5" />, 
-    href: '/payments' 
-  },
-  { 
-    title: 'Base de Conhecimento', 
-    icon: <BookOpen className="h-5 w-5" />, 
-    href: '/knowledge' 
-  }
-];
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { isAdmin, signOut } = useAuth();
+
+  // Define menu items based on user role
+  const navItems = isAdmin 
+    ? [
+        { 
+          title: 'Dashboard', 
+          icon: <LayoutDashboard className="h-5 w-5" />, 
+          href: '/admin' 
+        },
+        { 
+          title: 'Clientes', 
+          icon: <Users className="h-5 w-5" />, 
+          href: '/admin/clients' 
+        },
+        { 
+          title: 'Processos', 
+          icon: <FolderOpen className="h-5 w-5" />, 
+          href: '/admin/cases' 
+        },
+        { 
+          title: 'Mensagens', 
+          icon: <MessageSquare className="h-5 w-5" />, 
+          href: '/messages' 
+        },
+        { 
+          title: 'Relatórios', 
+          icon: <BarChart className="h-5 w-5" />, 
+          href: '/admin/reports' 
+        },
+        { 
+          title: 'Configurações', 
+          icon: <Settings className="h-5 w-5" />, 
+          href: '/admin/settings' 
+        }
+      ]
+    : [
+        { 
+          title: 'Dashboard', 
+          icon: <LayoutDashboard className="h-5 w-5" />, 
+          href: '/dashboard' 
+        },
+        { 
+          title: 'Documentos', 
+          icon: <FolderOpen className="h-5 w-5" />, 
+          href: '/documents' 
+        },
+        { 
+          title: 'Mensagens', 
+          icon: <MessageSquare className="h-5 w-5" />, 
+          href: '/messages' 
+        },
+        { 
+          title: 'Pagamentos', 
+          icon: <CreditCard className="h-5 w-5" />, 
+          href: '/payments' 
+        },
+        { 
+          title: 'Base de Conhecimento', 
+          icon: <BookOpen className="h-5 w-5" />, 
+          href: '/knowledge' 
+        }
+      ];
 
   return (
     <div className={`${collapsed ? 'w-20' : 'w-64'} h-screen bg-sidebar flex flex-col fixed left-0 top-0 transition-all duration-300 z-20`}>
       <div className="flex justify-between items-center p-4">
-        {!collapsed && <h1 className="text-sidebar-foreground text-xl font-bold">Portal Cliente</h1>}
+        {!collapsed && <h1 className="text-sidebar-foreground text-xl font-bold">{isAdmin ? 'Admin Portal' : 'Portal Cliente'}</h1>}
         <Button 
           variant="ghost" 
           size="icon" 
@@ -80,15 +119,14 @@ const Sidebar = () => {
         </nav>
         
         <div className="p-4">
-          <Link to="/">
-            <Button 
-              variant="outline" 
-              className={`w-full bg-transparent border-sidebar-foreground text-sidebar-foreground hover:bg-sidebar-accent ${collapsed ? 'justify-center p-2' : ''}`}
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              {!collapsed && <span>Sair</span>}
-            </Button>
-          </Link>
+          <Button 
+            variant="outline" 
+            className={`w-full bg-transparent border-sidebar-foreground text-sidebar-foreground hover:bg-sidebar-accent ${collapsed ? 'justify-center p-2' : ''}`}
+            onClick={signOut}
+          >
+            <LogOut className="h-5 w-5 mr-2" />
+            {!collapsed && <span>Sair</span>}
+          </Button>
         </div>
       </div>
     </div>

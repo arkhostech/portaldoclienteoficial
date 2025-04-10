@@ -97,8 +97,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       
-      toast.success("Login bem-sucedido!");
-      navigate("/dashboard");
+      // Get updated user data after login
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData && userData.user) {
+        const adminStatus = await checkIsAdmin(userData.user.id);
+        
+        toast.success("Login bem-sucedido!");
+        
+        // Redirect based on user role
+        if (adminStatus) {
+          navigate("/admin"); // Redirect admin to admin dashboard
+        } else {
+          navigate("/dashboard"); // Redirect client to client dashboard
+        }
+      }
     } catch (error: any) {
       toast.error(`Erro ao fazer login: ${error.message}`);
       throw error;
