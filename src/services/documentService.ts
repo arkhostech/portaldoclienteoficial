@@ -32,14 +32,18 @@ export const fetchClientDocuments = async (clientId: string): Promise<Document[]
     
     if (error) {
       console.error("Error fetching client documents:", error);
-      toast.error("Erro ao buscar documentos");
+      setTimeout(() => {
+        toast.error("Erro ao buscar documentos");
+      }, 100);
       return [];
     }
     
     return data || [];
   } catch (error) {
     console.error("Unexpected error fetching client documents:", error);
-    toast.error("Erro ao buscar documentos");
+    setTimeout(() => {
+      toast.error("Erro ao buscar documentos");
+    }, 100);
     return [];
   }
 };
@@ -63,7 +67,9 @@ export const uploadDocument = async (
     
     if (uploadError) {
       console.error("Error uploading file:", uploadError);
-      toast.error("Erro ao fazer upload do arquivo");
+      setTimeout(() => {
+        toast.error("Erro ao fazer upload do arquivo");
+      }, 100);
       return null;
     }
     
@@ -85,20 +91,24 @@ export const uploadDocument = async (
       await supabase.storage
         .from('client_documents')
         .remove([filePath]);
-        
-      toast.error("Erro ao criar registro do documento");
+      
+      setTimeout(() => {
+        toast.error("Erro ao criar registro do documento");
+      }, 100);
       return null;
     }
     
     // Delay toast to prevent UI issues
     setTimeout(() => {
       toast.success("Documento enviado com sucesso");
-    }, 100);
+    }, 300);
     
     return data;
   } catch (error) {
     console.error("Unexpected error uploading document:", error);
-    toast.error("Erro ao enviar documento");
+    setTimeout(() => {
+      toast.error("Erro ao enviar documento");
+    }, 100);
     return null;
   }
 };
@@ -117,19 +127,23 @@ export const updateDocumentMetadata = async (
     
     if (error) {
       console.error("Error updating document:", error);
-      toast.error("Erro ao atualizar documento");
+      setTimeout(() => {
+        toast.error("Erro ao atualizar documento");
+      }, 100);
       return null;
     }
     
     // Delay toast to prevent UI issues
     setTimeout(() => {
       toast.success("Documento atualizado com sucesso");
-    }, 100);
+    }, 300);
     
     return data;
   } catch (error) {
     console.error("Unexpected error updating document:", error);
-    toast.error("Erro ao atualizar documento");
+    setTimeout(() => {
+      toast.error("Erro ao atualizar documento");
+    }, 100);
     return null;
   }
 };
@@ -144,7 +158,9 @@ export const deleteDocument = async (documentId: string, filePath: string | null
     
     if (dbError) {
       console.error("Error deleting document record:", dbError);
-      toast.error("Erro ao excluir documento");
+      setTimeout(() => {
+        toast.error("Erro ao excluir documento");
+      }, 100);
       return false;
     }
     
@@ -164,12 +180,14 @@ export const deleteDocument = async (documentId: string, filePath: string | null
     // Delay toast to prevent UI issues
     setTimeout(() => {
       toast.success("Documento excluído com sucesso");
-    }, 100);
+    }, 300);
     
     return true;
   } catch (error) {
     console.error("Unexpected error deleting document:", error);
-    toast.error("Erro ao excluir documento");
+    setTimeout(() => {
+      toast.error("Erro ao excluir documento");
+    }, 100);
     return false;
   }
 };
@@ -182,14 +200,18 @@ export const getDocumentUrl = async (filePath: string): Promise<string | null> =
     
     if (error) {
       console.error("Error getting document URL:", error);
-      toast.error("Erro ao acessar o documento");
+      setTimeout(() => {
+        toast.error("Erro ao acessar o documento");
+      }, 100);
       return null;
     }
     
     return data.signedUrl;
   } catch (error) {
     console.error("Unexpected error getting document URL:", error);
-    toast.error("Erro ao acessar o documento");
+    setTimeout(() => {
+      toast.error("Erro ao acessar o documento");
+    }, 100);
     return null;
   }
 };
