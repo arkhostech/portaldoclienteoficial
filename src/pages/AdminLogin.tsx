@@ -81,6 +81,13 @@ const AdminLogin = () => {
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/lovable-uploads/d8e21b74-cc1d-428e-b582-38c1eb3549fe.png" 
+                alt="Logo da empresa" 
+                className="h-24 w-auto"
+              />
+            </div>
             <CardTitle className="text-3xl font-bold">Login de Administrador</CardTitle>
             <CardDescription>
               Acesse o painel administrativo do sistema
