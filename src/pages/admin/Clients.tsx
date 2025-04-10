@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserPlus, Search, Filter } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Client, ClientFormData } from "@/services/clientService";
+import { Client } from "@/services/clientService";
 import { useClients } from "@/hooks/useClients";
 import ClientsTable from "@/components/admin/clients/ClientsTable";
 import CreateClientModal from "@/components/admin/clients/CreateClientModal";
@@ -33,20 +33,29 @@ const Clients = () => {
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
+  // Redirect if not admin
   useEffect(() => {
     if (!isAdmin) {
       navigate("/dashboard");
     }
   }, [isAdmin, navigate]);
 
+  // Handle opening edit dialog
   const handleEditClient = (client: Client) => {
     selectClient(client);
-    setOpenEditDialog(true);
+    // Add a slight delay to ensure client data is set before dialog opens
+    setTimeout(() => {
+      setOpenEditDialog(true);
+    }, 10);
   };
 
+  // Handle opening delete dialog
   const handleConfirmDelete = (client: Client) => {
     selectClient(client);
-    setOpenDeleteDialog(true);
+    // Add a slight delay to ensure client data is set before dialog opens
+    setTimeout(() => {
+      setOpenDeleteDialog(true);
+    }, 10);
   };
 
   const handleViewDocuments = (clientId: string) => {
@@ -103,6 +112,7 @@ const Clients = () => {
         </Card>
       </div>
 
+      {/* Modals */}
       <CreateClientModal 
         open={openNewDialog}
         onOpenChange={setOpenNewDialog}

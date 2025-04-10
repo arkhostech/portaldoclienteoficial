@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Client } from "@/services/clientService";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface DeleteClientModalProps {
   client: Client | null;
@@ -29,7 +29,7 @@ const DeleteClientModal = ({
 }: DeleteClientModalProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // Reset state when dialog opens or closes
+  // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
       setIsDeleting(false);
@@ -37,21 +37,29 @@ const DeleteClientModal = ({
   }, [open]);
   
   const handleDelete = async () => {
-    if (client) {
+    if (!client) return;
+    
+    try {
       setIsDeleting(true);
       const success = await onConfirm(client.id);
+      
       if (success) {
+        // Use a longer timeout to ensure all state updates have propagated
         setTimeout(() => {
-          onOpenChange(false);
           setIsDeleting(false);
-        }, 100);
+          onOpenChange(false);
+        }, 300);
       } else {
         setIsDeleting(false);
       }
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      setIsDeleting(false);
     }
   };
 
   const handleDialogClose = (open: boolean) => {
+    // Only allow closing if we're not in the middle of a deletion
     if (!open && !isSubmitting && !isDeleting) {
       onOpenChange(open);
     }

@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
 import { Client, ClientFormData } from "@/services/clientService";
-import { useState } from "react";
 
 const clientFormSchema = z.object({
   full_name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
@@ -48,8 +47,6 @@ const EditClientModal = ({
   onSubmit,
   isSubmitting
 }: EditClientModalProps) => {
-  const [isUpdating, setIsUpdating] = useState(false);
-  
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
@@ -71,33 +68,40 @@ const EditClientModal = ({
         status: client.status
       });
     }
+    // Reset form when the dialog opens with new client data
   }, [client, form]);
   
-  // Reset state when dialog opens or closes
-  useEffect(() => {
-    if (!open) {
-      setIsUpdating(false);
-    }
-  }, [open]);
-
   const handleSubmit = async (data: ClientFormData) => {
-    if (client) {
-      setIsUpdating(true);
+    if (!client) return;
+    
+    try {
+      // Disable closing the dialog during submission
       const success = await onSubmit(client.id, data);
+      
       if (success) {
+        // Only close the dialog if the submission was successful
+        // Use a slight delay to ensure state updates have propagated
         setTimeout(() => {
           onOpenChange(false);
-          setIsUpdating(false);
-        }, 100);
-      } else {
-        setIsUpdating(false);
+          // Reset form after successful submission and dialog close
+          form.reset();
+        }, 300);
       }
+    } catch (error) {
+      console.error("Error submitting form:", error);
     }
   };
 
   const handleDialogClose = (open: boolean) => {
-    if (!open && !isSubmitting && !isUpdating) {
+    // Prevent closing the dialog during form submission
+    if (!isSubmitting && open === false) {
       onOpenChange(open);
+      if (!open) {
+        // Reset form when dialog is closed
+        setTimeout(() => {
+          form.reset();
+        }, 100);
+      }
     }
   };
 
@@ -188,15 +192,15 @@ const EditClientModal = ({
                 type="button" 
                 variant="outline" 
                 onClick={() => handleDialogClose(false)}
-                disabled={isSubmitting || isUpdating}
+                disabled={isSubmitting}
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
-                disabled={isSubmitting || isUpdating}
+                disabled={isSubmitting}
               >
-                {(isSubmitting || isUpdating) && (
+                {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Atualizar

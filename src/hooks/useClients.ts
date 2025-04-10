@@ -36,12 +36,14 @@ export const useClients = () => {
 
   // Create a new client
   const handleCreateClient = async (data: ClientFormData) => {
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
       const result = await createClient(data);
+      
       if (result) {
-        setClients([result, ...clients]);
-        toast.success("Cliente criado com sucesso");
+        // Add new client to state
+        setClients(prevClients => [result, ...prevClients]);
         return true;
       }
       return false;
@@ -50,21 +52,25 @@ export const useClients = () => {
       toast.error("Erro ao criar cliente");
       return false;
     } finally {
-      // Use setTimeout to ensure UI updates properly before state changes
+      // Delay state update to prevent UI issues
       setTimeout(() => {
         setIsSubmitting(false);
-      }, 100);
+      }, 300);
     }
   };
 
   // Update an existing client
   const handleUpdateClient = async (id: string, data: ClientFormData) => {
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
       const result = await updateClient(id, data);
+      
       if (result) {
-        setClients(clients.map(c => c.id === result.id ? result : c));
-        toast.success("Cliente atualizado com sucesso");
+        // Update client in the state
+        setClients(prevClients => 
+          prevClients.map(c => c.id === result.id ? result : c)
+        );
         return true;
       }
       return false;
@@ -73,21 +79,23 @@ export const useClients = () => {
       toast.error("Erro ao atualizar cliente");
       return false;
     } finally {
-      // Use setTimeout to ensure UI updates properly before state changes
+      // Delay state update to prevent UI issues
       setTimeout(() => {
         setIsSubmitting(false);
-      }, 100);
+      }, 300);
     }
   };
 
   // Delete a client
   const handleDeleteClient = async (id: string) => {
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
       const success = await deleteClient(id);
+      
       if (success) {
-        setClients(clients.filter(c => c.id !== id));
-        toast.success("Cliente excluído com sucesso");
+        // Remove client from state
+        setClients(prevClients => prevClients.filter(c => c.id !== id));
         return true;
       }
       return false;
@@ -96,10 +104,10 @@ export const useClients = () => {
       toast.error("Erro ao excluir cliente");
       return false;
     } finally {
-      // Use setTimeout to ensure UI updates properly before state changes
+      // Delay state update to prevent UI issues
       setTimeout(() => {
         setIsSubmitting(false);
-      }, 100);
+      }, 300);
     }
   };
 
