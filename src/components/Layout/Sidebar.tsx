@@ -84,14 +84,14 @@ const Sidebar = () => {
       ];
 
   return (
-    <div className={`${collapsed ? 'w-20' : 'w-64'} h-screen bg-sidebar flex flex-col fixed left-0 top-0 transition-all duration-300 z-20`}>
+    <div className={`${collapsed ? 'w-20' : 'w-64'} h-screen bg-secondary flex flex-col fixed left-0 top-0 transition-all duration-300 z-20`}>
       <div className="flex justify-between items-center p-4">
-        {!collapsed && <h1 className="text-sidebar-foreground text-xl font-bold">{isAdmin ? 'Admin Portal' : 'Portal Cliente'}</h1>}
+        {!collapsed && <h1 className="text-white text-xl font-bold">{isAdmin ? 'Admin Portal' : 'Portal Cliente'}</h1>}
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={() => setCollapsed(!collapsed)}
-          className="text-sidebar-foreground hover:bg-sidebar-accent"
+          className="text-white hover:bg-accent hover:text-secondary"
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -106,8 +106,8 @@ const Sidebar = () => {
                   to={item.href} 
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors
                     ${location.pathname === item.href 
-                      ? 'bg-white text-sidebar-primary-foreground' 
-                      : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                      ? 'bg-accent text-secondary font-medium' 
+                      : 'text-white hover:bg-white/10'
                     }`}
                 >
                   <span className="mr-3">{item.icon}</span>
@@ -121,7 +121,7 @@ const Sidebar = () => {
         <div className="p-4">
           <Button 
             variant="outline" 
-            className={`w-full bg-transparent border-sidebar-foreground text-sidebar-foreground hover:bg-sidebar-accent ${collapsed ? 'justify-center p-2' : ''}`}
+            className={`w-full bg-transparent border-white text-white hover:bg-accent hover:text-secondary hover:border-accent ${collapsed ? 'justify-center p-2' : ''}`}
             onClick={signOut}
           >
             <LogOut className="h-5 w-5 mr-2" />
