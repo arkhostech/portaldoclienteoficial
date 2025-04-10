@@ -8,7 +8,7 @@ import {
   updateDocumentMetadata,
   deleteDocument,
   getDocumentUrl
-} from "@/services/documentService";
+} from "@/services/documents";
 import { toast } from "sonner";
 
 export const useClientDocuments = (clientId: string) => {
