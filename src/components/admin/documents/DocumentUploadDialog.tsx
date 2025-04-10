@@ -113,11 +113,17 @@ export default function DocumentUploadDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {clients.map(client => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.full_name}
+                      {clients.length > 0 ? (
+                        clients.map(client => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.full_name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no_clients_available" disabled>
+                          Nenhum cliente disponível
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

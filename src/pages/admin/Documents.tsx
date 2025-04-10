@@ -69,14 +69,14 @@ export default function Documents() {
               </div>
               <div className="w-full md:w-72">
                 <Select
-                  value={selectedClientId || ""}
-                  onValueChange={(value) => setSelectedClientId(value === "" ? null : value)}
+                  value={selectedClientId || "all"}
+                  onValueChange={(value) => setSelectedClientId(value === "all" ? null : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Filtrar por cliente" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os clientes</SelectItem>
+                    <SelectItem value="all">Todos os clientes</SelectItem>
                     {clients.map((client) => (
                       <SelectItem key={client.id} value={client.id}>
                         {client.full_name}
