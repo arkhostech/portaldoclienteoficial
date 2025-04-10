@@ -1,5 +1,5 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Document } from "@/services/documents/types";
 import { DocumentEditForm } from "./DocumentEditForm";
 
@@ -36,6 +36,9 @@ export default function DocumentEditDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Editar Documento</DialogTitle>
+          <DialogDescription>
+            Edite as informações do documento clicando nos campos abaixo.
+          </DialogDescription>
         </DialogHeader>
         
         <DocumentEditForm

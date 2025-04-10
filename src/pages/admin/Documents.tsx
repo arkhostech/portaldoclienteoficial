@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import MainLayout from "@/components/Layout/MainLayout"; // Fix import syntax
+import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import DocumentEditDialog from "@/components/admin/documents/DocumentEditDialog"
 import DocumentDeleteDialog from "@/components/admin/documents/DocumentDeleteDialog";
 import { useClients } from "@/hooks/useClients";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 export default function Documents() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,14 +41,26 @@ export default function Documents() {
     loadDocuments,
   } = useDocuments(selectedClientId);
 
-  // Function to handle dialog closing ensuring state is reset properly
-  const handleEditDialogClose = (open: boolean) => {
-    if (!open && !isUpdating) {
-      // Add a small delay to ensure state is properly updated before allowing new interactions
-      setTimeout(() => {
-        setOpenEditDialog(false);
-      }, 100);
-    }
+  // Function to handle document edit directly from the table
+  const handleDirectEdit = async (document: Document) => {
+    handleEditDocument(document);
+  };
+
+  // Function to handle document deletion directly from the table
+  const handleDirectDelete = async (document: Document) => {
+    handleConfirmDelete(document);
+  };
+
+  // Function to handle document download directly from the table
+  const handleDirectDownload = async (document: Document) => {
+    toast.promise(
+      handleDownloadDocument(document),
+      {
+        loading: 'Preparando download...',
+        success: 'Download iniciado',
+        error: 'Erro ao baixar o documento'
+      }
+    );
   };
 
   return (
@@ -103,9 +116,9 @@ export default function Documents() {
               isLoading={isLoading || isClientsLoading}
               searchTerm={searchTerm}
               clients={clients}
-              onDownload={handleDownloadDocument}
-              onEdit={handleEditDocument}
-              onDelete={handleConfirmDelete}
+              onDownload={handleDirectDownload}
+              onEdit={handleDirectEdit}
+              onDelete={handleDirectDelete}
             />
           </CardContent>
         </Card>
@@ -121,7 +134,7 @@ export default function Documents() {
       
       <DocumentEditDialog
         open={openEditDialog}
-        onOpenChange={handleEditDialogClose}
+        onOpenChange={setOpenEditDialog}
         document={selectedDocument}
         onSave={handleUpdateDocument}
         isUpdating={isUpdating}
