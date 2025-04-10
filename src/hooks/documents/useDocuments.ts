@@ -101,6 +101,8 @@ export const useDocuments = (clientId: string | null = null) => {
 
   const handleEditDocument = (document: Document) => {
     setSelectedDocument(document);
+    // Make sure we're not in an updating state before opening the dialog
+    setIsUpdating(false);
     setOpenEditDialog(true);
   };
 
@@ -119,15 +121,17 @@ export const useDocuments = (clientId: string | null = null) => {
       );
       
       if (result) {
+        // Update the documents array with the updated document
         setDocuments(prevDocs => prevDocs.map(doc => 
           doc.id === result.id ? result : doc
         ));
-        setOpenEditDialog(false);
         
-        // Use managed timeout
+        // Add a delay to ensure UI smoothness
         addTimeout(() => {
           setIsUpdating(false);
         }, 600);
+        
+        // Return success after UI is updated
         return true;
       }
     } catch (error) {
@@ -161,6 +165,7 @@ export const useDocuments = (clientId: string | null = null) => {
         // Use managed timeout
         addTimeout(() => {
           setIsDeleting(false);
+          setSelectedDocument(null);
         }, 600);
         return true;
       }

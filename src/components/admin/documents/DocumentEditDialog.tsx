@@ -41,30 +41,45 @@ export default function DocumentEditDialog({
     }
   });
   
-  // Update form values when document changes
+  // Update form values when document changes or dialog opens
   useEffect(() => {
-    if (document) {
+    if (document && open) {
       form.reset({
         title: document.title,
         description: document.description || ""
       });
     }
-  }, [document, form]);
+  }, [document, form, open]);
   
   const onSubmit = async (data: FormValues) => {
-    // Ensure title is always passed as a string (TypeScript safety)
-    await onSave({
-      title: data.title,
-      description: data.description
-    });
+    try {
+      const success = await onSave({
+        title: data.title,
+        description: data.description
+      });
+      
+      if (success) {
+        // Let the document update complete before interacting with state
+        setTimeout(() => {
+          if (!isUpdating) {
+            onOpenChange(false);
+          }
+        }, 300);
+      }
+    } catch (error) {
+      console.error("Error saving document:", error);
+    }
+  };
+  
+  // Handle dialog close safely, preventing closing during updates
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!isUpdating) {
+      onOpenChange(newOpen);
+    }
   };
   
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!isUpdating) {
-        onOpenChange(newOpen);
-      }
-    }}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Editar Documento</DialogTitle>
@@ -113,7 +128,7 @@ export default function DocumentEditDialog({
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
                 disabled={isUpdating}
               >
                 Cancelar

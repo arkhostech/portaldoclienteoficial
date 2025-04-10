@@ -37,7 +37,18 @@ export default function Documents() {
     handleConfirmDelete,
     handleDeleteDocument,
     handleDownloadDocument,
+    loadDocuments,
   } = useDocuments(selectedClientId);
+
+  // Function to handle dialog closing ensuring state is reset properly
+  const handleEditDialogClose = (open: boolean) => {
+    if (!open && !isUpdating) {
+      // Add a small delay to ensure state is properly updated before allowing new interactions
+      setTimeout(() => {
+        setOpenEditDialog(false);
+      }, 100);
+    }
+  };
 
   return (
     <MainLayout title="Documentos">
@@ -110,7 +121,7 @@ export default function Documents() {
       
       <DocumentEditDialog
         open={openEditDialog}
-        onOpenChange={setOpenEditDialog}
+        onOpenChange={handleEditDialogClose}
         document={selectedDocument}
         onSave={handleUpdateDocument}
         isUpdating={isUpdating}
