@@ -18,7 +18,7 @@ import {
   Cell
 } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
-import { Download, FileBar, PieChart as PieChartIcon } from "lucide-react";
+import { Download, FileText, PieChart as PieChartIcon } from "lucide-react";
 
 // Dummy data for charts
 const monthlyData = [
@@ -63,7 +63,7 @@ const Reports = () => {
           </div>
           <div className="flex gap-2">
             <Button variant="outline">
-              <FileBar className="mr-2 h-4 w-4" />
+              <FileText className="mr-2 h-4 w-4" />
               Exportar dados
             </Button>
             <Button>
