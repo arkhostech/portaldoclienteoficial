@@ -4,8 +4,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Clock, Download, FileText, Loader2, Pencil, Trash2, User } from "lucide-react";
 import { Document as DocumentType } from "@/services/documents/types";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import DocumentEditDialog from "./DocumentEditDialog";
 
 interface Client {
   id: string;
@@ -32,9 +30,6 @@ export default function DocumentsTable({
   onEdit,
   onDelete
 }: DocumentsTableProps) {
-  const [editingDocument, setEditingDocument] = useState<DocumentType | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
   const filteredDocuments = documents.filter(doc =>
     doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -69,9 +64,8 @@ export default function DocumentsTable({
   };
 
   const handleCellClick = (document: DocumentType) => {
-    setEditingDocument(document);
+    // Simply call onEdit without creating another dialog
     onEdit(document);
-    setIsDialogOpen(true);
   };
   
   if (isLoading) {
@@ -94,101 +88,84 @@ export default function DocumentsTable({
   }
   
   return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Título</TableHead>
-            <TableHead>Cliente</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Tamanho</TableHead>
-            <TableHead>Data</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredDocuments.map(doc => (
-            <TableRow key={doc.id} className="cursor-pointer">
-              <TableCell 
-                className="font-medium hover:bg-muted/50"
-                onClick={() => handleCellClick(doc)}
-              >
-                <div className="flex items-center">
-                  <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
-                  <span className="truncate max-w-[200px]" title={doc.title}>
-                    {doc.title}
-                  </span>
-                  <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
-                </div>
-              </TableCell>
-              <TableCell 
-                className="hover:bg-muted/50"
-                onClick={() => handleCellClick(doc)}
-              >
-                <div className="flex items-center">
-                  <User className="h-4 w-4 mr-2 flex-shrink-0" />
-                  <span className="truncate max-w-[150px]">
-                    {getClientName(doc.client_id)}
-                  </span>
-                  <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
-                </div>
-              </TableCell>
-              <TableCell>{doc.file_type || "N/A"}</TableCell>
-              <TableCell>{formatFileSize(doc.file_size)}</TableCell>
-              <TableCell>
-                <div className="flex items-center">
-                  <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
-                  {formatDate(doc.created_at)}
-                </div>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  {doc.file_path && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDownload(doc);
-                      }}
-                      title="Download"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  )}
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Título</TableHead>
+          <TableHead>Cliente</TableHead>
+          <TableHead>Tipo</TableHead>
+          <TableHead>Tamanho</TableHead>
+          <TableHead>Data</TableHead>
+          <TableHead className="text-right">Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {filteredDocuments.map(doc => (
+          <TableRow key={doc.id} className="cursor-pointer">
+            <TableCell 
+              className="font-medium hover:bg-muted/50"
+              onClick={() => handleCellClick(doc)}
+            >
+              <div className="flex items-center">
+                <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span className="truncate max-w-[200px]" title={doc.title}>
+                  {doc.title}
+                </span>
+                <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
+              </div>
+            </TableCell>
+            <TableCell 
+              className="hover:bg-muted/50"
+              onClick={() => handleCellClick(doc)}
+            >
+              <div className="flex items-center">
+                <User className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span className="truncate max-w-[150px]">
+                  {getClientName(doc.client_id)}
+                </span>
+                <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
+              </div>
+            </TableCell>
+            <TableCell>{doc.file_type || "N/A"}</TableCell>
+            <TableCell>{formatFileSize(doc.file_size)}</TableCell>
+            <TableCell>
+              <div className="flex items-center">
+                <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
+                {formatDate(doc.created_at)}
+              </div>
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-2">
+                {doc.file_path && (
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDelete(doc);
+                      onDownload(doc);
                     }}
-                    title="Excluir"
+                    title="Download"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Download className="h-4 w-4" />
                   </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DocumentEditDialog
-          open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          document={editingDocument}
-          onSave={async (data) => {
-            // We've already triggered the edit action in handleCellClick
-            // This will just close the dialog after saving
-            setIsDialogOpen(false);
-            return true;
-          }}
-          isUpdating={false}
-        />
-      </Dialog>
-    </>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(doc);
+                  }}
+                  title="Excluir"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
