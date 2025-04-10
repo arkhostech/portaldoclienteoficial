@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { useAuth } from '@/contexts/AuthContext';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -20,14 +19,16 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
     // Scroll to top when route changes
     window.scrollTo(0, 0);
     
-    // Check if user is authenticated
+    // Only redirect if not loading and no user
     if (!loading && !user) {
+      console.log("No authenticated user detected, redirecting to login");
       navigate('/');
     }
   }, [location.pathname, user, loading, navigate]);
 
   // Show loading state
   if (loading) {
+    console.log("MainLayout: Showing loading spinner");
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
@@ -40,9 +41,11 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
 
   // Don't render if not authenticated
   if (!user) {
+    console.log("MainLayout: User not authenticated, returning null");
     return null;
   }
 
+  console.log("MainLayout: Rendering main layout");
   return (
     <div className="flex min-h-screen bg-white">
       <Sidebar />

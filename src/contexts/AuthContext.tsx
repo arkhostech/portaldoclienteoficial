@@ -17,11 +17,14 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  console.log("AuthProvider initializing");
   const { user, session, loading, isAdmin } = useAuthState();
   const { signIn, signUp, signOut, actionLoading } = useAuthActions();
   
   // Combine loading states
   const isLoading = loading || actionLoading;
+  
+  console.log("Auth state:", { user: !!user, isLoading, isAdmin });
   
   return (
     <AuthContext.Provider 

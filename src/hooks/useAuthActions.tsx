@@ -9,14 +9,17 @@ export function useAuthActions() {
   const navigate = useNavigate();
 
   const signIn = async (email: string, password: string) => {
+    console.log("Attempting to sign in:", email);
     setActionLoading(true);
+    
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
+      console.log("Sign in successful for:", data?.user?.id);
       
       // Get updated user data after login
       const { data: userData } = await supabase.auth.getUser();
@@ -56,10 +59,10 @@ export function useAuthActions() {
   };
 
   const signUp = async (email: string, password: string, fullName: string, isAdmin = false) => {
+    console.log("Attempting to sign up user:", email, "Is Admin:", isAdmin);
     setActionLoading(true);
+    
     try {
-      console.log("Attempting to sign up user:", email, "Is Admin:", isAdmin);
-      
       // Create the user with metadata including role
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -112,7 +115,9 @@ export function useAuthActions() {
   };
 
   const signOut = async () => {
+    console.log("Signing out user");
     setActionLoading(true);
+    
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;

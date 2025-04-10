@@ -40,24 +40,29 @@ export function useAuthState() {
   };
 
   useEffect(() => {
+    console.log("useAuthState: Initializing auth state");
     let mounted = true;
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state changed:", event);
+      async (event, newSession) => {
+        console.log("Auth state changed:", event, newSession?.user?.id);
         
         if (!mounted) return;
         
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Check if user is admin
-        if (session?.user) {
-          const adminStatus = await checkIsAdmin(session.user.id);
-          if (mounted) setIsAdmin(adminStatus);
+        if (newSession) {
+          setSession(newSession);
+          setUser(newSession.user);
+          
+          // Check if user is admin
+          if (newSession.user) {
+            const adminStatus = await checkIsAdmin(newSession.user.id);
+            if (mounted) setIsAdmin(adminStatus);
+          }
         } else {
-          if (mounted) setIsAdmin(false);
+          setSession(null);
+          setUser(null);
+          setIsAdmin(false);
         }
         
         // Always make sure loading state is updated after auth changes
@@ -68,28 +73,35 @@ export function useAuthState() {
     // THEN check for existing session
     const checkSession = async () => {
       try {
+        console.log("Checking existing session");
         const { data: { session } } = await supabase.auth.getSession();
-        console.log("Getting existing session:", session?.user?.id);
         
         if (!mounted) return;
         
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
+        if (session) {
+          console.log("Found existing session for user:", session.user.id);
+          setSession(session);
+          setUser(session.user);
+          
           const adminStatus = await checkIsAdmin(session.user.id);
           if (mounted) setIsAdmin(adminStatus);
+        } else {
+          console.log("No existing session found");
         }
       } catch (error) {
         console.error("Error getting session:", error);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          console.log("Setting loading to false after session check");
+          setLoading(false);
+        }
       }
     };
 
     checkSession();
 
     return () => {
+      console.log("useAuthState: Cleaning up");
       mounted = false;
       subscription.unsubscribe();
     };
