@@ -60,6 +60,13 @@ const AdminLogin = () => {
       <div className="hidden md:flex flex-1 bg-[#111111] text-white p-12 flex-col justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#222222] to-[#111111] opacity-90"></div>
         <div className="relative z-10 space-y-6">
+          <div className="flex justify-center mb-8">
+            <img 
+              src="/lovable-uploads/d8e21b74-cc1d-428e-b582-38c1eb3549fe.png" 
+              alt="Logo da empresa" 
+              className="h-32 w-auto"
+            />
+          </div>
           <h1 className="text-4xl font-bold">Portal Administrativo</h1>
           <p className="text-xl">Acesso exclusivo para administradores do sistema.</p>
           
@@ -81,13 +88,6 @@ const AdminLogin = () => {
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-              <img 
-                src="/lovable-uploads/d8e21b74-cc1d-428e-b582-38c1eb3549fe.png" 
-                alt="Logo da empresa" 
-                className="h-24 w-auto"
-              />
-            </div>
             <CardTitle className="text-3xl font-bold">Login de Administrador</CardTitle>
             <CardDescription>
               Acesse o painel administrativo do sistema
