@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
 import { Client, ClientFormData } from "@/services/clientService";
+import { useState } from "react";
 
 const clientFormSchema = z.object({
   full_name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
@@ -47,6 +48,8 @@ const EditClientModal = ({
   onSubmit,
   isSubmitting
 }: EditClientModalProps) => {
+  const [isUpdating, setIsUpdating] = useState(false);
+  
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
@@ -69,18 +72,31 @@ const EditClientModal = ({
       });
     }
   }, [client, form]);
+  
+  // Reset state when dialog opens or closes
+  useEffect(() => {
+    if (!open) {
+      setIsUpdating(false);
+    }
+  }, [open]);
 
   const handleSubmit = async (data: ClientFormData) => {
     if (client) {
+      setIsUpdating(true);
       const success = await onSubmit(client.id, data);
       if (success) {
-        handleDialogClose(false);
+        setTimeout(() => {
+          onOpenChange(false);
+          setIsUpdating(false);
+        }, 100);
+      } else {
+        setIsUpdating(false);
       }
     }
   };
 
   const handleDialogClose = (open: boolean) => {
-    if (!open && !isSubmitting) {
+    if (!open && !isSubmitting && !isUpdating) {
       onOpenChange(open);
     }
   };
@@ -172,12 +188,15 @@ const EditClientModal = ({
                 type="button" 
                 variant="outline" 
                 onClick={() => handleDialogClose(false)}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUpdating}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && (
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || isUpdating}
+              >
+                {(isSubmitting || isUpdating) && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Atualizar

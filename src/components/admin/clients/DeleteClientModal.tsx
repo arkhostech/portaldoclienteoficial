@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Client } from "@/services/clientService";
+import { useState, useEffect } from "react";
 
 interface DeleteClientModalProps {
   client: Client | null;
@@ -26,18 +27,32 @@ const DeleteClientModal = ({
   onConfirm,
   isSubmitting
 }: DeleteClientModalProps) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Reset state when dialog opens or closes
+  useEffect(() => {
+    if (!open) {
+      setIsDeleting(false);
+    }
+  }, [open]);
   
   const handleDelete = async () => {
     if (client) {
+      setIsDeleting(true);
       const success = await onConfirm(client.id);
       if (success) {
-        handleDialogClose(false);
+        setTimeout(() => {
+          onOpenChange(false);
+          setIsDeleting(false);
+        }, 100);
+      } else {
+        setIsDeleting(false);
       }
     }
   };
 
   const handleDialogClose = (open: boolean) => {
-    if (!open && !isSubmitting) {
+    if (!open && !isSubmitting && !isDeleting) {
       onOpenChange(open);
     }
   };
@@ -56,16 +71,16 @@ const DeleteClientModal = ({
           <Button 
             variant="outline" 
             onClick={() => handleDialogClose(false)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isDeleting}
           >
             Cancelar
           </Button>
           <Button 
             variant="destructive" 
             onClick={handleDelete}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isDeleting}
           >
-            {isSubmitting && (
+            {(isSubmitting || isDeleting) && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
             Excluir
