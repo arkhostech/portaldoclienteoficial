@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -71,6 +72,7 @@ const Clients = () => {
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const newClientForm = useForm<ClientFormData>({
     resolver: zodResolver(clientFormSchema),
@@ -111,11 +113,20 @@ const Clients = () => {
   };
 
   const handleCreateClient = async (data: ClientFormData) => {
-    const result = await createClient(data);
-    if (result) {
-      setClients([result, ...clients]);
-      setOpenNewDialog(false);
-      newClientForm.reset();
+    try {
+      setIsSubmitting(true);
+      const result = await createClient(data);
+      if (result) {
+        setClients([result, ...clients]);
+        setOpenNewDialog(false);
+        newClientForm.reset();
+        toast.success("Cliente criado com sucesso");
+      }
+    } catch (error) {
+      console.error("Error creating client:", error);
+      toast.error("Erro ao criar cliente");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -134,10 +145,22 @@ const Clients = () => {
   const handleUpdateClient = async (data: ClientFormData) => {
     if (!selectedClient) return;
     
-    const result = await updateClient(selectedClient.id, data);
-    if (result) {
-      setClients(clients.map(c => c.id === result.id ? result : c));
-      setOpenEditDialog(false);
+    try {
+      setIsSubmitting(true);
+      const result = await updateClient(selectedClient.id, data);
+      if (result) {
+        setClients(clients.map(c => c.id === result.id ? result : c));
+        toast.success("Cliente atualizado com sucesso");
+        setTimeout(() => {
+          setOpenEditDialog(false);
+          setSelectedClient(null);
+        }, 300);
+      }
+    } catch (error) {
+      console.error("Error updating client:", error);
+      toast.error("Erro ao atualizar cliente");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -149,11 +172,22 @@ const Clients = () => {
   const handleDeleteClient = async () => {
     if (!selectedClient) return;
     
-    const success = await deleteClient(selectedClient.id);
-    if (success) {
-      setClients(clients.filter(c => c.id !== selectedClient.id));
-      setOpenDeleteDialog(false);
-      setSelectedClient(null);
+    try {
+      setIsSubmitting(true);
+      const success = await deleteClient(selectedClient.id);
+      if (success) {
+        setClients(clients.filter(c => c.id !== selectedClient.id));
+        toast.success("Cliente excluído com sucesso");
+        setTimeout(() => {
+          setOpenDeleteDialog(false);
+          setSelectedClient(null);
+        }, 300);
+      }
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      toast.error("Erro ao excluir cliente");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -166,6 +200,31 @@ const Clients = () => {
     client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (client.phone && client.phone.includes(searchTerm))
   );
+
+  // Handle dialog close properly
+  const handleEditDialogClose = (open: boolean) => {
+    if (!open && !isSubmitting) {
+      setOpenEditDialog(false);
+      setTimeout(() => {
+        setSelectedClient(null);
+      }, 300);
+    }
+  };
+
+  const handleDeleteDialogClose = (open: boolean) => {
+    if (!open && !isSubmitting) {
+      setOpenDeleteDialog(false);
+      setTimeout(() => {
+        setSelectedClient(null);
+      }, 300);
+    }
+  };
+
+  const handleNewDialogClose = (open: boolean) => {
+    if (!open && !isSubmitting) {
+      setOpenNewDialog(false);
+    }
+  };
 
   return (
     <MainLayout title="Clientes">
@@ -187,7 +246,7 @@ const Clients = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Dialog open={openNewDialog} onOpenChange={setOpenNewDialog}>
+            <Dialog open={openNewDialog} onOpenChange={handleNewDialogClose}>
               <DialogTrigger asChild>
                 <Button>
                   <UserPlus className="mr-2 h-4 w-4" />
@@ -260,11 +319,12 @@ const Clients = () => {
                         type="button" 
                         variant="outline" 
                         onClick={() => setOpenNewDialog(false)}
+                        disabled={isSubmitting}
                       >
                         Cancelar
                       </Button>
-                      <Button type="submit" disabled={newClientForm.formState.isSubmitting}>
-                        {newClientForm.formState.isSubmitting && (
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting && (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         )}
                         Salvar
@@ -358,7 +418,7 @@ const Clients = () => {
         </Card>
       </div>
 
-      <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
+      <Dialog open={openEditDialog} onOpenChange={handleEditDialogClose}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Editar Cliente</DialogTitle>
@@ -443,12 +503,13 @@ const Clients = () => {
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => setOpenEditDialog(false)}
+                  onClick={() => handleEditDialogClose(false)}
+                  disabled={isSubmitting}
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={editClientForm.formState.isSubmitting}>
-                  {editClientForm.formState.isSubmitting && (
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
                   Atualizar
@@ -459,7 +520,7 @@ const Clients = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+      <Dialog open={openDeleteDialog} onOpenChange={handleDeleteDialogClose}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar Exclusão</DialogTitle>
@@ -469,10 +530,21 @@ const Clients = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenDeleteDialog(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => handleDeleteDialogClose(false)}
+              disabled={isSubmitting}
+            >
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleDeleteClient}>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteClient}
+              disabled={isSubmitting}
+            >
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Excluir
             </Button>
           </DialogFooter>
