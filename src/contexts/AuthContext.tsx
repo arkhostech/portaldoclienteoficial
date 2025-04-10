@@ -35,12 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           setTimeout(async () => {
             const { data: profile } = await supabase
-              .from("profiles")
-              .select("role")
-              .eq("id", session.user.id)
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
               .single();
             
-            setIsAdmin(profile?.role === "admin");
+            setIsAdmin(profile?.role === 'admin' || false);
           }, 0);
         } else {
           setIsAdmin(false);
@@ -56,12 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         setTimeout(async () => {
           const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", session.user.id)
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
             .single();
           
-          setIsAdmin(profile?.role === "admin");
+          setIsAdmin(profile?.role === 'admin' || false);
         }, 0);
       }
       
