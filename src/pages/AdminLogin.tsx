@@ -74,7 +74,7 @@ const AdminLogin = () => {
           className="bg-white hover:bg-gray-100"
           onClick={() => navigate('/')}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+          <ArrowLeft className="mr-2 h-4 w-4" /> Portal do Cliente
         </Button>
       </div>
 

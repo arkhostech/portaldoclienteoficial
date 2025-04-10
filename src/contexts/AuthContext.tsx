@@ -3,7 +3,7 @@ import { createContext, useContext, ReactNode, useState, useEffect } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 type AuthContextType = {
   user: User | null;
@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Enhanced function to check if a user is an admin
   const checkUserRole = async (userId: string): Promise<'admin' | 'client' | null> => {
@@ -55,6 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Determine if the current path is in the admin section
+  const isAdminPath = (path: string): boolean => {
+    return path === '/admin-login' || path.startsWith('/admin');
+  };
+
+  // Determine if the current path is in the client section
+  const isClientPath = (path: string): boolean => {
+    return path === '/' || path === '/dashboard' || 
+           path === '/documents' || path === '/payments' || 
+           path === '/knowledge';
+  };
+
   // Authentication actions
   const signIn = async (email: string, password: string) => {
     try {
@@ -79,7 +92,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      navigate("/");
+      // Redirect based on current path
+      if (isAdminPath(location.pathname)) {
+        navigate("/admin-login");
+      } else {
+        navigate("/");
+      }
+      
       toast.success("Desconectado com sucesso!");
     } catch (error: any) {
       console.error("Sign out error:", error);
@@ -116,24 +135,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 // Check if user is on the correct login page
                 const currentPath = window.location.pathname;
                 
-                if (currentPath === '/admin-login' && !isUserAdmin) {
-                  // Admin login page but user is not admin
-                  toast.error("Apenas administradores podem acessar este portal.");
-                  await signOut();
-                  return;
+                // Handle admin login page
+                if (currentPath === '/admin-login') {
+                  if (!isUserAdmin) {
+                    // Admin login page but user is not admin
+                    toast.error("Apenas administradores podem acessar este portal.");
+                    await signOut();
+                    return;
+                  } else {
+                    // Admin logged into admin login page - redirect to admin dashboard
+                    navigate("/admin");
+                    return;
+                  }
                 } 
-                else if (currentPath === '/' && isUserAdmin) {
-                  // Client login page but user is admin
-                  toast.error("Administradores devem acessar pelo portal administrativo.");
+                
+                // Handle client login page
+                if (currentPath === '/') {
+                  if (isUserAdmin) {
+                    // Client login page but user is admin
+                    toast.error("Administradores devem acessar pelo portal administrativo.");
+                    await signOut();
+                    return;
+                  } else {
+                    // Client logged into client login page - redirect to client dashboard
+                    navigate("/dashboard");
+                    return;
+                  }
+                }
+                
+                // If already on some path, check if it's appropriate for the role
+                if (isAdminPath(currentPath) && !isUserAdmin) {
+                  toast.error("Apenas administradores podem acessar este portal.");
                   await signOut();
                   return;
                 }
                 
-                // Navigate to the correct dashboard
-                if (isUserAdmin) {
-                  navigate("/admin");
-                } else {
-                  navigate("/dashboard");
+                if (isClientPath(currentPath) && isUserAdmin) {
+                  toast.error("Administradores devem acessar pelo portal administrativo.");
+                  await signOut();
+                  return;
                 }
               }
             }
@@ -170,18 +210,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Check if user is on the correct page based on role
             const currentPath = window.location.pathname;
             
-            if ((currentPath === '/admin-login' || currentPath.startsWith('/admin')) && !isUserAdmin) {
+            // Redirect if on wrong section
+            if (isAdminPath(currentPath) && !isUserAdmin) {
               // Admin page but user is not admin
               toast.error("Apenas administradores podem acessar este portal.");
               await signOut();
+              return;
             } 
-            else if ((currentPath === '/' || currentPath.startsWith('/dashboard')) && isUserAdmin) {
+            
+            if (isClientPath(currentPath) && isUserAdmin) {
               // Client page but user is admin
               toast.error("Administradores devem acessar pelo portal administrativo.");
               await signOut();
+              return;
+            }
+            
+            // If on login page, redirect to appropriate dashboard
+            if (currentPath === '/admin-login' && isUserAdmin) {
+              navigate('/admin');
+              return;
+            }
+            
+            if (currentPath === '/' && !isUserAdmin) {
+              navigate('/dashboard');
+              return;
             }
           }
         } else {
+          // Handle not logged in - redirect to appropriate login page if trying to access protected path
+          const currentPath = window.location.pathname;
+          
+          if (isAdminPath(currentPath) && currentPath !== '/admin-login') {
+            navigate('/admin-login');
+            return;
+          }
+          
+          if (isClientPath(currentPath) && currentPath !== '/') {
+            navigate('/');
+            return;
+          }
+          
           setLoading(false);
         }
       } catch (error) {
@@ -197,7 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const value = {
     user,
@@ -208,7 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin
   };
   
-  console.log("Auth state:", { user: !!user, loading, isAdmin });
+  console.log("Auth state:", { user: !!user, loading, isAdmin, path: location.pathname });
   
   return (
     <AuthContext.Provider value={value}>

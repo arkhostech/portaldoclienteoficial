@@ -16,6 +16,18 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
   const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   
+  // Determine if the current path is in the admin section
+  const isAdminPath = (path: string): boolean => {
+    return path === '/admin-login' || path.startsWith('/admin');
+  };
+
+  // Determine if the current path is in the client section
+  const isClientPath = (path: string): boolean => {
+    return path === '/' || path === '/dashboard' || 
+           path === '/documents' || path === '/payments' || 
+           path === '/knowledge';
+  };
+  
   useEffect(() => {
     // Scroll to top when route changes
     window.scrollTo(0, 0);
@@ -25,22 +37,29 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
     // Only redirect if not loading and no user
     if (!loading && !user) {
       console.log("No authenticated user detected, redirecting to login");
-      navigate('/');
+      // Redirect to the appropriate login page based on the current path
+      if (isAdminPath(location.pathname)) {
+        navigate('/admin-login');
+      } else {
+        navigate('/');
+      }
       return;
     }
     
-    // Redirect admin users to admin dashboard and regular users to client dashboard
+    // Redirect users based on their role and current path
     if (!loading && user) {
       const currentPath = location.pathname;
       
       // If admin is trying to access client pages
-      if (isAdmin && currentPath.startsWith('/dashboard')) {
+      if (isAdmin && isClientPath(currentPath)) {
+        console.log("Admin trying to access client pages, redirecting to admin dashboard");
         navigate('/admin');
         return;
       }
       
       // If client is trying to access admin pages
-      if (!isAdmin && currentPath.startsWith('/admin')) {
+      if (!isAdmin && isAdminPath(currentPath)) {
+        console.log("Client trying to access admin pages, redirecting to client dashboard");
         navigate('/dashboard');
         return;
       }

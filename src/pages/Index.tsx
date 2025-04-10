@@ -74,7 +74,7 @@ const Index = () => {
           className="bg-white hover:bg-gray-100"
           onClick={() => navigate('/admin-login')}
         >
-          <LogIn className="mr-2 h-4 w-4" /> Login Admin
+          <LogIn className="mr-2 h-4 w-4" /> Portal Administrativo
         </Button>
       </div>
 
@@ -125,7 +125,7 @@ const Index = () => {
                 className="w-full bg-[#EAC066] hover:bg-[#d9af5c] text-[#111111]"
                 disabled={isLoading}
               >
-                {isLoading ? "Entrando..." : "Entrar"}
+                {isLoading ? "Entrando..." : "Entrar como Cliente"}
               </Button>
             </form>
             <div className="mt-4 text-center text-sm">
