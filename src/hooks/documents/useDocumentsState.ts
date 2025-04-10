@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Document, fetchClientDocuments } from "@/services/documents";
+import { Document, fetchDocuments } from "@/services/documents"; // Fixed import to use fetchDocuments
 
 export const useDocumentsState = (clientId: string) => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -16,7 +16,7 @@ export const useDocumentsState = (clientId: string) => {
 
   const loadClientDocuments = async () => {
     setIsLoading(true);
-    const documentsData = await fetchClientDocuments(clientId);
+    const documentsData = await fetchDocuments(clientId); // Using fetchDocuments instead
     setDocuments(documentsData);
     setIsLoading(false);
   };

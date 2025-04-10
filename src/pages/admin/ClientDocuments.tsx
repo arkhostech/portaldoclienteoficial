@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import MainLayout from "@/components/Layout/MainLayout";
+import MainLayout from "@/components/Layout/MainLayout"; // Fix import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import DocumentsTable from "@/components/admin/documents/DocumentsTable";
 import DocumentUploadDialog from "@/components/admin/documents/DocumentUploadDialog";
 import DocumentEditDialog from "@/components/admin/documents/DocumentEditDialog";
 import DocumentDeleteDialog from "@/components/admin/documents/DocumentDeleteDialog";
+import { useClients } from "@/hooks/useClients";
 
 const ClientDocuments = () => {
   const { clientId } = useParams<{ clientId: string }>();
@@ -22,12 +23,13 @@ const ClientDocuments = () => {
   const [client, setClient] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [clientLoading, setClientLoading] = useState(true);
+  const { clients } = useClients();
   
   const {
     documents,
     selectedDocument,
     isLoading,
-    isUploading,
+    isSubmitting, // Changed from isUploading to match DocumentUploadDialog props
     isUpdating,
     isDeleting,
     openUploadDialog,
@@ -111,6 +113,7 @@ const ClientDocuments = () => {
               documents={documents}
               isLoading={isLoading || clientLoading}
               searchTerm={searchTerm}
+              clients={clients} // Added clients prop
               onDownload={handleDownloadDocument}
               onEdit={handleEditDocument}
               onDelete={handleConfirmDelete}
@@ -124,7 +127,8 @@ const ClientDocuments = () => {
         open={openUploadDialog}
         onOpenChange={setOpenUploadDialog}
         onUpload={handleUploadDocument}
-        isUploading={isUploading}
+        isSubmitting={isSubmitting} // Changed from isUploading to match the prop name
+        clients={[client].filter(Boolean)} // Provide clients array
       />
 
       {/* Edit Document Dialog */}
@@ -141,7 +145,7 @@ const ClientDocuments = () => {
         open={openDeleteDialog}
         onOpenChange={setOpenDeleteDialog}
         document={selectedDocument}
-        onConfirmDelete={handleDeleteDocument}
+        onDelete={handleDeleteDocument} // Changed from onConfirmDelete to onDelete
         isDeleting={isDeleting}
       />
     </MainLayout>

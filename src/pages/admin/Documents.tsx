@@ -1,6 +1,6 @@
 
-import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/Layout/MainLayout";
+import { useState } from "react";
+import MainLayout from "@/components/Layout/MainLayout"; // Fix import syntax
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export default function Documents() {
   } = useDocuments(selectedClientId);
 
   return (
-    <MainLayout>
+    <MainLayout title="Documentos">
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Documentos</h1>
