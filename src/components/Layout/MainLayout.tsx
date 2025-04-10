@@ -28,10 +28,10 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
   // Show loading state
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
-          <div className="h-12 w-12 border-4 border-t-brand-600 border-gray-200 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
+          <div className="h-12 w-12 border-4 border-t-[#eac066] border-gray-200 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-[#111111]">Carregando...</p>
         </div>
       </div>
     );
@@ -43,7 +43,7 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
       <div className="flex-1 ml-64 flex flex-col">
         <Header title={title} />

@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -69,11 +70,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setIsAdmin(false);
         }
+        
+        // Always make sure loading state is updated after auth changes
+        setLoading(false);
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log("Getting existing session:", session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -83,12 +88,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       setLoading(false);
+    })
+    .catch(error => {
+      console.error("Error getting session:", error);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -113,11 +123,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       toast.error(`Erro ao fazer login: ${error.message}`);
-      throw error;
+      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string, isAdmin = false) => {
+    setLoading(true);
     try {
       console.log("Attempting to sign up user:", email, "Is Admin:", isAdmin);
       
@@ -163,16 +174,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar sua conta.");
+      setLoading(false);
       
       // Não redirecionar automaticamente, deixar o usuário ver a mensagem de sucesso
     } catch (error: any) {
       console.error("Error details:", error);
       toast.error(`Erro ao criar conta: ${error.message}`);
+      setLoading(false);
       throw error;
     }
   };
 
   const signOut = async () => {
+    setLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -181,6 +195,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.success("Desconectado com sucesso!");
     } catch (error: any) {
       toast.error(`Erro ao desconectar: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
