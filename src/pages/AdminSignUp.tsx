@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -12,28 +12,40 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Lock, Mail, ShieldCheck } from "lucide-react";
+import { Lock, Mail, User, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
-const Index = () => {
+const AdminSignUp = () => {
   const navigate = useNavigate();
-  const { signIn, user } = useAuth();
+  const { signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [adminKey, setAdminKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  // Redirect if already logged in
-  if (user) {
-    navigate("/dashboard");
-    return null;
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Simple validation
+    if (!email || !password || !fullName) {
+      toast.error("Por favor, preencha todos os campos.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Admin key validation (simple)
+    if (adminKey !== "legacygroup2023") {
+      toast.error("Chave de administrador inválida.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await signIn(email, password);
+      await signUp(email, password, fullName, true);
+      toast.success("Administrador cadastrado com sucesso! Verifique seu email para confirmar.");
+      navigate("/");
     } catch (error) {
       console.error(error);
     } finally {
@@ -43,17 +55,30 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Left side - Login Form */}
+      {/* Left side - Signup Form */}
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-3xl font-bold">Portal do Cliente</CardTitle>
+            <CardTitle className="text-3xl font-bold">Cadastro de Administrador</CardTitle>
             <CardDescription>
-              Entre com suas credenciais para acessar sua conta
+              Crie uma conta de administrador para o Portal do Cliente
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Nome Completo"
+                    className="pl-10"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -80,23 +105,31 @@ const Index = () => {
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <div className="relative">
+                  <ShieldCheck className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    placeholder="Chave de Administrador"
+                    className="pl-10"
+                    value={adminKey}
+                    onChange={(e) => setAdminKey(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
               <Button 
                 type="submit" 
                 className="w-full bg-brand-600 hover:bg-brand-700"
                 disabled={isLoading}
               >
-                {isLoading ? "Entrando..." : "Entrar"}
+                {isLoading ? "Cadastrando..." : "Cadastrar"}
               </Button>
             </form>
             <div className="mt-4 text-center text-sm">
-              <a href="#" className="text-brand-600 hover:underline">
-                Esqueceu sua senha?
+              <a href="/" className="text-brand-600 hover:underline">
+                Voltar para login
               </a>
-            </div>
-            <div className="mt-2 text-center text-sm">
-              <Link to="/admin-signup" className="text-brand-600 hover:underline">
-                Criar conta de administrador
-              </Link>
             </div>
           </CardContent>
           <CardFooter className="flex justify-center border-t p-4">
@@ -112,8 +145,8 @@ const Index = () => {
       <div className="hidden md:flex flex-1 bg-brand-600 text-white p-12 flex-col justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-500 to-brand-800 opacity-90"></div>
         <div className="relative z-10 space-y-6">
-          <h1 className="text-4xl font-bold">Bem-vindo ao Portal do Cliente</h1>
-          <p className="text-xl">Gerencie seus processos, documentos e pagamentos em um só lugar.</p>
+          <h1 className="text-4xl font-bold">Portal de Administração</h1>
+          <p className="text-xl">Crie uma conta de administrador para gerenciar clientes, documentos e processos.</p>
           
           <div className="mt-12 space-y-4">
             <div className="flex items-start space-x-4">
@@ -121,18 +154,8 @@ const Index = () => {
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Acesso Seguro</h3>
-                <p className="text-white/80">Sua informação é protegida com criptografia de ponta a ponta.</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-4">
-              <div className="bg-white/20 rounded-full p-2">
-                <Mail className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">Comunicação Centralizada</h3>
-                <p className="text-white/80">Todas as suas mensagens e documentos em um só lugar.</p>
+                <h3 className="text-lg font-semibold">Acesso Administrativo</h3>
+                <p className="text-white/80">Gerencie todos os clientes e seus dados.</p>
               </div>
             </div>
           </div>
@@ -142,4 +165,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default AdminSignUp;

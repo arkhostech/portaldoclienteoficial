@@ -4,7 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
+import AdminSignUp from "./pages/AdminSignUp";
 import Dashboard from "./pages/Dashboard";
 import Documents from "./pages/Documents";
 import Messages from "./pages/Messages";
@@ -20,15 +22,18 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/payments" element={<Payments />} />
-          <Route path="/knowledge" element={<Knowledge />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/admin-signup" element={<AdminSignUp />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/payments" element={<Payments />} />
+            <Route path="/knowledge" element={<Knowledge />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

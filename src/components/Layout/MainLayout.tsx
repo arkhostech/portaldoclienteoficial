@@ -1,8 +1,9 @@
 
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -11,11 +12,35 @@ interface MainLayoutProps {
 
 const MainLayout = ({ children, title }: MainLayoutProps) => {
   const location = useLocation();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
     // Scroll to top when route changes
     window.scrollTo(0, 0);
-  }, [location.pathname]);
+    
+    // Check if user is authenticated
+    if (!loading && !user) {
+      navigate('/');
+    }
+  }, [location.pathname, user, loading, navigate]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="h-12 w-12 border-4 border-t-brand-600 border-gray-200 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
