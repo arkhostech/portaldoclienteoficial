@@ -15,6 +15,7 @@ const Header = ({ title }: HeaderProps) => {
   const getInitials = () => {
     if (!user) return "?";
     
+    // Try to get full name from metadata
     const fullName = user.user_metadata?.full_name || user.email;
     if (!fullName) return "?";
     

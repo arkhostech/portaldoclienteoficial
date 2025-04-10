@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,8 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
     // Scroll to top when route changes
     window.scrollTo(0, 0);
     
+    console.log("MainLayout useEffect: loading=", loading, "user=", !!user);
+    
     // Only redirect if not loading and no user
     if (!loading && !user) {
       console.log("No authenticated user detected, redirecting to login");
@@ -26,14 +29,26 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
     }
   }, [location.pathname, user, loading, navigate]);
 
-  // Show loading state
+  // Show loading state with skeletons
   if (loading) {
-    console.log("MainLayout: Showing loading spinner");
+    console.log("MainLayout: Showing loading skeleton");
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="h-12 w-12 border-4 border-t-[#eac066] border-gray-200 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-[#111111]">Carregando...</p>
+        <div className="w-full max-w-md space-y-4 p-6">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+          <Skeleton className="h-48 w-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-4/6" />
+          </div>
+          <div className="flex justify-center">
+            <div className="h-12 w-12 border-4 border-t-[#eac066] border-gray-200 rounded-full animate-spin mx-auto"></div>
+          </div>
+          <p className="text-center text-[#111111]">Carregando...</p>
         </div>
       </div>
     );
