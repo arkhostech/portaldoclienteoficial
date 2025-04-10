@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Search, Upload } from "lucide-react";
 import { fetchClientById } from "@/services/clientService";
-import { useClientDocuments } from "@/hooks/useClientDocuments";
+import { useClientDocuments } from "@/hooks/documents";
 import { useAuth } from "@/contexts/AuthContext";
 import DocumentsTable from "@/components/admin/documents/DocumentsTable";
 import DocumentUploadDialog from "@/components/admin/documents/DocumentUploadDialog";
