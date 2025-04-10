@@ -120,9 +120,9 @@ const Index = () => {
         <div className="relative z-10 space-y-6">
           <div className="flex justify-center mb-8">
             <img 
-              src="/lovable-uploads/d8e21b74-cc1d-428e-b582-38c1eb3549fe.png" 
+              src="/lovable-uploads/f5a3246c-a214-45b7-aa04-6049dbbeb4f8.png" 
               alt="Logo da empresa" 
-              className="h-32 w-auto"
+              className="h-48 w-auto"
             />
           </div>
           <h1 className="text-4xl font-bold">Bem-vindo ao Portal do Cliente</h1>
