@@ -138,16 +138,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
       
-      if (data.user) {
-        toast.success("Cadastro realizado com sucesso! Verifique seu email.");
-        
-        // For admin users, wait for verification and don't redirect
-        if (!isAdmin) {
-          navigate("/");
-        }
-      } else {
-        toast.info("Por favor, verifique seu email para confirmar seu cadastro.");
+      if (!data.user) {
+        throw new Error("Erro ao criar usuário");
       }
+      
+      // Cria um registro na tabela profiles apenas se o usuário foi criado com sucesso
+      if (data.user && data.user.id) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            { 
+              id: data.user.id, 
+              email: email,
+              full_name: fullName,
+              role: isAdmin ? 'admin' : 'client' 
+            }
+          ]);
+          
+        if (profileError) {
+          console.error("Erro ao criar perfil:", profileError);
+          // Não queremos lançar um erro aqui, pois o usuário já foi criado
+          toast.error("Conta criada, mas houve um problema ao configurar o perfil.");
+        }
+      }
+      
+      toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar sua conta.");
+      
+      // Não redirecionar automaticamente, deixar o usuário ver a mensagem de sucesso
     } catch (error: any) {
       console.error("Error details:", error);
       toast.error(`Erro ao criar conta: ${error.message}`);

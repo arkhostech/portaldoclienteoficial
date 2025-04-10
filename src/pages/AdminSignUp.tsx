@@ -46,7 +46,6 @@ const AdminSignUp = () => {
         return;
       }
 
-      // Log all details for debugging
       console.log("Criando conta de administrador:", {
         email,
         fullName,
@@ -56,9 +55,16 @@ const AdminSignUp = () => {
       
       await signUp(email, password, fullName, true);
       
-      // Mostrar mensagem de sucesso
       toast.success("Administrador cadastrado com sucesso! Por favor, confira seu email para verificar sua conta.");
-      setTimeout(() => navigate("/"), 3000);
+      
+      // Resetar o formulário
+      setEmail("");
+      setPassword("");
+      setFullName("");
+      setAdminKey("");
+      
+      // Redirecionar após um breve atraso
+      setTimeout(() => navigate("/"), 2000);
     } catch (error: any) {
       console.error("Erro no cadastro de administrador:", error);
       setError(error.message || "Ocorreu um erro ao criar a conta de administrador.");
@@ -139,14 +145,14 @@ const AdminSignUp = () => {
               </div>
               <Button 
                 type="submit" 
-                className="w-full bg-brand-600 hover:bg-brand-700"
+                className="w-full bg-accent hover:bg-accent/90 text-secondary"
                 disabled={isLoading}
               >
                 {isLoading ? "Cadastrando..." : "Cadastrar"}
               </Button>
             </form>
             <div className="mt-4 text-center text-sm">
-              <a href="/" className="text-brand-600 hover:underline">
+              <a href="/" className="text-accent hover:underline">
                 Voltar para login
               </a>
             </div>
@@ -161,8 +167,8 @@ const AdminSignUp = () => {
       </div>
       
       {/* Right side - Image and information */}
-      <div className="hidden md:flex flex-1 bg-brand-600 text-white p-12 flex-col justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-500 to-brand-800 opacity-90"></div>
+      <div className="hidden md:flex flex-1 bg-secondary text-white p-12 flex-col justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-secondary to-secondary/80 opacity-90"></div>
         <div className="relative z-10 space-y-6">
           <h1 className="text-4xl font-bold">Portal de Administração</h1>
           <p className="text-xl">Crie uma conta de administrador para gerenciar clientes, documentos e processos.</p>
