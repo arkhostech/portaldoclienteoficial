@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
 import { toast } from "sonner";
 import { Lock, Mail, User, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AdminSignUp = () => {
   const navigate = useNavigate();
@@ -22,34 +24,38 @@ const AdminSignUp = () => {
   const [fullName, setFullName] = useState("");
   const [adminKey, setAdminKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
     try {
-      // Simple validation
+      // Validação simples
       if (!email || !password || !fullName) {
-        toast.error("Por favor, preencha todos os campos.");
+        setError("Por favor, preencha todos os campos.");
         setIsLoading(false);
         return;
       }
 
-      // Admin key validation (simple)
+      // Validação da chave de administrador
       if (adminKey !== "legacygroup2023") {
-        toast.error("Chave de administrador inválida.");
+        setError("Chave de administrador inválida.");
         setIsLoading(false);
         return;
       }
 
-      console.log("Creating admin account with email:", email);
-      await signUp(email, password, fullName, true);
-      toast.success("Administrador cadastrado com sucesso! Verifique seu email para confirmar.");
+      console.log("Criando conta de administrador com email:", email);
       
-      // Redirect to login page after successful registration
-      setTimeout(() => navigate("/"), 2000);
-    } catch (error) {
-      console.error("Admin signup error:", error);
+      await signUp(email, password, fullName, true);
+      
+      // Mostrar mensagem de sucesso e redirecionar após um tempo
+      toast.success("Administrador cadastrado com sucesso! Por favor, confira seu email para verificar sua conta.");
+      setTimeout(() => navigate("/"), 3000);
+    } catch (error: any) {
+      console.error("Erro no cadastro de administrador:", error);
+      setError(error.message || "Ocorreu um erro ao criar a conta de administrador.");
     } finally {
       setIsLoading(false);
     }
@@ -67,6 +73,11 @@ const AdminSignUp = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <div className="relative">

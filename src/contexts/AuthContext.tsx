@@ -112,21 +112,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string, isAdmin = false) => {
     try {
-      // Define user data with proper role
-      const userData = {
+      // Simplificando o envio de dados para o cadastro
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
-            role: isAdmin ? "admin" : "client",
-          },
+            role: isAdmin ? "admin" : "client"
+          }
         }
-      };
-
-      console.log("Signing up with data:", { ...userData, password: "***" });
-      
-      const { data, error } = await supabase.auth.signUp(userData);
+      });
 
       if (error) {
         console.error("Signup error:", error);
@@ -135,7 +131,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (data.user) {
         toast.success("Cadastro realizado com sucesso! Verifique seu email.");
-        // For admin users, don't navigate away as they might need to be verified
+        
+        // Para administradores, aguarde a verificação e não redirecione
         if (!isAdmin) {
           navigate("/");
         }
