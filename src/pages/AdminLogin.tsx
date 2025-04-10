@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -12,30 +12,32 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Lock, Mail, ShieldCheck, LogIn } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
-const Index = () => {
+const AdminLogin = () => {
   const navigate = useNavigate();
-  const { signIn, user } = useAuth();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  // Redirect if already logged in
-  if (user) {
-    navigate("/dashboard");
-    return null;
-  }
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
     try {
       await signIn(email, password);
-    } catch (error) {
+      
+      // A verificação se o usuário é administrador é feita no AuthContext
+      // e o redirecionamento para /admin é feito automaticamente
+      
+    } catch (error: any) {
       console.error(error);
+      setError("Credenciais inválidas ou você não tem permissão de administrador.");
     } finally {
       setIsLoading(false);
     }
@@ -43,27 +45,53 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Admin Login Button */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Back button */}
+      <div className="absolute top-4 left-4 z-10">
         <Button 
           variant="outline"
           className="bg-white hover:bg-gray-100"
-          onClick={() => navigate('/admin-login')}
+          onClick={() => navigate('/')}
         >
-          <LogIn className="mr-2 h-4 w-4" /> Login Admin
+          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
         </Button>
       </div>
 
-      {/* Left side - Login Form */}
+      {/* Left side - Admin Information */}
+      <div className="hidden md:flex flex-1 bg-secondary text-white p-12 flex-col justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-secondary to-secondary/80 opacity-90"></div>
+        <div className="relative z-10 space-y-6">
+          <h1 className="text-4xl font-bold">Portal Administrativo</h1>
+          <p className="text-xl">Acesso exclusivo para administradores do sistema.</p>
+          
+          <div className="mt-12 space-y-4">
+            <div className="flex items-start space-x-4">
+              <div className="bg-white/20 rounded-full p-2">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Acesso Restrito</h3>
+                <p className="text-white/80">Apenas pessoal autorizado pode entrar neste portal.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right side - Login Form */}
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-3xl font-bold">Portal do Cliente</CardTitle>
+            <CardTitle className="text-3xl font-bold">Login de Administrador</CardTitle>
             <CardDescription>
-              Entre com suas credenciais para acessar sua conta
+              Acesse o painel administrativo do sistema
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <div className="relative">
@@ -93,17 +121,12 @@ const Index = () => {
               </div>
               <Button 
                 type="submit" 
-                className="w-full bg-brand-600 hover:bg-brand-700"
+                className="w-full bg-secondary hover:bg-secondary/80 text-white"
                 disabled={isLoading}
               >
-                {isLoading ? "Entrando..." : "Entrar"}
+                {isLoading ? "Verificando..." : "Entrar como Administrador"}
               </Button>
             </form>
-            <div className="mt-4 text-center text-sm">
-              <a href="#" className="text-brand-600 hover:underline">
-                Esqueceu sua senha?
-              </a>
-            </div>
           </CardContent>
           <CardFooter className="flex justify-center border-t p-4">
             <div className="flex items-center text-xs text-muted-foreground">
@@ -113,39 +136,8 @@ const Index = () => {
           </CardFooter>
         </Card>
       </div>
-      
-      {/* Right side - Image and information */}
-      <div className="hidden md:flex flex-1 bg-brand-600 text-white p-12 flex-col justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-500 to-brand-800 opacity-90"></div>
-        <div className="relative z-10 space-y-6">
-          <h1 className="text-4xl font-bold">Bem-vindo ao Portal do Cliente</h1>
-          <p className="text-xl">Gerencie seus processos, documentos e pagamentos em um só lugar.</p>
-          
-          <div className="mt-12 space-y-4">
-            <div className="flex items-start space-x-4">
-              <div className="bg-white/20 rounded-full p-2">
-                <ShieldCheck className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">Acesso Seguro</h3>
-                <p className="text-white/80">Sua informação é protegida com criptografia de ponta a ponta.</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-4">
-              <div className="bg-white/20 rounded-full p-2">
-                <Mail className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">Comunicação Centralizada</h3>
-                <p className="text-white/80">Todas as suas mensagens e documentos em um só lugar.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
 
-export default Index;
+export default AdminLogin;

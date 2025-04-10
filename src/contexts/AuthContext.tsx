@@ -9,7 +9,6 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string, isAdmin?: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
   isAdmin: boolean;
@@ -70,51 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error(`Erro ao fazer login: ${error.message}`);
-    }
-  };
-
-  const signUp = async (email: string, password: string, fullName: string, isAdmin = false) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            role: isAdmin ? "admin" : "client"
-          }
-        }
-      });
-
-      if (error) throw error;
-      
-      if (!data.user) {
-        throw new Error("Erro ao criar usuário");
-      }
-      
-      // Create profile record
-      if (data.user.id) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            { 
-              id: data.user.id, 
-              email: email,
-              full_name: fullName,
-              role: isAdmin ? 'admin' : 'client' 
-            }
-          ]);
-          
-        if (profileError) {
-          console.error("Error creating profile:", profileError);
-          toast.error("Conta criada, mas houve um problema ao configurar o perfil.");
-        }
-      }
-      
-      toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmar sua conta.");
-    } catch (error: any) {
-      console.error("Error details:", error);
-      toast.error(`Erro ao criar conta: ${error.message}`);
+      throw error;
     }
   };
 
@@ -190,15 +145,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (mounted) {
             setIsAdmin(adminStatus);
             // Don't navigate here - user is already on a page
+            setLoading(false);
           }
+        } else {
+          setLoading(false);
         }
       } catch (error) {
         console.error("Error getting session:", error);
-      } finally {
-        if (mounted) {
-          console.log("Setting loading to false after session check");
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
@@ -215,7 +169,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     session,
     signIn,
-    signUp,
     signOut,
     loading,
     isAdmin

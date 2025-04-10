@@ -13,7 +13,7 @@ interface MainLayoutProps {
 
 const MainLayout = ({ children, title }: MainLayoutProps) => {
   const location = useLocation();
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -26,8 +26,26 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
     if (!loading && !user) {
       console.log("No authenticated user detected, redirecting to login");
       navigate('/');
+      return;
     }
-  }, [location.pathname, user, loading, navigate]);
+    
+    // Redirect admin users to admin dashboard and regular users to client dashboard
+    if (!loading && user) {
+      const currentPath = location.pathname;
+      
+      // If admin is trying to access client pages
+      if (isAdmin && currentPath.startsWith('/dashboard')) {
+        navigate('/admin');
+        return;
+      }
+      
+      // If client is trying to access admin pages
+      if (!isAdmin && currentPath.startsWith('/admin')) {
+        navigate('/dashboard');
+        return;
+      }
+    }
+  }, [location.pathname, user, loading, navigate, isAdmin]);
 
   // Show loading state with skeletons
   if (loading) {
