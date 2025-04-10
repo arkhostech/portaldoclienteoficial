@@ -22,13 +22,12 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Document } from "@/services/documentService";
+import { Document } from "@/services/documents";
 
 // Form validation schema for editing document metadata
 const documentMetadataFormSchema = z.object({
   title: z.string().min(3, { message: "Título deve ter pelo menos 3 caracteres" }),
   description: z.string().optional(),
-  status: z.string().default("active")
 });
 
 export type DocumentMetadataFormData = z.infer<typeof documentMetadataFormSchema>;
@@ -58,7 +57,6 @@ const EditDocumentDialog = ({
     defaultValues: {
       title: document?.title || "",
       description: document?.description || "",
-      status: document?.status || "active"
     }
   });
 
@@ -68,7 +66,6 @@ const EditDocumentDialog = ({
       editForm.reset({
         title: document.title,
         description: document.description || "",
-        status: document.status
       });
       
       // Reset refs when dialog opens
@@ -153,26 +150,6 @@ const EditDocumentDialog = ({
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Textarea {...field} placeholder="Descrição do documento" disabled={isUpdating} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={editForm.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <FormControl>
-                    <select
-                      className="w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background"
-                      {...field}
-                      disabled={isUpdating}
-                    >
-                      <option value="active">Ativo</option>
-                      <option value="inactive">Inativo</option>
-                    </select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

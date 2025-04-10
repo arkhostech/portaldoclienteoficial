@@ -24,7 +24,7 @@ import {
   Trash2,
   Loader2 
 } from "lucide-react";
-import { Document } from "@/services/documentService";
+import { Document } from "@/services/documents";
 
 interface DocumentsTableProps {
   documents: Document[];
@@ -95,7 +95,6 @@ const DocumentsTable = ({
           <TableHead>Tipo</TableHead>
           <TableHead>Tamanho</TableHead>
           <TableHead>Data</TableHead>
-          <TableHead>Status</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
       </TableHeader>
@@ -116,15 +115,6 @@ const DocumentsTable = ({
               <div className="flex items-center">
                 <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
                 {formatDate(doc.created_at)}
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-                doc.status === "active" 
-                  ? "bg-green-100 text-green-700" 
-                  : "bg-gray-100 text-gray-700"
-              }`}>
-                {doc.status === "active" ? "Ativo" : "Inativo"}
               </div>
             </TableCell>
             <TableCell className="text-right">

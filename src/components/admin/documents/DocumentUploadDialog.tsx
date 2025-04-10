@@ -28,7 +28,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 const documentFormSchema = z.object({
   title: z.string().min(3, { message: "Título deve ter pelo menos 3 caracteres" }),
   description: z.string().optional(),
-  status: z.string().default("active"),
   file: z.instanceof(File, { message: "Arquivo é obrigatório" })
 });
 
@@ -57,7 +56,6 @@ const DocumentUploadDialog = ({
     defaultValues: {
       title: "",
       description: "",
-      status: "active"
     }
   });
 
@@ -73,7 +71,6 @@ const DocumentUploadDialog = ({
       uploadForm.reset({
         title: "",
         description: "",
-        status: "active"
       });
       
       // Reset refs

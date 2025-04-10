@@ -52,7 +52,6 @@ export const useDocumentOperations = (
       const documentData: DocumentFormData = {
         title: data.title,
         description: data.description,
-        status: data.status,
         client_id: clientId
       };
       
@@ -95,7 +94,6 @@ export const useDocumentOperations = (
           doc.id === result.id ? result : doc
         ));
         
-        // Use longer delay for status changes to ensure UI updates correctly
         addTimeout(() => {
           setIsUpdating(false);
           return result;
