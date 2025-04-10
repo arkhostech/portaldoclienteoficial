@@ -26,21 +26,35 @@ export const useClientDocuments = (clientId: string) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // UI state management refs
-  const pendingOperationRef = useRef<NodeJS.Timeout | null>(null);
-  const operationCompletedRef = useRef(false);
+  // Cleanup for timeouts
+  const timeoutRefs = useRef<Array<NodeJS.Timeout>>([]);
+
+  // Cleanup function to clear any pending timeouts
+  const clearAllTimeouts = () => {
+    timeoutRefs.current.forEach(timeout => clearTimeout(timeout));
+    timeoutRefs.current = [];
+  };
+
+  // Add a timeout with automatic tracking for cleanup
+  const addTimeout = (callback: () => void, delay: number) => {
+    const timeoutId = setTimeout(() => {
+      // Remove this timeout from the refs array when it executes
+      timeoutRefs.current = timeoutRefs.current.filter(t => t !== timeoutId);
+      callback();
+    }, delay);
+    
+    timeoutRefs.current.push(timeoutId);
+    return timeoutId;
+  };
 
   useEffect(() => {
     if (clientId) {
       loadClientDocuments();
     }
     
-    // Cleanup function to clear any pending timeouts
+    // Cleanup function
     return () => {
-      if (pendingOperationRef.current) {
-        clearTimeout(pendingOperationRef.current);
-        pendingOperationRef.current = null;
-      }
+      clearAllTimeouts();
     };
   }, [clientId]);
 
@@ -55,7 +69,6 @@ export const useClientDocuments = (clientId: string) => {
     if (!clientId || !data.file) return;
     
     setIsSubmitting(true);
-    operationCompletedRef.current = false;
     
     try {
       // Prepare document data
@@ -70,23 +83,23 @@ export const useClientDocuments = (clientId: string) => {
       
       if (result) {
         setDocuments(prevDocs => [result, ...prevDocs]);
-        operationCompletedRef.current = true;
         
-        // Delay closing the dialog to prevent UI issues
-        pendingOperationRef.current = setTimeout(() => {
+        // Use managed timeout
+        addTimeout(() => {
           setOpenUploadDialog(false);
-          pendingOperationRef.current = null;
-        }, 500);
+          setIsSubmitting(false);
+        }, 800);
+      } else {
+        addTimeout(() => {
+          setIsSubmitting(false);
+        }, 800);
       }
     } catch (error) {
       console.error("Error uploading document:", error);
-      toast.error("Erro ao enviar documento");
-    } finally {
-      // Ensure we reset the submitting state after some delay
-      pendingOperationRef.current = setTimeout(() => {
+      
+      addTimeout(() => {
         setIsSubmitting(false);
-        pendingOperationRef.current = null;
-      }, 500);
+      }, 800);
     }
   };
 
@@ -99,30 +112,31 @@ export const useClientDocuments = (clientId: string) => {
     if (!selectedDocument) return;
     
     setIsUpdating(true);
-    operationCompletedRef.current = false;
     
     try {
       const result = await updateDocumentMetadata(selectedDocument.id, data);
       
       if (result) {
-        setDocuments(prevDocs => prevDocs.map(doc => doc.id === result.id ? result : doc));
-        operationCompletedRef.current = true;
+        setDocuments(prevDocs => prevDocs.map(doc => 
+          doc.id === result.id ? result : doc
+        ));
         
-        // Delay closing the dialog to prevent UI issues
-        pendingOperationRef.current = setTimeout(() => {
-          setOpenEditDialog(false);
-          pendingOperationRef.current = null;
-        }, 600); // Slightly longer delay for status changes
+        // Use longer delay for status changes to ensure UI updates correctly
+        addTimeout(() => {
+          setIsUpdating(false);
+          // Note: Not closing the dialog here - letting the dialog component handle it
+        }, 1000);
+      } else {
+        addTimeout(() => {
+          setIsUpdating(false);
+        }, 1000);
       }
     } catch (error) {
       console.error("Error updating document:", error);
-      toast.error("Erro ao atualizar documento");
-    } finally {
-      // Ensure we reset the updating state after some delay
-      pendingOperationRef.current = setTimeout(() => {
+      
+      addTimeout(() => {
         setIsUpdating(false);
-        pendingOperationRef.current = null;
-      }, 600); // Slightly longer delay for status changes
+      }, 1000);
     }
   };
 
@@ -135,29 +149,29 @@ export const useClientDocuments = (clientId: string) => {
     if (!selectedDocument) return;
     
     setIsDeleting(true);
-    operationCompletedRef.current = false;
     
     try {
       const success = await deleteDocument(selectedDocument.id, selectedDocument.file_path);
       
       if (success) {
         setDocuments(prevDocs => prevDocs.filter(doc => doc.id !== selectedDocument.id));
-        operationCompletedRef.current = true;
         
-        // Delay closing the dialog to prevent UI issues
-        pendingOperationRef.current = setTimeout(() => {
+        // Use managed timeout with longer delay
+        addTimeout(() => {
           setOpenDeleteDialog(false);
-          pendingOperationRef.current = null;
-        }, 500);
+          setIsDeleting(false);
+        }, 800);
+      } else {
+        addTimeout(() => {
+          setIsDeleting(false);
+        }, 800);
       }
     } catch (error) {
       console.error("Error deleting document:", error);
-      toast.error("Erro ao excluir documento");
-    } finally {
-      pendingOperationRef.current = setTimeout(() => {
+      
+      addTimeout(() => {
         setIsDeleting(false);
-        pendingOperationRef.current = null;
-      }, 500);
+      }, 800);
     }
   };
 
@@ -167,12 +181,28 @@ export const useClientDocuments = (clientId: string) => {
       return;
     }
     
-    const url = await getDocumentUrl(document.file_path);
+    // Show loading toast
+    const toastId = toast.loading("Preparando o download...");
     
-    if (url) {
-      // Open in a new tab to avoid navigation issues
-      const win = window.open(url, '_blank');
-      if (win) win.focus();
+    try {
+      const url = await getDocumentUrl(document.file_path);
+      
+      if (url) {
+        // Dismiss the loading toast
+        toast.dismiss(toastId);
+        toast.success("Download iniciado");
+        
+        // Open in a new tab to avoid navigation issues
+        const win = window.open(url, '_blank');
+        if (win) win.focus();
+      } else {
+        toast.dismiss(toastId);
+        toast.error("Erro ao gerar link para download");
+      }
+    } catch (error) {
+      console.error("Error getting document URL:", error);
+      toast.dismiss(toastId);
+      toast.error("Erro ao acessar o documento");
     }
   };
 

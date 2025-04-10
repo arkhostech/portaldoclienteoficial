@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,6 +47,11 @@ const DocumentUploadDialog = ({
   isSubmitting,
   onSubmit
 }: DocumentUploadDialogProps) => {
+  // Track if we're in the process of submitting
+  const isSubmittingRef = useRef(isSubmitting);
+  // Track if the dialog should be forcibly kept open
+  const keepOpenRef = useRef(false);
+  
   const uploadForm = useForm<DocumentUploadFormData>({
     resolver: zodResolver(documentFormSchema),
     defaultValues: {
@@ -56,23 +61,76 @@ const DocumentUploadDialog = ({
     }
   });
 
+  // Update ref when prop changes
+  useEffect(() => {
+    isSubmittingRef.current = isSubmitting;
+  }, [isSubmitting]);
+
+  // Reset form when dialog opens/closes
+  useEffect(() => {
+    if (open) {
+      // Reset form when dialog opens
+      uploadForm.reset({
+        title: "",
+        description: "",
+        status: "active"
+      });
+      
+      // Reset refs
+      keepOpenRef.current = false;
+    }
+  }, [open, uploadForm]);
+
+  // Handle completion of submission
+  useEffect(() => {
+    if (!isSubmitting && keepOpenRef.current) {
+      // Reset flag and close dialog after a short delay
+      const timeout = setTimeout(() => {
+        keepOpenRef.current = false;
+        if (open) {
+          onOpenChange(false);
+        }
+      }, 300);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isSubmitting, open, onOpenChange]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       uploadForm.setValue('file', e.target.files[0]);
     }
   };
 
-  const handleUploadDialogChange = (open: boolean) => {
-    if (!isSubmitting) {
-      onOpenChange(open);
-    } else if (open) {
-      onOpenChange(open);
+  const handleFormSubmit = (data: DocumentUploadFormData) => {
+    keepOpenRef.current = true;
+    onSubmit(data);
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    // Only allow dialog to close if not submitting and not "kept open"
+    if (!isSubmittingRef.current && !keepOpenRef.current) {
+      onOpenChange(isOpen);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleUploadDialogChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent 
+        className="sm:max-w-[500px]"
+        onInteractOutside={(e) => {
+          // Prevent closing when clicking outside during submission
+          if (isSubmittingRef.current || keepOpenRef.current) {
+            e.preventDefault();
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          // Prevent closing with escape key during submission
+          if (isSubmittingRef.current || keepOpenRef.current) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Enviar Novo Documento</DialogTitle>
           <DialogDescription>
@@ -80,7 +138,7 @@ const DocumentUploadDialog = ({
           </DialogDescription>
         </DialogHeader>
         <Form {...uploadForm}>
-          <form onSubmit={uploadForm.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={uploadForm.handleSubmit(handleFormSubmit)} className="space-y-4">
             <FormField
               control={uploadForm.control}
               name="title"
@@ -132,7 +190,7 @@ const DocumentUploadDialog = ({
                 type="button" 
                 variant="outline" 
                 onClick={() => {
-                  if (!isSubmitting) {
+                  if (!isSubmitting && !keepOpenRef.current) {
                     onOpenChange(false);
                   }
                 }}

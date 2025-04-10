@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import {
@@ -29,14 +29,51 @@ const DeleteDocumentDialog = ({
   onConfirmDelete,
   document
 }: DeleteDocumentDialogProps) => {
-  // Use AlertDialog instead of Dialog for better accessibility and modal behavior
+  // Use refs to track state between renders
+  const isDeletingRef = useRef(isDeleting);
+  const keepOpenRef = useRef(false);
+  
+  // Update refs when props change
+  useEffect(() => {
+    isDeletingRef.current = isDeleting;
+  }, [isDeleting]);
+  
+  // Handle completion of delete operation
+  useEffect(() => {
+    if (!isDeleting && keepOpenRef.current) {
+      // Reset flag and allow dialog to close after a short delay
+      const timeout = setTimeout(() => {
+        keepOpenRef.current = false;
+        if (open) {
+          onOpenChange(false);
+        }
+      }, 300);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isDeleting, open, onOpenChange]);
+
+  const handleOpenChange = (isOpen: boolean) => {
+    // Only allow state change if not in the middle of an operation
+    if (!isDeletingRef.current && !keepOpenRef.current) {
+      onOpenChange(isOpen);
+    }
+  };
+  
+  const handleConfirmDelete = () => {
+    keepOpenRef.current = true;
+    onConfirmDelete();
+  };
+
+  // Use AlertDialog for better accessibility and modal behavior
   return (
-    <AlertDialog open={open} onOpenChange={(isOpen) => {
-      if (!isDeleting) {
-        onOpenChange(isOpen);
-      }
-    }}>
-      <AlertDialogContent>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+      <AlertDialogContent onPointerDownOutside={(e) => {
+        // Prevent closing when clicking outside during delete operation
+        if (isDeletingRef.current || keepOpenRef.current) {
+          e.preventDefault();
+        }
+      }}>
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
           <AlertDialogDescription>
@@ -51,7 +88,7 @@ const DeleteDocumentDialog = ({
           <AlertDialogAction 
             onClick={(e) => {
               e.preventDefault(); // Prevent default to handle manually
-              onConfirmDelete();
+              handleConfirmDelete();
             }}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             disabled={isDeleting}

@@ -22,6 +22,24 @@ export interface DocumentFormData {
   status: string;
 }
 
+// Helper for creating consistent delayed toasts
+const createDelayedToast = (
+  type: "success" | "error", 
+  message: string, 
+  delay: number = 300
+) => {
+  return new Promise<void>(resolve => {
+    setTimeout(() => {
+      if (type === "success") {
+        toast.success(message);
+      } else {
+        toast.error(message);
+      }
+      resolve();
+    }, delay);
+  });
+};
+
 export const fetchClientDocuments = async (clientId: string): Promise<Document[]> => {
   try {
     const { data, error } = await supabase
@@ -32,18 +50,14 @@ export const fetchClientDocuments = async (clientId: string): Promise<Document[]
     
     if (error) {
       console.error("Error fetching client documents:", error);
-      setTimeout(() => {
-        toast.error("Erro ao buscar documentos");
-      }, 100);
+      await createDelayedToast("error", "Erro ao buscar documentos", 100);
       return [];
     }
     
     return data || [];
   } catch (error) {
     console.error("Unexpected error fetching client documents:", error);
-    setTimeout(() => {
-      toast.error("Erro ao buscar documentos");
-    }, 100);
+    await createDelayedToast("error", "Erro ao buscar documentos", 100);
     return [];
   }
 };
@@ -67,9 +81,7 @@ export const uploadDocument = async (
     
     if (uploadError) {
       console.error("Error uploading file:", uploadError);
-      setTimeout(() => {
-        toast.error("Erro ao fazer upload do arquivo");
-      }, 100);
+      await createDelayedToast("error", "Erro ao fazer upload do arquivo", 300);
       return null;
     }
     
@@ -92,23 +104,17 @@ export const uploadDocument = async (
         .from('client_documents')
         .remove([filePath]);
       
-      setTimeout(() => {
-        toast.error("Erro ao criar registro do documento");
-      }, 100);
+      await createDelayedToast("error", "Erro ao criar registro do documento", 300);
       return null;
     }
     
     // Delay toast to prevent UI issues
-    setTimeout(() => {
-      toast.success("Documento enviado com sucesso");
-    }, 300);
+    await createDelayedToast("success", "Documento enviado com sucesso", 600);
     
     return data;
   } catch (error) {
     console.error("Unexpected error uploading document:", error);
-    setTimeout(() => {
-      toast.error("Erro ao enviar documento");
-    }, 100);
+    await createDelayedToast("error", "Erro ao enviar documento", 300);
     return null;
   }
 };
@@ -127,23 +133,17 @@ export const updateDocumentMetadata = async (
     
     if (error) {
       console.error("Error updating document:", error);
-      setTimeout(() => {
-        toast.error("Erro ao atualizar documento");
-      }, 100);
+      await createDelayedToast("error", "Erro ao atualizar documento", 300);
       return null;
     }
     
     // Delay toast to prevent UI issues
-    setTimeout(() => {
-      toast.success("Documento atualizado com sucesso");
-    }, 300);
+    await createDelayedToast("success", "Documento atualizado com sucesso", 600);
     
     return data;
   } catch (error) {
     console.error("Unexpected error updating document:", error);
-    setTimeout(() => {
-      toast.error("Erro ao atualizar documento");
-    }, 100);
+    await createDelayedToast("error", "Erro ao atualizar documento", 300);
     return null;
   }
 };
@@ -158,9 +158,7 @@ export const deleteDocument = async (documentId: string, filePath: string | null
     
     if (dbError) {
       console.error("Error deleting document record:", dbError);
-      setTimeout(() => {
-        toast.error("Erro ao excluir documento");
-      }, 100);
+      await createDelayedToast("error", "Erro ao excluir documento", 300);
       return false;
     }
     
@@ -178,16 +176,12 @@ export const deleteDocument = async (documentId: string, filePath: string | null
     }
     
     // Delay toast to prevent UI issues
-    setTimeout(() => {
-      toast.success("Documento excluído com sucesso");
-    }, 300);
+    await createDelayedToast("success", "Documento excluído com sucesso", 600);
     
     return true;
   } catch (error) {
     console.error("Unexpected error deleting document:", error);
-    setTimeout(() => {
-      toast.error("Erro ao excluir documento");
-    }, 100);
+    await createDelayedToast("error", "Erro ao excluir documento", 300);
     return false;
   }
 };
@@ -200,18 +194,14 @@ export const getDocumentUrl = async (filePath: string): Promise<string | null> =
     
     if (error) {
       console.error("Error getting document URL:", error);
-      setTimeout(() => {
-        toast.error("Erro ao acessar o documento");
-      }, 100);
+      await createDelayedToast("error", "Erro ao acessar o documento", 100);
       return null;
     }
     
     return data.signedUrl;
   } catch (error) {
     console.error("Unexpected error getting document URL:", error);
-    setTimeout(() => {
-      toast.error("Erro ao acessar o documento");
-    }, 100);
+    await createDelayedToast("error", "Erro ao acessar o documento", 100);
     return null;
   }
 };

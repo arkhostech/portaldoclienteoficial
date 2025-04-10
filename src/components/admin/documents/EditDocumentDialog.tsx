@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,6 +48,11 @@ const EditDocumentDialog = ({
   onSubmit,
   document
 }: EditDocumentDialogProps) => {
+  // Track if we're in the process of submitting
+  const isSubmittingRef = useRef(false);
+  // Track if the dialog should be forcibly kept open
+  const keepOpenRef = useRef(false);
+  
   const editForm = useForm<DocumentMetadataFormData>({
     resolver: zodResolver(documentMetadataFormSchema),
     defaultValues: {
@@ -58,47 +62,68 @@ const EditDocumentDialog = ({
     }
   });
 
-  // Update form when document changes
-  React.useEffect(() => {
-    if (document) {
+  // Reset form and refs when document changes or dialog opens/closes
+  useEffect(() => {
+    if (document && open) {
       editForm.reset({
         title: document.title,
         description: document.description || "",
         status: document.status
       });
+      
+      // Reset refs when dialog opens
+      isSubmittingRef.current = false;
+      keepOpenRef.current = false;
     }
-  }, [document, editForm]);
+  }, [document, open, editForm]);
 
-  // Using a ref to track if we're submitting to prevent dialog from closing prematurely
-  const submittingRef = React.useRef(false);
+  // Reset submitting state when isUpdating changes to false (update completed)
+  useEffect(() => {
+    if (!isUpdating && isSubmittingRef.current) {
+      isSubmittingRef.current = false;
+      
+      // Allow a short delay before permitting dialog to close
+      setTimeout(() => {
+        keepOpenRef.current = false;
+        
+        // If the update completed successfully, close the dialog
+        if (open) {
+          onOpenChange(false);
+        }
+      }, 300);
+    }
+  }, [isUpdating, open, onOpenChange]);
 
   const handleSubmit = (data: DocumentMetadataFormData) => {
-    submittingRef.current = true;
+    isSubmittingRef.current = true;
+    keepOpenRef.current = true;
     onSubmit(data);
   };
 
   const handleOpenChange = (isOpen: boolean) => {
-    // Only allow close if we're not in the process of updating
-    if (!isUpdating && !submittingRef.current) {
+    // Only allow close if we're not updating and not in "keep open" state
+    if (!isUpdating && !keepOpenRef.current) {
       onOpenChange(isOpen);
     }
   };
 
-  // Reset submitting state when isUpdating changes to false (update completed)
-  React.useEffect(() => {
-    if (!isUpdating) {
-      submittingRef.current = false;
-    }
-  }, [isUpdating]);
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[500px]" onInteractOutside={(e) => {
-        // Prevent closing when clicking outside during update
-        if (isUpdating || submittingRef.current) {
-          e.preventDefault();
-        }
-      }}>
+      <DialogContent 
+        className="sm:max-w-[500px]" 
+        onInteractOutside={(e) => {
+          // Prevent closing when clicking outside during update or when keeping open
+          if (isUpdating || keepOpenRef.current) {
+            e.preventDefault();
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          // Prevent closing with escape key during update or when keeping open
+          if (isUpdating || keepOpenRef.current) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Editar Documento</DialogTitle>
           <DialogDescription>
@@ -158,7 +183,7 @@ const EditDocumentDialog = ({
                 type="button" 
                 variant="outline" 
                 onClick={() => {
-                  if (!isUpdating && !submittingRef.current) {
+                  if (!isUpdating && !keepOpenRef.current) {
                     onOpenChange(false);
                   }
                 }}
