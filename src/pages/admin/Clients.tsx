@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -54,7 +53,6 @@ import {
 } from "lucide-react";
 import { fetchClients, createClient, updateClient, deleteClient, ClientFormData, Client } from "@/services/clientService";
 
-// Form validation schema
 const clientFormSchema = z.object({
   full_name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   email: z.string().email({ message: "Email inválido" }),
@@ -96,7 +94,6 @@ const Clients = () => {
     }
   });
 
-  // Redirect non-admin users
   useEffect(() => {
     if (!isAdmin) {
       navigate("/dashboard");
@@ -328,7 +325,8 @@ const Clients = () => {
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                              <span className="sr-only">Abrir menu</span>
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -360,7 +358,6 @@ const Clients = () => {
         </Card>
       </div>
 
-      {/* Edit Client Dialog */}
       <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -462,7 +459,6 @@ const Clients = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <DialogContent>
           <DialogHeader>
