@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import MainLayout from "@/components/Layout/MainLayout"; // Fix import
+import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,7 @@ const ClientDocuments = () => {
     documents,
     selectedDocument,
     isLoading,
-    isSubmitting, // Changed from isUploading to match DocumentUploadDialog props
+    isSubmitting,
     isUpdating,
     isDeleting,
     openUploadDialog,
@@ -113,7 +113,7 @@ const ClientDocuments = () => {
               documents={documents}
               isLoading={isLoading || clientLoading}
               searchTerm={searchTerm}
-              clients={clients} // Added clients prop
+              clients={clients}
               onDownload={handleDownloadDocument}
               onEdit={handleEditDocument}
               onDelete={handleConfirmDelete}
@@ -127,8 +127,8 @@ const ClientDocuments = () => {
         open={openUploadDialog}
         onOpenChange={setOpenUploadDialog}
         onUpload={handleUploadDocument}
-        isSubmitting={isSubmitting} // Changed from isUploading to match the prop name
-        clients={[client].filter(Boolean)} // Provide clients array
+        isSubmitting={isSubmitting}
+        clients={[client].filter(Boolean)}
       />
 
       {/* Edit Document Dialog */}
@@ -145,7 +145,7 @@ const ClientDocuments = () => {
         open={openDeleteDialog}
         onOpenChange={setOpenDeleteDialog}
         document={selectedDocument}
-        onDelete={handleDeleteDocument} // Changed from onConfirmDelete to onDelete
+        onDelete={handleDeleteDocument}
         isDeleting={isDeleting}
       />
     </MainLayout>
