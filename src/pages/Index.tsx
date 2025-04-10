@@ -93,14 +93,14 @@ const Index = () => {
               </div>
               <Button 
                 type="submit" 
-                className="w-full bg-brand-600 hover:bg-brand-700"
+                className="w-full bg-[#8C52FF] hover:bg-[#7845E0] text-white"
                 disabled={isLoading}
               >
                 {isLoading ? "Entrando..." : "Entrar"}
               </Button>
             </form>
             <div className="mt-4 text-center text-sm">
-              <a href="#" className="text-brand-600 hover:underline">
+              <a href="#" className="text-[#8C52FF] hover:underline">
                 Esqueceu sua senha?
               </a>
             </div>
@@ -115,8 +115,8 @@ const Index = () => {
       </div>
       
       {/* Right side - Image and information */}
-      <div className="hidden md:flex flex-1 bg-brand-600 text-white p-12 flex-col justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-500 to-brand-800 opacity-90"></div>
+      <div className="hidden md:flex flex-1 bg-[#8C52FF] text-white p-12 flex-col justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#9B65FF] to-[#7B45E0] opacity-90"></div>
         <div className="relative z-10 space-y-6">
           <h1 className="text-4xl font-bold">Bem-vindo ao Portal do Cliente</h1>
           <p className="text-xl">Gerencie seus processos, documentos e pagamentos em um só lugar.</p>

@@ -57,8 +57,8 @@ const AdminLogin = () => {
       </div>
 
       {/* Left side - Admin Information */}
-      <div className="hidden md:flex flex-1 bg-secondary text-white p-12 flex-col justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-secondary to-secondary/80 opacity-90"></div>
+      <div className="hidden md:flex flex-1 bg-[#8C52FF] text-white p-12 flex-col justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#9B65FF] to-[#7B45E0] opacity-90"></div>
         <div className="relative z-10 space-y-6">
           <h1 className="text-4xl font-bold">Portal Administrativo</h1>
           <p className="text-xl">Acesso exclusivo para administradores do sistema.</p>
@@ -121,7 +121,7 @@ const AdminLogin = () => {
               </div>
               <Button 
                 type="submit" 
-                className="w-full bg-secondary hover:bg-secondary/80 text-white"
+                className="w-full bg-[#8C52FF] hover:bg-[#7845E0] text-white"
                 disabled={isLoading}
               >
                 {isLoading ? "Verificando..." : "Entrar como Administrador"}
