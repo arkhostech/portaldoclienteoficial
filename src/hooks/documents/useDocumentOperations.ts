@@ -11,7 +11,7 @@ import {
 import { toast } from "sonner";
 
 export const useDocumentOperations = (
-  clientId: string,
+  clientId: string | null,
   documents: Document[],
   setDocuments: React.Dispatch<React.SetStateAction<Document[]>>,
   selectedDocument: Document | null
@@ -43,7 +43,7 @@ export const useDocumentOperations = (
   };
 
   const handleUploadDocument = async (data: DocumentFormData & { file: File }) => {
-    if (!clientId || !data.file) return;
+    if (!data.client_id || !data.file) return false;
     
     setIsSubmitting(true);
     
@@ -52,10 +52,10 @@ export const useDocumentOperations = (
       const documentData: DocumentFormData = {
         title: data.title,
         description: data.description,
-        client_id: clientId
+        client_id: data.client_id
       };
       
-      const result = await uploadDocument(clientId, data.file, documentData);
+      const result = await uploadDocument(data.client_id, data.file, documentData);
       
       if (result) {
         setDocuments(prevDocs => [result, ...prevDocs]);
@@ -63,26 +63,26 @@ export const useDocumentOperations = (
         // Use managed timeout
         addTimeout(() => {
           setIsSubmitting(false);
-          return result;
         }, 800);
+        return true;
       } else {
         addTimeout(() => {
           setIsSubmitting(false);
-          return null;
         }, 800);
+        return false;
       }
     } catch (error) {
       console.error("Error uploading document:", error);
       
       addTimeout(() => {
         setIsSubmitting(false);
-        return null;
       }, 800);
+      return false;
     }
   };
 
   const handleUpdateDocument = async (data: Omit<DocumentFormData, 'client_id'>) => {
-    if (!selectedDocument) return;
+    if (!selectedDocument) return false;
     
     setIsUpdating(true);
     
@@ -96,26 +96,26 @@ export const useDocumentOperations = (
         
         addTimeout(() => {
           setIsUpdating(false);
-          return result;
         }, 1000);
+        return true;
       } else {
         addTimeout(() => {
           setIsUpdating(false);
-          return null;
         }, 1000);
+        return false;
       }
     } catch (error) {
       console.error("Error updating document:", error);
       
       addTimeout(() => {
         setIsUpdating(false);
-        return null;
       }, 1000);
+      return false;
     }
   };
 
   const handleDeleteDocument = async () => {
-    if (!selectedDocument) return;
+    if (!selectedDocument) return false;
     
     setIsDeleting(true);
     
@@ -128,21 +128,21 @@ export const useDocumentOperations = (
         // Use managed timeout with longer delay
         addTimeout(() => {
           setIsDeleting(false);
-          return true;
         }, 800);
+        return true;
       } else {
         addTimeout(() => {
           setIsDeleting(false);
-          return false;
         }, 800);
+        return false;
       }
     } catch (error) {
       console.error("Error deleting document:", error);
       
       addTimeout(() => {
         setIsDeleting(false);
-        return false;
       }, 800);
+      return false;
     }
   };
 

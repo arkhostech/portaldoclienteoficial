@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Document, fetchDocuments } from "@/services/documents"; // Fixed import to use fetchDocuments
 
-export const useDocumentsState = (clientId: string) => {
+export const useDocumentsState = (clientId: string | null) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
@@ -11,12 +11,21 @@ export const useDocumentsState = (clientId: string) => {
   useEffect(() => {
     if (clientId) {
       loadClientDocuments();
+    } else {
+      loadAllDocuments();
     }
   }, [clientId]);
 
   const loadClientDocuments = async () => {
     setIsLoading(true);
-    const documentsData = await fetchDocuments(clientId); // Using fetchDocuments instead
+    const documentsData = await fetchDocuments(clientId);
+    setDocuments(documentsData);
+    setIsLoading(false);
+  };
+  
+  const loadAllDocuments = async () => {
+    setIsLoading(true);
+    const documentsData = await fetchDocuments();
     setDocuments(documentsData);
     setIsLoading(false);
   };
@@ -27,6 +36,7 @@ export const useDocumentsState = (clientId: string) => {
     isLoading,
     selectedDocument,
     setSelectedDocument,
-    loadClientDocuments
+    loadClientDocuments,
+    loadAllDocuments
   };
 };
