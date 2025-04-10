@@ -52,7 +52,11 @@ export default function DocumentEditDialog({
   }, [document, form]);
   
   const onSubmit = async (data: FormValues) => {
-    await onSave(data);
+    // Ensure title is always a string (it will be due to validation, but this makes TypeScript happy)
+    await onSave({
+      title: data.title,
+      description: data.description
+    });
   };
   
   return (
