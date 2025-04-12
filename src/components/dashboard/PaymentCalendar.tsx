@@ -70,11 +70,22 @@ const PaymentCalendar = () => {
               paymentDay: "bg-primary/20 font-bold text-primary rounded-md"
             }}
             components={{
-              Day: ({ date: dayDate, ...dayProps }: DayProps) => {
-                // Extract needed props without the ref to avoid type conflicts
-                const { className, disabled, hidden, selected, today } = dayProps;
+              Day: (dayProps) => {
+                const {
+                  date: dayDate,
+                  selected,
+                  today,
+                  modifiers,
+                  modifiersClassNames,
+                  ...rest
+                } = dayProps;
+
                 const payments = getPaymentDetails(dayDate);
-                
+
+                const className = modifiers?.paymentDay
+                  ? `${modifiersClassNames?.paymentDay ?? ''} ${rest.className ?? ''}`
+                  : rest.className ?? '';
+
                 if (payments.length > 0) {
                   return (
                     <Tooltip>
@@ -82,8 +93,7 @@ const PaymentCalendar = () => {
                         <button
                           type="button"
                           className={className}
-                          disabled={disabled}
-                          hidden={hidden}
+                          {...rest}
                           data-selected={selected ? "true" : undefined}
                           data-today={today ? "true" : undefined}
                         >
@@ -103,12 +113,11 @@ const PaymentCalendar = () => {
                     </Tooltip>
                   );
                 }
-                
+
                 return (
-                  <div 
+                  <div
                     className={className}
-                    aria-disabled={disabled}
-                    hidden={hidden}
+                    {...rest}
                     data-selected={selected ? "true" : undefined}
                     data-today={today ? "true" : undefined}
                   >
