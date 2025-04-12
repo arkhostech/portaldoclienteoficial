@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, User } from "lucide-react";
+import { CalendarClock, User, AlertCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 interface ProcessInfoCardProps {
@@ -25,8 +25,10 @@ const ProcessInfoCard = ({
     
     const statusMap: Record<string, { color: string, label: string }> = {
       'active': { color: 'bg-green-100 text-green-700', label: 'Ativo' },
+      'pending': { color: 'bg-yellow-100 text-yellow-700', label: 'Pendente' },
       'review': { color: 'bg-yellow-100 text-yellow-700', label: 'Em Análise' },
       'approved': { color: 'bg-blue-100 text-blue-700', label: 'Aprovado' },
+      'denied': { color: 'bg-red-100 text-red-700', label: 'Negado' },
       'rfe': { color: 'bg-orange-100 text-orange-700', label: 'RFE' },
       'inactive': { color: 'bg-gray-100 text-gray-700', label: 'Inativo' },
     };
@@ -42,9 +44,14 @@ const ProcessInfoCard = ({
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações do Processo</CardTitle>
+      <Card className="border-l-4 border-l-primary">
+        <CardHeader className="pb-2">
+          <CardTitle>
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2 text-primary" />
+              Informações do Processo
+            </div>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {processType ? (
@@ -73,7 +80,7 @@ const ProcessInfoCard = ({
                   <div className="flex items-start gap-2">
                     <User className="h-4 w-4 text-muted-foreground mt-0.5" />
                     <div className="flex flex-col">
-                      <span className="text-sm text-muted-foreground">Responsável</span>
+                      <span className="text-sm text-muted-foreground">Advogado Responsável</span>
                       <span className="font-medium">{responsibleAgent}</span>
                     </div>
                   </div>

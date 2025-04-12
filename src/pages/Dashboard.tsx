@@ -8,8 +8,9 @@ import { Document } from "@/services/documents/types";
 import { 
   WelcomeSection, 
   ProcessInfoCard, 
-  DocumentsCard, 
-  MeetingsCard 
+  DocumentsCard,
+  QuickActionsCard,
+  PaymentCalendar
 } from "@/components/dashboard";
 
 const Dashboard = () => {
@@ -47,7 +48,7 @@ const Dashboard = () => {
           setClientInfo(clientData);
         }
         
-        // Fetch client's documents - RLS will ensure this only returns the client's own documents
+        // Fetch client's documents
         const { data: documentsData, error: documentsError } = await supabase
           .from('documents')
           .select('*')
@@ -57,7 +58,6 @@ const Dashboard = () => {
         if (documentsError) {
           console.error("Error fetching documents:", documentsError);
           if (documentsError.code === 'PGRST116') {
-            // This is most likely an access error
             toast.error("Não foi possível acessar seus documentos");
           } else {
             toast.error("Erro ao carregar documentos");
@@ -92,24 +92,33 @@ const Dashboard = () => {
 
   return (
     <MainLayout title="Dashboard">
-      <div className="space-y-6">
-        {/* Welcome section */}
-        <WelcomeSection clientName={clientInfo?.full_name} />
+      {/* Welcome section */}
+      <WelcomeSection clientName={clientInfo?.full_name} />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        {/* Main content - left column (2/3 width) */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Process information */}
+          <ProcessInfoCard 
+            processType={clientInfo?.process_type} 
+            status={clientInfo?.status}
+            startDate={clientInfo?.process_start_date}
+            responsibleAgent={clientInfo?.responsible_agent}
+            lastUpdate={clientInfo?.last_update_date || clientInfo?.updated_at}
+          />
+
+          {/* Documents section */}
+          <DocumentsCard documents={documents} />
+        </div>
         
-        {/* Process information */}
-        <ProcessInfoCard 
-          processType={clientInfo?.process_type} 
-          status={clientInfo?.status}
-          startDate={clientInfo?.process_start_date}
-          responsibleAgent={clientInfo?.responsible_agent}
-          lastUpdate={clientInfo?.last_update_date || clientInfo?.updated_at}
-        />
-
-        {/* Documents section */}
-        <DocumentsCard documents={documents} />
-
-        {/* Meetings section */}
-        <MeetingsCard />
+        {/* Right sidebar (1/3 width) */}
+        <div className="space-y-6">
+          {/* Calendar for payment reminders */}
+          <PaymentCalendar />
+          
+          {/* Quick actions */}
+          <QuickActionsCard />
+        </div>
       </div>
     </MainLayout>
   );
