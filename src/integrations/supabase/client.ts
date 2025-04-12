@@ -15,5 +15,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     autoRefreshToken: true,
     storageKey: 'client-hub-access-auth-storage',
+    // Add admin methods
+    detectSessionInUrl: true,
   }
 });

@@ -4,9 +4,11 @@ import { toast } from "sonner";
 import { 
   fetchClients, 
   createClient, 
+  createClientWithAuth,
   updateClient, 
   deleteClient, 
-  ClientFormData, 
+  ClientFormData,
+  ClientWithAuthFormData,
   Client 
 } from "@/services/clientService";
 
@@ -35,11 +37,18 @@ export const useClients = () => {
   };
 
   // Create a new client
-  const handleCreateClient = async (data: ClientFormData) => {
+  const handleCreateClient = async (data: ClientFormData | ClientWithAuthFormData) => {
     setIsSubmitting(true);
     
     try {
-      const result = await createClient(data);
+      let result;
+      
+      // Check if the data contains a password field
+      if ('password' in data) {
+        result = await createClientWithAuth(data);
+      } else {
+        result = await createClient(data);
+      }
       
       if (result) {
         // Add new client to state
