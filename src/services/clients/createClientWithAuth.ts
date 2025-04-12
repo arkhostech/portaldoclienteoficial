@@ -17,16 +17,16 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
     });
     
     // Handle edge function errors
-    if (error || !data) {
+    if (error) {
       console.error("Edge function error:", error);
-      toast.error(error?.message || "Erro ao criar cliente com autenticação");
+      toast.error(error.message || "Erro ao criar cliente com autenticação");
       return null;
     }
     
     // Handle application errors returned from the edge function
-    if (data.error) {
-      console.error("Application error:", data.error);
-      toast.error(data.error);
+    if (!data || data.error) {
+      console.error("Application error:", data?.error || "Unknown error");
+      toast.error(data?.error || "Erro ao criar cliente com autenticação");
       return null;
     }
     
