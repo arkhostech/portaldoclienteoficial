@@ -66,7 +66,7 @@ function isValidEmail(email: string): boolean {
 
 // Function to validate password strength
 function isValidPassword(password: string): boolean {
-  // At least 8 characters, with at least one uppercase, one lowercase, and one number
+  // At least 6 characters (minimum requirement)
   return password.length >= 6;
 }
 
