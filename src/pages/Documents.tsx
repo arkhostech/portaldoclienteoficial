@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FilePlus, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
-import { Document } from "@/utils/dummyData";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { fetchDocuments } from "@/services/documents";
+import { Document } from "@/services/documents/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Documents = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,27 +21,22 @@ const Documents = () => {
   
   // Fetch documents for the current client
   useEffect(() => {
-    const fetchDocuments = async () => {
-      if (!user) return;
+    const loadDocuments = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
       
       setIsLoading(true);
       try {
         console.log("Fetching documents for user ID:", user.id);
         
-        const { data, error } = await supabase
-          .from('documents')
-          .select('*')
-          .eq('client_id', user.id);
+        // Use the service function which respects RLS policies
+        const documentsData = await fetchDocuments(user.id);
         
-        if (error) {
-          console.error("Error fetching documents:", error);
-          toast.error("Erro ao carregar documentos");
-          return;
-        }
-        
-        if (data && data.length > 0) {
-          console.log("Documents found:", data.length);
-          const formattedDocs = data.map(doc => ({
+        if (documentsData && documentsData.length > 0) {
+          console.log("Documents found:", documentsData.length);
+          const formattedDocs = documentsData.map(doc => ({
             id: doc.id,
             name: doc.title,
             type: doc.file_type || 'Unknown',
@@ -71,7 +66,7 @@ const Documents = () => {
       }
     };
     
-    fetchDocuments();
+    loadDocuments();
   }, [user]);
   
   const filteredDocuments = searchTerm 

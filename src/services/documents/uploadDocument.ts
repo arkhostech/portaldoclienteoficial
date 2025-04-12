@@ -26,7 +26,13 @@ export const uploadDocument = async (
     
     if (uploadError) {
       console.error("Error uploading file:", uploadError);
-      await createDelayedToast("error", "Erro ao fazer upload do arquivo", 300);
+      
+      // Check for specific storage errors
+      if (uploadError.message.includes('Permission denied')) {
+        await createDelayedToast("error", "Permissão negada para upload do arquivo", 300);
+      } else {
+        await createDelayedToast("error", "Erro ao fazer upload do arquivo", 300);
+      }
       return null;
     }
     
@@ -51,12 +57,19 @@ export const uploadDocument = async (
     
     if (error) {
       console.error("Error creating document record:", error);
+      
+      // Handle RLS policy violations
+      if (error.code === 'PGRST116') {
+        await createDelayedToast("error", "Permissão negada para criar documento", 300);
+      } else {
+        await createDelayedToast("error", "Erro ao criar registro do documento", 300);
+      }
+      
       // Delete the uploaded file since the document record failed
       await supabase.storage
         .from('client_documents')
         .remove([filePath]);
       
-      await createDelayedToast("error", "Erro ao criar registro do documento", 300);
       return null;
     }
     

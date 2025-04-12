@@ -24,7 +24,7 @@ const Dashboard = () => {
       try {
         console.log("Fetching client data for user ID:", user.id);
         
-        // Fetch client info
+        // Fetch client info - RLS will ensure this only returns the client's own data
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
           .select('*')
@@ -33,21 +33,32 @@ const Dashboard = () => {
         
         if (clientError) {
           console.error("Error fetching client info:", clientError);
-          toast.error("Erro ao carregar informações do cliente");
+          if (clientError.code === 'PGRST116') {
+            // No rows returned - this is an access error or data not found
+            toast.error("Não foi possível acessar os dados do cliente");
+          } else {
+            toast.error("Erro ao carregar informações do cliente");
+          }
         } else if (clientData) {
           console.log("Client info found:", clientData);
           setClientInfo(clientData);
         }
         
-        // Fetch client's documents
+        // Fetch client's documents - RLS will ensure this only returns the client's own documents
         const { data: documentsData, error: documentsError } = await supabase
           .from('documents')
           .select('*')
-          .eq('client_id', user.id);
+          .eq('client_id', user.id)
+          .order('created_at', { ascending: false });
           
         if (documentsError) {
           console.error("Error fetching documents:", documentsError);
-          toast.error("Erro ao carregar documentos");
+          if (documentsError.code === 'PGRST116') {
+            // This is most likely an access error
+            toast.error("Não foi possível acessar seus documentos");
+          } else {
+            toast.error("Erro ao carregar documentos");
+          }
         } else if (documentsData) {
           console.log("Documents found:", documentsData.length);
           setDocuments(documentsData);

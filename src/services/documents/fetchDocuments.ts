@@ -13,6 +13,9 @@ export const fetchDocuments = async (clientId: string | null = null): Promise<Do
       .order('created_at', { ascending: false });
     
     // Filter by client_id if provided
+    // This works with RLS because:
+    // - For clients: RLS will only return their own documents anyway
+    // - For admins: RLS allows them to see all documents, and this filter narrows down by client
     if (clientId) {
       query = query.eq('client_id', clientId);
     }
@@ -21,7 +24,12 @@ export const fetchDocuments = async (clientId: string | null = null): Promise<Do
     
     if (error) {
       console.error("Error fetching documents:", error);
-      await createDelayedToast("error", "Erro ao buscar documentos", 100);
+      if (error.code === 'PGRST116') {
+        // This is likely an RLS policy violation
+        await createDelayedToast("error", "Acesso negado aos documentos", 100);
+      } else {
+        await createDelayedToast("error", "Erro ao buscar documentos", 100);
+      }
       return [];
     }
     
