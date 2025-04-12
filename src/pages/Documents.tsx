@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import DocumentCard from "@/components/ui/DocumentCard";
@@ -46,7 +47,8 @@ const Documents = () => {
             uploadDate: doc.created_at,
             size: doc.file_size ? `${Math.round(doc.file_size / 1024)} KB` : 'Unknown',
             needsSignature: false,
-            signed: false
+            signed: false,
+            filePath: doc.file_path
           }));
           
           setDocuments(clientDocuments);

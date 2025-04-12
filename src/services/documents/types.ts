@@ -29,4 +29,5 @@ export interface ClientDocumentView {
   size: string;
   needsSignature: boolean;
   signed: boolean;
+  filePath: string | null;
 }
