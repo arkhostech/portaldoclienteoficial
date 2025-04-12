@@ -19,7 +19,7 @@ interface DocumentsTableProps {
   onDownload: (document: DocumentType) => void;
   onEdit: (document: DocumentType) => void;
   onDelete: (document: DocumentType) => void;
-  hideClientColumn?: boolean; // Added the missing property
+  hideClientColumn?: boolean;
 }
 
 export default function DocumentsTable({
@@ -30,7 +30,7 @@ export default function DocumentsTable({
   onDownload,
   onEdit,
   onDelete,
-  hideClientColumn = false // Default to false
+  hideClientColumn = false
 }: DocumentsTableProps) {
   const filteredDocuments = documents.filter(doc =>
     doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,8 +53,19 @@ export default function DocumentsTable({
     return client ? client.full_name : "Cliente não encontrado";
   };
 
+  // Function to highlight matched text in a string
+  const highlightMatch = (text: string, term: string) => {
+    if (!term || term === "") return text;
+    
+    const regex = new RegExp(`(${term})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, i) => 
+      regex.test(part) ? <mark key={i} className="bg-yellow-200 px-0.5 rounded-sm">{part}</mark> : part
+    );
+  };
+
   const handleCellClick = (document: DocumentType) => {
-    // Simply call onEdit without creating another dialog
     onEdit(document);
   };
   
@@ -97,7 +108,7 @@ export default function DocumentsTable({
               <div className="flex items-center">
                 <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
                 <span className="truncate max-w-[200px]" title={doc.title}>
-                  {doc.title}
+                  {searchTerm ? highlightMatch(doc.title, searchTerm) : doc.title}
                 </span>
                 <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
               </div>
@@ -110,7 +121,7 @@ export default function DocumentsTable({
                 <div className="flex items-center">
                   <User className="h-4 w-4 mr-2 flex-shrink-0" />
                   <span className="truncate max-w-[150px]">
-                    {getClientName(doc.client_id)}
+                    {searchTerm ? highlightMatch(getClientName(doc.client_id), searchTerm) : getClientName(doc.client_id)}
                   </span>
                   <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
                 </div>

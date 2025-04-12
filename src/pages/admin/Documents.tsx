@@ -78,8 +78,25 @@ export default function Documents() {
     return client?.full_name || "Cliente desconhecido";
   };
 
+  // Filter clients and documents based on search term
+  const filteredClientIds = Object.keys(groupedDocuments).filter(clientId => {
+    const clientName = getClientName(clientId).toLowerCase();
+    const clientDocs = groupedDocuments[clientId] || [];
+    
+    // Check if search term matches client name
+    const matchesClientName = clientName.includes(searchTerm.toLowerCase());
+    
+    // Check if any document title or description matches search term
+    const hasMatchingDocs = clientDocs.some(doc => 
+      doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    
+    return searchTerm === "" || matchesClientName || hasMatchingDocs;
+  });
+
   // Sort clients alphabetically by name
-  const sortedClientIds = Object.keys(groupedDocuments).sort((a, b) => {
+  const sortedClientIds = filteredClientIds.sort((a, b) => {
     const nameA = getClientName(a).toLowerCase();
     const nameB = getClientName(b).toLowerCase();
     return nameA.localeCompare(nameB);
@@ -103,6 +120,18 @@ export default function Documents() {
   const handleOpenUploadForClient = (clientId: string) => {
     setSelectedClientId(clientId);
     setOpenUploadDialog(true);
+  };
+
+  // Function to highlight matched text in a string
+  const highlightMatch = (text: string, term: string) => {
+    if (!term || term === "") return text;
+    
+    const regex = new RegExp(`(${term})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, i) => 
+      regex.test(part) ? <mark key={i} className="bg-yellow-200 px-0.5 rounded-sm">{part}</mark> : part
+    );
   };
 
   return (
@@ -135,7 +164,7 @@ export default function Documents() {
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="search"
-                    placeholder="Buscar documentos..."
+                    placeholder="Buscar por cliente ou documento..."
                     className="pl-8"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -164,8 +193,11 @@ export default function Documents() {
                       )
                     : clientDocs;
                   
-                  // If searching and no matches for this client, don't show the client
-                  if (searchTerm && filteredDocs.length === 0) {
+                  // Skip if no documents match the search (but include if client name matches)
+                  const clientName = getClientName(clientId).toLowerCase();
+                  const clientMatchesSearch = clientName.includes(searchTerm.toLowerCase());
+                  
+                  if (searchTerm && filteredDocs.length === 0 && !clientMatchesSearch) {
                     return null;
                   }
                   
@@ -178,7 +210,11 @@ export default function Documents() {
                       <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50">
                         <div className="flex items-center justify-between w-full text-left">
                           <div className="flex items-center">
-                            <span className="font-medium">{getClientName(clientId)}</span>
+                            <span className="font-medium">
+                              {searchTerm && clientName.includes(searchTerm.toLowerCase())
+                                ? highlightMatch(getClientName(clientId), searchTerm)
+                                : getClientName(clientId)}
+                            </span>
                             <span className="ml-2 text-sm text-muted-foreground">
                               ({clientDocs.length} {clientDocs.length === 1 ? 'documento' : 'documentos'})
                             </span>
@@ -202,7 +238,7 @@ export default function Documents() {
                         <DocumentsTable 
                           documents={filteredDocs}
                           isLoading={false}
-                          searchTerm=""
+                          searchTerm={searchTerm}
                           clients={clients}
                           onDownload={handleDirectDownload}
                           onEdit={handleDirectEdit}
