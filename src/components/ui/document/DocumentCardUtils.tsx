@@ -1,7 +1,7 @@
-
 import { FileText, Image, File } from "lucide-react";
 import { toast } from "sonner";
 import { getDocumentUrl } from "@/services/documents/documentUrl";
+import { supabase } from "@/integrations/supabase/client";
 
 export const getFileIcon = (fileType: string) => {
   if (!fileType) return <File className="h-10 w-10 text-gray-500" />;
@@ -63,13 +63,18 @@ export const handleDocumentDownload = async (filePath: string | null, fileName: 
     return;
   }
 
+  console.log(`Attempting to download: ${fileName} (${filePath})`);
   const toastId = toast.loading("Preparando o download...");
   
   try {
     console.log("Requesting signed URL for download:", filePath);
+    const { data: sessionData } = await supabase.auth.getSession();
+    console.log("Current user:", sessionData?.session?.user?.id || 'not authenticated');
+    
     const url = await getDocumentUrl(filePath);
     
     if (url) {
+      console.log("Successfully obtained signed URL for download");
       toast.dismiss(toastId);
       toast.success("Download iniciado");
       

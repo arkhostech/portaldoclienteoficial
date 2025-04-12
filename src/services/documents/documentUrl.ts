@@ -12,12 +12,32 @@ export const getDocumentUrl = async (filePath: string): Promise<string | null> =
 
   try {
     console.log("Getting document URL for:", filePath);
-    console.log("Current auth status:", await supabase.auth.getSession());
+    
+    // Check auth status first
+    const { data: sessionData } = await supabase.auth.getSession();
+    const isAuthenticated = !!sessionData?.session?.user;
+    console.log("User authentication status:", isAuthenticated ? "Authenticated" : "Not authenticated");
+    
+    if (!isAuthenticated) {
+      console.error("User is not authenticated");
+      await createDelayedToast("error", "Usuário não autenticado", 100);
+      return null;
+    }
     
     // Log storage bucket info for debugging
-    const { data: bucketData } = await supabase.storage.getBucket('client_documents');
-    console.log("Bucket info:", bucketData);
+    try {
+      const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('client_documents');
+      if (bucketError) {
+        console.error("Error getting bucket info:", bucketError);
+      } else {
+        console.log("Bucket info:", bucketData);
+      }
+    } catch (bucketErr) {
+      console.error("Unexpected error checking bucket:", bucketErr);
+    }
     
+    // Try to create signed URL
+    console.log("Creating signed URL for path:", filePath);
     const { data, error } = await supabase.storage
       .from('client_documents')
       .createSignedUrl(filePath, 3600); // URL valid for 1 hour
@@ -26,7 +46,8 @@ export const getDocumentUrl = async (filePath: string): Promise<string | null> =
       console.error("Error getting document URL:", error);
       console.error("Error details:", {
         errorMessage: error.message,
-        filePath
+        filePath,
+        userId: sessionData?.session?.user?.id || 'unknown'
       });
       
       await createDelayedToast("error", "Erro ao acessar o documento", 100);
@@ -34,7 +55,10 @@ export const getDocumentUrl = async (filePath: string): Promise<string | null> =
     }
     
     if (!data?.signedUrl) {
-      console.error("No signed URL returned despite no error", { filePath });
+      console.error("No signed URL returned despite no error", { 
+        filePath,
+        userId: sessionData?.session?.user?.id || 'unknown'
+      });
       await createDelayedToast("error", "Erro ao gerar URL do documento", 100);
       return null;
     }
