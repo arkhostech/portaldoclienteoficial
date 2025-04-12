@@ -1,13 +1,13 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { supabaseAdmin } from "@/integrations/supabase/admin-client";
 import { toast } from "sonner";
 import { Client, ClientWithAuthFormData } from "./types";
 
 export const createClientWithAuth = async (clientFormData: ClientWithAuthFormData): Promise<Client | null> => {
   try {
-    // First, create the auth user for the client WITHOUT signing in as that user
-    // We're using admin functions directly to create the user but stay logged in as admin
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // Use the admin client with service role for auth operations
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: clientFormData.email,
       password: clientFormData.password,
       email_confirm: true, // Auto-confirm the email
@@ -59,6 +59,7 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
     };
     
     // Create client record in the clients table
+    // We can use the regular client here as we have RLS policies in place
     const { data: newClientData, error: clientError } = await supabase
       .from('clients')
       .insert([clientWithId])
@@ -69,7 +70,8 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
       console.error("Error creating client record:", clientError);
       
       // If the client record creation fails, we should clean up by deleting the auth user
-      await supabase.auth.admin.deleteUser(authData.user.id);
+      // Use supabaseAdmin for this operation
+      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       
       toast.error("Erro ao criar registro do cliente: " + clientError.message);
       return null;
