@@ -71,8 +71,8 @@ const PaymentCalendar = () => {
             }}
             components={{
               Day: ({ date: dayDate, ...dayProps }: DayProps) => {
-                // Cast dayProps to include children
-                const props = dayProps as React.ComponentPropsWithRef<"div">;
+                // Extract needed props without the ref to avoid type conflicts
+                const { className, disabled, hidden, selected, today } = dayProps;
                 const payments = getPaymentDetails(dayDate);
                 
                 if (payments.length > 0) {
@@ -81,9 +81,13 @@ const PaymentCalendar = () => {
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          {...props}
+                          className={className}
+                          disabled={disabled}
+                          hidden={hidden}
+                          data-selected={selected ? "true" : undefined}
+                          data-today={today ? "true" : undefined}
                         >
-                          {props.children}
+                          {dayDate.getDate()}
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="p-2 max-w-xs">
@@ -100,7 +104,17 @@ const PaymentCalendar = () => {
                   );
                 }
                 
-                return <div {...props}>{props.children}</div>;
+                return (
+                  <div 
+                    className={className}
+                    aria-disabled={disabled}
+                    hidden={hidden}
+                    data-selected={selected ? "true" : undefined}
+                    data-today={today ? "true" : undefined}
+                  >
+                    {dayDate.getDate()}
+                  </div>
+                );
               }
             }}
           />
