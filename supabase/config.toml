@@ -1,1 +1,19 @@
+
 project_id = "mdywdodbnmxavqleccwf"
+
+[api]
+enabled = true
+
+[db]
+enabled = true
+
+[realtime]
+enabled = true
+
+[storage]
+enabled = true
+
+[edge_functions]
+enabled = true
+[edge_functions.create-client-with-auth]
+verify_jwt = true
