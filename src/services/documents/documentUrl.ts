@@ -20,7 +20,6 @@ export const getDocumentUrl = async (filePath: string): Promise<string | null> =
     if (error) {
       console.error("Error getting document URL:", error);
       console.error("Error details:", {
-        statusCode: error.status,
         errorMessage: error.message,
         filePath
       });
