@@ -1,80 +1,66 @@
 
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Upload } from "lucide-react";
-import { FileUploadField } from "./FileUploadField";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { Client } from "@/services/clientService";
 
-interface Client {
-  id: string;
-  full_name: string;
-  email: string;
-}
-
-// Form schema with validation
-const formSchema = z.object({
-  title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
+const documentFormSchema = z.object({
+  title: z.string().min(1, "Título é obrigatório"),
   description: z.string().optional(),
   client_id: z.string().min(1, "Cliente é obrigatório"),
-  file: z.instanceof(File, { message: "Arquivo é obrigatório" })
+  status: z.string().default("active")
 });
 
-export type FormValues = z.infer<typeof formSchema>;
+export type DocumentFormValues = z.infer<typeof documentFormSchema>;
 
 interface DocumentUploadFormProps {
-  onSubmit: (data: FormValues) => Promise<boolean>;
-  onCancel: () => void;
-  isSubmitting: boolean;
   clients: Client[];
+  preSelectedClientId?: string;
+  isSubmitting: boolean;
+  onCancel: () => void;
+  onSubmit: (data: DocumentFormValues) => void;
 }
 
-export function DocumentUploadForm({
-  onSubmit,
-  onCancel,
-  isSubmitting,
-  clients
-}: DocumentUploadFormProps) {
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
-  
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+const DocumentUploadForm = ({ 
+  clients, 
+  preSelectedClientId, 
+  isSubmitting, 
+  onCancel, 
+  onSubmit 
+}: DocumentUploadFormProps) => {
+  const form = useForm<DocumentFormValues>({
+    resolver: zodResolver(documentFormSchema),
     defaultValues: {
       title: "",
       description: "",
-      client_id: ""
+      client_id: preSelectedClientId || "",
+      status: "active"
     }
   });
-  
-  const handleFormSubmit = async (data: FormValues) => {
-    const success = await onSubmit(data);
-    
-    if (success) {
-      form.reset();
-      setSelectedFileName(null);
+
+  // Ensure preSelectedClientId is used if provided
+  React.useEffect(() => {
+    if (preSelectedClientId && form.getValues("client_id") !== preSelectedClientId) {
+      form.setValue("client_id", preSelectedClientId);
     }
-  };
-  
-  const handleFileChange = (file: File | null) => {
-    if (file) {
-      form.setValue("file", file);
-      setSelectedFileName(file.name);
-      
-      // Auto-fill title with file name if title is empty
-      if (!form.getValues("title")) {
-        form.setValue("title", file.name.split('.')[0]);
-      }
-    }
-  };
-  
+  }, [preSelectedClientId, form]);
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="client_id"
@@ -82,40 +68,31 @@ export function DocumentUploadForm({
             <FormItem>
               <FormLabel>Cliente*</FormLabel>
               <Select 
-                disabled={isSubmitting}
-                onValueChange={field.onChange}
-                defaultValue={field.value}
+                onValueChange={field.onChange} 
+                value={field.value}
+                disabled={!!preSelectedClientId}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um cliente" />
+                    <SelectValue placeholder="Selecione o cliente" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {clients.length > 0 ? (
-                    clients.map(client => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.full_name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no_clients_available" disabled>
-                      Nenhum cliente disponível
+                  {clients.map(client => (
+                    <SelectItem 
+                      key={client.id} 
+                      value={client.id}
+                    >
+                      {client.full_name}
                     </SelectItem>
-                  )}
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        <FileUploadField 
-          onChange={handleFileChange}
-          isSubmitting={isSubmitting}
-          selectedFileName={selectedFileName}
-        />
-        
+
         <FormField
           control={form.control}
           name="title"
@@ -123,17 +100,13 @@ export function DocumentUploadForm({
             <FormItem>
               <FormLabel>Título*</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Nome do documento" 
-                  disabled={isSubmitting} 
-                  {...field} 
-                />
+                <Input placeholder="Título do documento" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="description"
@@ -141,22 +114,17 @@ export function DocumentUploadForm({
             <FormItem>
               <FormLabel>Descrição</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Descrição do documento (opcional)" 
-                  disabled={isSubmitting} 
-                  {...field} 
-                  value={field.value || ""}
-                />
+                <Input placeholder="Descrição (opcional)" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         
-        <div className="flex justify-end space-x-2 pt-2">
-          <Button 
-            type="button" 
-            variant="outline" 
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
             onClick={onCancel}
             disabled={isSubmitting}
           >
@@ -166,20 +134,15 @@ export function DocumentUploadForm({
             type="submit" 
             disabled={isSubmitting}
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enviando...
-              </>
-            ) : (
-              <>
-                <Upload className="mr-2 h-4 w-4" />
-                Enviar
-              </>
+            {isSubmitting && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
+            Enviar
           </Button>
         </div>
       </form>
     </Form>
   );
-}
+};
+
+export default DocumentUploadForm;
