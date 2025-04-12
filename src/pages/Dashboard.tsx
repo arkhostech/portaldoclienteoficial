@@ -99,7 +99,10 @@ const Dashboard = () => {
         {/* Process information */}
         <ProcessInfoCard 
           processType={clientInfo?.process_type} 
-          status={clientInfo?.status} 
+          status={clientInfo?.status}
+          startDate={clientInfo?.process_start_date}
+          responsibleAgent={clientInfo?.responsible_agent}
+          lastUpdate={clientInfo?.last_update_date || clientInfo?.updated_at}
         />
 
         {/* Documents section */}
