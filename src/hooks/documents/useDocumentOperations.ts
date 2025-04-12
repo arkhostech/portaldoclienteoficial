@@ -9,6 +9,7 @@ import {
   getDocumentUrl 
 } from "@/services/documents";
 import { toast } from "sonner";
+import { ensureFileExtension } from "@/components/ui/document/DocumentCardUtils";
 
 export const useDocumentOperations = (
   clientId: string | null,
@@ -169,10 +170,13 @@ export const useDocumentOperations = (
         const blob = await response.blob();
         const blobUrl = window.URL.createObjectURL(blob);
 
+        // Apply correct file extension based on content type
+        const downloadFileName = ensureFileExtension(document.title, contentType);
+
         // Create and trigger download via an anchor element
         const link = window.document.createElement("a");
         link.href = blobUrl;
-        link.download = document.title;
+        link.download = downloadFileName;
         link.style.display = "none";
         
         window.document.body.appendChild(link);

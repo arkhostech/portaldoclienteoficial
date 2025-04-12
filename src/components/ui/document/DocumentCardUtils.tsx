@@ -1,4 +1,3 @@
-
 import { FileText, Image, File } from "lucide-react";
 import { toast } from "sonner";
 import { getDocumentUrl } from "@/services/documents/documentUrl";
@@ -56,6 +55,28 @@ export const isPreviewable = (fileType: string) => {
   );
 };
 
+export const ensureFileExtension = (fileName: string, mimeType: string): string => {
+  const hasKnownExtension = /\.[a-z0-9]{2,5}$/i.test(fileName);
+  if (hasKnownExtension) return fileName;
+
+  const extensionMap: Record<string, string> = {
+    "application/pdf": ".pdf",
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/jpg": ".jpg",
+    "application/msword": ".doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+    "text/plain": ".txt",
+    "application/vnd.ms-excel": ".xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+    "application/zip": ".zip"
+    // Add more as needed
+  };
+
+  const extension = extensionMap[mimeType] || "";
+  return fileName + extension;
+};
+
 export const handleDocumentDownload = async (filePath: string | null, fileName: string) => {
   if (!filePath) {
     toast.error("Nenhum arquivo disponível para download");
@@ -79,14 +100,16 @@ export const handleDocumentDownload = async (filePath: string | null, fileName: 
     const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
+    const downloadFileName = ensureFileExtension(fileName, contentType);
+
+    const link = window.document.createElement("a");
     link.href = blobUrl;
-    link.download = fileName;
+    link.download = downloadFileName;
     link.style.display = "none";
 
-    document.body.appendChild(link);
+    window.document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    window.document.body.removeChild(link);
     window.URL.revokeObjectURL(blobUrl);
 
     toast.dismiss(toastId);
