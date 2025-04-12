@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,11 @@ const Sidebar = () => {
           title: 'Processos', 
           icon: <FileText className="h-5 w-5" />, 
           href: '/admin/cases' 
+        },
+        { 
+          title: 'Pagamentos', 
+          icon: <CreditCard className="h-5 w-5" />, 
+          href: '/admin/payments' 
         },
         { 
           title: 'Relatórios', 
