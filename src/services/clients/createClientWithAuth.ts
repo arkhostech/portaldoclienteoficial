@@ -71,7 +71,7 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
       // If the client record creation fails, we should clean up by deleting the auth user
       await supabase.auth.admin.deleteUser(authData.user.id);
       
-      toast.error("Erro ao criar registro do cliente: permissão negada");
+      toast.error("Erro ao criar registro do cliente: " + clientError.message);
       return null;
     }
     
