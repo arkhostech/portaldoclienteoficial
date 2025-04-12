@@ -91,12 +91,12 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
         toast.success("Download iniciado");
         
         // Create an anchor element and trigger download
-        const link = document.createElement("a");
+        const link = window.document.createElement("a");
         link.href = url;
         link.download = document.name;
-        document.body.appendChild(link);
+        window.document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        window.document.body.removeChild(link);
       } else {
         toast.dismiss(toastId);
         toast.error("Erro ao gerar link para download");
@@ -269,12 +269,12 @@ const DocumentPreviewDialog = ({ isOpen, onClose, documentUrl, document }: Docum
           <Button onClick={() => {
             // Create an anchor element and trigger download
             if (documentUrl) {
-              const link = document.createElement("a");
+              const link = window.document.createElement("a");
               link.href = documentUrl;
               link.download = document.name;
-              document.body.appendChild(link);
+              window.document.body.appendChild(link);
               link.click();
-              document.body.removeChild(link);
+              window.document.body.removeChild(link);
             }
           }}>
             <Download className="h-4 w-4 mr-2" />
