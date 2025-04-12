@@ -10,7 +10,7 @@ import {
   ClientFormData,
   ClientWithAuthFormData,
   Client 
-} from "@/services/clientService";
+} from "@/services/clients";
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
