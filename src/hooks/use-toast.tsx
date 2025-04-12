@@ -15,6 +15,7 @@ type ToasterToast = {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   duration?: number
+  variant?: "default" | "destructive" // Add variant property
 }
 
 const actionTypes = {
@@ -115,10 +116,29 @@ const reducer = (state: State, action: Action): State => {
 
 type ToastProps = Omit<ToasterToast, "id">
 
+// Define context type
+type ToastContextType = {
+  toasts: ToasterToast[]
+  dispatch: React.Dispatch<Action>
+}
+
+// Create the context with appropriate type
+const ToastContext = React.createContext<ToastContextType | null>(null)
+
+function useToastStore() {
+  const context = React.useContext(ToastContext)
+
+  if (!context) {
+    throw new Error("useToast must be used within a ToastProvider")
+  }
+
+  return context
+}
+
 function toast(props: ToastProps) {
   const id = genId()
 
-  const dispatch = useToastStore((state) => state.dispatch)
+  const dispatch = useToastStore().dispatch
   const dismiss = () => dispatch({
     type: actionTypes.DISMISS_TOAST,
     toastId: id,
@@ -146,24 +166,6 @@ function toast(props: ToastProps) {
       })
     }
   }
-}
-
-// Store
-type ToastContext = {
-  toasts: ToasterToast[]
-  dispatch: React.Dispatch<Action>
-}
-
-const ToastContext = React.createContext<ToastContext | null>(null)
-
-function useToastStore() {
-  const context = React.useContext(ToastContext)
-
-  if (!context) {
-    throw new Error("useToast must be used within a ToastProvider")
-  }
-
-  return context
 }
 
 const ToastProvider = ({ children }: { children: React.ReactNode }) => {
