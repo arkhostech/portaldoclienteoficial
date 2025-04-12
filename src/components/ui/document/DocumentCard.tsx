@@ -26,15 +26,26 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
     }
 
     setIsLoading(true);
+    const toastId = toast.loading("Carregando documento...");
+    
     try {
       const url = await getDocumentUrl(document.filePath);
+      
       if (url) {
+        toast.dismiss(toastId);
         setPreviewUrl(url);
         setPreviewOpen(true);
       } else {
+        toast.dismiss(toastId);
         toast.error("Erro ao acessar o documento");
+        console.error("Failed to get document URL for preview:", {
+          documentId: document.id,
+          filePath: document.filePath,
+          documentType: document.type
+        });
       }
     } catch (error) {
+      toast.dismiss(toastId);
       console.error("Error getting document URL:", error);
       toast.error("Erro ao acessar o documento");
     } finally {
@@ -45,6 +56,8 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
   const handleDownload = () => {
     handleDocumentDownload(document.filePath, document.name);
   };
+
+  const canPreview = isPreviewable(document.type);
 
   return (
     <>
@@ -91,19 +104,19 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
                 size="sm" 
                 className="text-xs py-1 px-2 h-auto" 
                 onClick={handleDownload}
-                disabled={isLoading}
+                disabled={isLoading || !document.filePath}
               >
                 <Download className="h-3 w-3 mr-1" />
                 Download
               </Button>
 
-              {isPreviewable(document.type) ? (
+              {canPreview ? (
                 <Button 
                   variant="outline" 
                   size="sm" 
                   className="text-xs py-1 px-2 h-auto" 
                   onClick={handlePreview}
-                  disabled={isLoading}
+                  disabled={isLoading || !document.filePath}
                 >
                   <Eye className="h-3 w-3 mr-1" />
                   Visualizar
