@@ -32,9 +32,10 @@ export const uploadDocument = async (
     
     console.log("File uploaded successfully");
     
-    // Create document record in the database
+    // Create document record in the database with explicit client_id
     const documentRecord = {
       ...documentData,
+      client_id: clientId, // Explicitly set client_id to ensure it's included
       file_path: filePath,
       file_type: file.type,
       file_size: file.size
