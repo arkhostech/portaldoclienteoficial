@@ -99,14 +99,14 @@ const PaymentCalendar = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="flex-1">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full md:w-1/2">
             <TooltipProvider>
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                className="mx-auto"
+                className="mx-auto pointer-events-auto"
                 modifiers={{
                   paymentDay: (day) => {
                     const key = format(day, "yyyy-MM-dd");
@@ -120,7 +120,7 @@ const PaymentCalendar = () => {
             </TooltipProvider>
 
             {selectedPayments.length > 0 && (
-              <div className="mt-4 space-y-2 text-sm text-center">
+              <div className="mt-4 space-y-2 text-sm">
                 <p className="font-medium">Pagamentos no dia {format(selectedDate!, "dd/MM/yyyy")}:</p>
                 {selectedPayments.map((payment, index) => (
                   <div key={index} className="p-2">
@@ -143,7 +143,7 @@ const PaymentCalendar = () => {
           </div>
           
           {/* Monthly payments summary section */}
-          <div className="flex-1 border-l pl-6 max-w-xs">
+          <div className="w-full md:w-1/2 md:border-l md:pl-4">
             <h3 className="font-medium text-base flex items-center mb-4">
               <CircleDollarSign className="h-4 w-4 mr-2 text-primary" />
               Pagamentos em {format(selectedDate || new Date(), "MMMM yyyy")}

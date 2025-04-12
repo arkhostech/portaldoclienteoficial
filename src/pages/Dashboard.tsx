@@ -95,9 +95,9 @@ const Dashboard = () => {
       {/* Welcome section */}
       <WelcomeSection clientName={clientInfo?.full_name} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        {/* Main content - left column (2/3 width) */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
+        {/* Main content - left column (3/5 width) */}
+        <div className="lg:col-span-3 space-y-6">
           {/* Process information */}
           <ProcessInfoCard 
             processType={clientInfo?.process_type} 
@@ -111,8 +111,8 @@ const Dashboard = () => {
           <DocumentsCard documents={documents} />
         </div>
         
-        {/* Right sidebar (1/3 width) */}
-        <div className="space-y-6">
+        {/* Right sidebar (2/5 width) */}
+        <div className="lg:col-span-2 space-y-6">
           {/* Calendar for payment reminders */}
           <PaymentCalendar />
           
