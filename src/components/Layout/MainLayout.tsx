@@ -32,9 +32,8 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
     // Scroll to top when route changes
     window.scrollTo(0, 0);
     
-    console.log("MainLayout useEffect: loading=", loading, "user=", !!user);
-    
     // Only redirect if not loading and no user
+    // We don't want to check on every path change - just if there's no authenticated user
     if (!loading && !user) {
       console.log("No authenticated user detected, redirecting to login");
       // Redirect to the appropriate login page based on the current path
@@ -46,26 +45,25 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
       return;
     }
     
-    // Only check path validity, don't force redirects on refresh
-    // This prevents users from being logged out on page refresh
+    // Only check path validity for wrong section access
+    // This prevents users from being logged out when browsing within their proper section
     if (!loading && user) {
       const currentPath = location.pathname;
       
       // Only redirect if user is clearly in the wrong section
-      // This allows refreshing pages within the proper section
-      if (isAdmin && currentPath === '/') {
-        console.log("Admin trying to access client login, redirecting to admin dashboard");
+      if (isAdmin && isClientPath(currentPath) && currentPath !== '/') {
+        console.log("Admin trying to access client section, redirecting to admin dashboard");
         navigate('/admin');
         return;
       }
       
-      if (!isAdmin && currentPath === '/admin-login') {
-        console.log("Client trying to access admin login, redirecting to client dashboard");
+      if (!isAdmin && isAdminPath(currentPath) && currentPath !== '/admin-login') {
+        console.log("Client trying to access admin section, redirecting to client dashboard");
         navigate('/dashboard');
         return;
       }
     }
-  }, [location.pathname, user, loading, navigate, isAdmin]);
+  }, [user, loading, navigate, isAdmin]);
 
   // Show loading state with skeletons
   if (loading) {

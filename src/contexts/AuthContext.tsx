@@ -1,7 +1,7 @@
 
-import { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, checkUserRoleWithCache, clearUserRoleCache } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -23,38 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Enhanced function to check if a user is an admin
-  const checkUserRole = async (userId: string): Promise<'admin' | 'client' | null> => {
-    try {
-      // First check app_metadata from auth user
-      const { data: userData } = await supabase.auth.getUser();
-      const userRole = userData?.user?.app_metadata?.role;
-      
-      if (userRole === 'admin') {
-        return 'admin';
-      } else if (userRole === 'client') {
-        return 'client';
-      }
-      
-      // Then check profiles table
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching profile:", error);
-        return null;
-      }
-
-      return data?.role || null;
-    } catch (err) {
-      console.error("Error checking user role:", err);
-      return null;
-    }
-  };
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   // Determine if the current path is in the admin section
   const isAdminPath = (path: string): boolean => {
@@ -68,6 +37,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            path === '/knowledge';
   };
 
+  // Memoized function to check user role - avoids unnecessary database queries
+  const checkUserRole = useCallback(async (userId: string): Promise<boolean> => {
+    try {
+      const userRole = await checkUserRoleWithCache(userId);
+      return userRole === 'admin';
+    } catch (error) {
+      console.error("Error checking user role:", error);
+      return false;
+    }
+  }, []);
+
   // Authentication actions
   const signIn = async (email: string, password: string) => {
     try {
@@ -78,7 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
       
-      // The navigation and role check will be handled in the onAuthStateChange
       toast.success("Login bem-sucedido!");
     } catch (error: any) {
       console.error("Login error:", error);
@@ -89,6 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Clear cached data for the current user
+      if (user) {
+        clearUserRoleCache(user.id);
+      }
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
@@ -113,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
         console.log("Auth state changed:", event, newSession?.user?.id);
         
         if (!mounted) return;
@@ -125,14 +109,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Use setTimeout to avoid potential deadlocks
           setTimeout(async () => {
             if (mounted && newSession.user) {
-              const userRole = await checkUserRole(newSession.user.id);
-              const isUserAdmin = userRole === 'admin';
+              const isUserAdmin = await checkUserRole(newSession.user.id);
               setIsAdmin(isUserAdmin);
-              setLoading(false);
               
-              // Only handle navigation for SIGNED_IN event, not for SESSION_REFRESHED
               if (event === 'SIGNED_IN') {
-                // Handle navigation logic for sign in
+                // Only handle navigation for SIGNED_IN event, not for SESSION_REFRESHED
                 const currentPath = window.location.pathname;
                 
                 if (currentPath === '/admin-login') {
@@ -170,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   return;
                 }
               }
+              setLoading(false);
             }
           }, 0);
         } else {
@@ -181,84 +163,86 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
-    const checkSession = async () => {
-      try {
-        console.log("Checking existing session");
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-        
-        if (session) {
-          console.log("Found existing session for user:", session.user.id);
-          setSession(session);
-          setUser(session.user);
+    // THEN check for existing session (only once)
+    if (!sessionChecked) {
+      const checkSession = async () => {
+        try {
+          console.log("Checking existing session");
+          const { data: { session } } = await supabase.auth.getSession();
           
-          const userRole = await checkUserRole(session.user.id);
-          const isUserAdmin = userRole === 'admin';
+          if (!mounted) return;
           
-          if (mounted) {
-            setIsAdmin(isUserAdmin);
-            setLoading(false);
+          if (session) {
+            console.log("Found existing session for user:", session.user.id);
+            setSession(session);
+            setUser(session.user);
             
-            // Only redirect if on login pages or wrong section
+            const isUserAdmin = await checkUserRole(session.user.id);
+            
+            if (mounted) {
+              setIsAdmin(isUserAdmin);
+              setLoading(false);
+              
+              // Only redirect if on login pages or wrong section
+              const currentPath = window.location.pathname;
+              
+              // Don't redirect on page refresh if already in correct section
+              // Only redirect if trying to access wrong section
+              if (isAdminPath(currentPath) && !isUserAdmin && currentPath !== '/admin-login') {
+                toast.error("Apenas administradores podem acessar este portal.");
+                await signOut();
+                return;
+              } 
+              
+              if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
+                toast.error("Administradores devem acessar pelo portal administrativo.");
+                await signOut();
+                return;
+              }
+              
+              // Redirect if on login pages only
+              if (currentPath === '/admin-login' && isUserAdmin) {
+                navigate('/admin');
+                return;
+              }
+              
+              if (currentPath === '/' && !isUserAdmin) {
+                navigate('/dashboard');
+                return;
+              }
+            }
+          } else {
+            // Handle not logged in - redirect to appropriate login page if trying to access protected path
             const currentPath = window.location.pathname;
             
-            // Don't redirect on page refresh if already in correct section
-            // Only redirect if trying to access wrong section
-            if (isAdminPath(currentPath) && !isUserAdmin && currentPath !== '/admin-login') {
-              toast.error("Apenas administradores podem acessar este portal.");
-              await signOut();
-              return;
-            } 
-            
-            if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
-              toast.error("Administradores devem acessar pelo portal administrativo.");
-              await signOut();
+            if (isAdminPath(currentPath) && currentPath !== '/admin-login') {
+              navigate('/admin-login');
               return;
             }
             
-            // Redirect if on login pages only
-            if (currentPath === '/admin-login' && isUserAdmin) {
-              navigate('/admin');
+            if (isClientPath(currentPath) && currentPath !== '/') {
+              navigate('/');
               return;
             }
             
-            if (currentPath === '/' && !isUserAdmin) {
-              navigate('/dashboard');
-              return;
-            }
+            setLoading(false);
           }
-        } else {
-          // Handle not logged in - redirect to appropriate login page if trying to access protected path
-          const currentPath = window.location.pathname;
-          
-          if (isAdminPath(currentPath) && currentPath !== '/admin-login') {
-            navigate('/admin-login');
-            return;
-          }
-          
-          if (isClientPath(currentPath) && currentPath !== '/') {
-            navigate('/');
-            return;
-          }
-          
+        } catch (error) {
+          console.error("Error getting session:", error);
           setLoading(false);
         }
-      } catch (error) {
-        console.error("Error getting session:", error);
-        setLoading(false);
-      }
-    };
+        setSessionChecked(true);
+      };
 
-    checkSession();
+      checkSession();
+    }
 
     return () => {
       console.log("AuthProvider: Cleaning up");
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, sessionChecked, checkUserRole, signOut]);
 
   const value = {
     user,

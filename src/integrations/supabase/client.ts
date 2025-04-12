@@ -16,5 +16,51 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     storageKey: 'client-hub-access-auth-storage',
     detectSessionInUrl: true,
+    flowType: 'implicit', // Use implicit flow for better caching
   }
 });
+
+// Cache for checking user roles - reduces database requests
+const userRoleCache = new Map<string, string>();
+
+// Function to check user role with caching
+export const checkUserRoleWithCache = async (userId: string): Promise<'admin' | 'client' | null> => {
+  // Return from cache if available
+  if (userRoleCache.has(userId)) {
+    return userRoleCache.get(userId) as 'admin' | 'client' | null;
+  }
+  
+  // First check app_metadata from auth user
+  const { data: userData } = await supabase.auth.getUser();
+  const userRole = userData?.user?.app_metadata?.role;
+  
+  if (userRole === 'admin' || userRole === 'client') {
+    // Store in cache
+    userRoleCache.set(userId, userRole);
+    return userRole;
+  }
+  
+  // Then check profiles table
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching profile:", error);
+    return null;
+  }
+
+  // Store result in cache
+  if (data?.role) {
+    userRoleCache.set(userId, data.role);
+  }
+
+  return data?.role || null;
+};
+
+// Clear cache entry for a user
+export const clearUserRoleCache = (userId: string): void => {
+  userRoleCache.delete(userId);
+};
