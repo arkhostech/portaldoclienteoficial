@@ -1,15 +1,16 @@
 
 import React, { useRef } from "react";
-import { Upload } from "lucide-react";
+import { Upload, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FileDropzoneProps {
   onDrop: (files: File[]) => void;
   filesCount: number;
   onBrowse: () => void;
+  isCompressing?: boolean;
 }
 
-const FileDropzone = ({ onDrop, filesCount, onBrowse }: FileDropzoneProps) => {
+const FileDropzone = ({ onDrop, filesCount, onBrowse, isCompressing = false }: FileDropzoneProps) => {
   // Handle drag events
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -36,14 +37,22 @@ const FileDropzone = ({ onDrop, filesCount, onBrowse }: FileDropzoneProps) => {
       onDrop={handleDrop}
       onClick={onBrowse}
     >
-      <Upload className={cn(
-        "h-10 w-10 mb-2", 
-        filesCount > 0 ? "text-primary" : "text-gray-400"
-      )} />
+      {isCompressing ? (
+        <Loader2 className="h-10 w-10 mb-2 text-primary animate-spin" />
+      ) : (
+        <Upload className={cn(
+          "h-10 w-10 mb-2", 
+          filesCount > 0 ? "text-primary" : "text-gray-400"
+        )} />
+      )}
       <div className="text-center">
-        <p className="font-medium">Clique para adicionar arquivos</p>
+        <p className="font-medium">
+          {isCompressing ? "Comprimindo imagens..." : "Clique para adicionar arquivos"}
+        </p>
         <p className="text-sm text-muted-foreground">
-          ou arraste e solte aqui
+          {isCompressing 
+            ? "Por favor aguarde..." 
+            : "ou arraste e solte aqui"}
         </p>
       </div>
     </div>

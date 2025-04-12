@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Document, DocumentFormData, uploadDocument } from "@/services/documents";
 import { useTimeoutManager } from "../utils/useTimeoutManager";
+import { compressImage } from "@/components/admin/documents/DocumentsUtils";
 
 export const useDocumentUpload = (
   clientId: string | null,
@@ -16,6 +17,9 @@ export const useDocumentUpload = (
     setIsSubmitting(true);
     
     try {
+      // Process the file (compression for images)
+      const processedFile = await compressImage(data.file);
+      
       // Prepare document data
       const documentData: DocumentFormData = {
         title: data.title,
@@ -23,7 +27,7 @@ export const useDocumentUpload = (
         client_id: data.client_id
       };
       
-      const result = await uploadDocument(data.client_id, data.file, documentData);
+      const result = await uploadDocument(data.client_id, processedFile, documentData);
       
       if (result) {
         setDocuments(prevDocs => [result, ...prevDocs]);
