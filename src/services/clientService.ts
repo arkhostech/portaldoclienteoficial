@@ -98,9 +98,8 @@ export const createClient = async (clientData: ClientFormData): Promise<Client |
 
 export const createClientWithAuth = async (clientFormData: ClientWithAuthFormData): Promise<Client | null> => {
   try {
-    // First check if the email is already in use by trying to sign up
-    // This will fail if the email is already in use
-    const { error: signUpError } = await supabase.auth.signUp({
+    // Create a separate connection to check if email already exists without using the admin's session
+    const tempClient = supabase.auth.signUp({
       email: clientFormData.email,
       password: clientFormData.password,
       options: {
@@ -109,6 +108,8 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
         }
       }
     });
+    
+    const { error: signUpError, data: signUpData } = await tempClient;
     
     if (signUpError) {
       console.error("Error checking existing user:", signUpError);
@@ -138,9 +139,7 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
     }
     
     // If sign-up was successful, get the user ID from the response
-    const { data: authData } = await supabase.auth.getUser();
-    
-    if (!authData.user) {
+    if (!signUpData.user) {
       toast.error("Erro ao obter dados do usuário criado");
       return null;
     }
@@ -150,7 +149,7 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
     
     const clientWithId = {
       ...clientDataWithoutPassword,
-      id: authData.user.id
+      id: signUpData.user.id
     };
     
     const { data: newClientData, error: clientError } = await supabase
@@ -161,26 +160,14 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
     
     if (clientError) {
       console.error("Error creating client record:", clientError);
-      
-      // If client creation fails, attempt to delete the auth user
-      // Note: We can't use admin.deleteUser since we don't have admin rights
-      // The user will need to be deleted manually or through a server-side function
-      
       toast.error("Erro ao criar registro do cliente");
       return null;
     }
-    
-    // Sign out the current user to return to the previous session
-    await supabase.auth.signOut();
     
     toast.success("Cliente criado com sucesso com acesso ao portal");
     return newClientData;
   } catch (error) {
     console.error("Unexpected error creating client with auth:", error);
-    
-    // Sign out just in case
-    await supabase.auth.signOut();
-    
     toast.error("Erro ao criar cliente com autenticação");
     return null;
   }
