@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { CalendarDays } from "lucide-react";
-import { format } from "date-fns";
+import { CalendarDays, CircleDollarSign } from "lucide-react";
+import { format, isSameMonth } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 
@@ -35,6 +35,15 @@ const PaymentCalendar = () => {
     selectedDate &&
     format(new Date(p.due_date), "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
   );
+
+  // Get all payments for the selected month
+  const monthlyPayments = useMemo(() => {
+    if (!selectedDate) return [];
+    
+    return payments
+      .filter(payment => isSameMonth(new Date(payment.due_date), selectedDate))
+      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+  }, [payments, selectedDate]);
 
   // Fetch payments for the current user
   useEffect(() => {
@@ -90,43 +99,76 @@ const PaymentCalendar = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <TooltipProvider>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="mx-auto"
-            modifiers={{
-              paymentDay: (day) => {
-                const key = format(day, "yyyy-MM-dd");
-                return paymentDaysMap[key];
-              }
-            }}
-            modifiersClassNames={{
-              paymentDay: "bg-primary/20 font-bold text-primary rounded-md"
-            }}
-          />
-        </TooltipProvider>
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex-1">
+            <TooltipProvider>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="mx-auto"
+                modifiers={{
+                  paymentDay: (day) => {
+                    const key = format(day, "yyyy-MM-dd");
+                    return paymentDaysMap[key];
+                  }
+                }}
+                modifiersClassNames={{
+                  paymentDay: "bg-primary/20 font-bold text-primary rounded-md"
+                }}
+              />
+            </TooltipProvider>
 
-        {selectedPayments.length > 0 && (
-          <div className="mt-4 space-y-2 text-sm text-center">
-            <p className="font-medium">Pagamentos no dia {format(selectedDate!, "dd/MM/yyyy")}:</p>
-            {selectedPayments.map((payment, index) => (
-              <div key={index} className="p-2">
-                <p className="font-medium">{payment.title}</p>
-                <p className="text-green-600">{payment.amount}</p>
-                {payment.description && <p className="text-xs text-muted-foreground">{payment.description}</p>}
+            {selectedPayments.length > 0 && (
+              <div className="mt-4 space-y-2 text-sm text-center">
+                <p className="font-medium">Pagamentos no dia {format(selectedDate!, "dd/MM/yyyy")}:</p>
+                {selectedPayments.map((payment, index) => (
+                  <div key={index} className="p-2">
+                    <p className="font-medium">{payment.title}</p>
+                    <p className="text-green-600">{payment.amount}</p>
+                    {payment.description && <p className="text-xs text-muted-foreground">{payment.description}</p>}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            )}
 
-        <div className="text-center mt-4">
-          <div className="flex items-center justify-center space-x-4 text-sm">
-            <div className="flex items-center">
-              <div className="w-3 h-3 rounded-full bg-primary/20 mr-2"></div>
-              <span>Pagamento Agendado</span>
+            <div className="text-center mt-4">
+              <div className="flex items-center justify-center space-x-4 text-sm">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-primary/20 mr-2"></div>
+                  <span>Pagamento Agendado</span>
+                </div>
+              </div>
             </div>
+          </div>
+          
+          {/* Monthly payments summary section */}
+          <div className="flex-1 border-l pl-6 max-w-xs">
+            <h3 className="font-medium text-base flex items-center mb-4">
+              <CircleDollarSign className="h-4 w-4 mr-2 text-primary" />
+              Pagamentos em {format(selectedDate || new Date(), "MMMM yyyy")}
+            </h3>
+            
+            {monthlyPayments.length > 0 ? (
+              <div className="space-y-4">
+                {monthlyPayments.map((payment) => (
+                  <div 
+                    key={payment.id} 
+                    className="border-b pb-3 last:border-0"
+                  >
+                    <div className="font-medium text-sm">
+                      {format(new Date(payment.due_date), "d 'de' MMMM, yyyy")}
+                    </div>
+                    <div className="text-sm mt-1">{payment.title}</div>
+                    <div className="text-green-600 font-medium">{payment.amount}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhum pagamento agendado para este mês.</p>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
