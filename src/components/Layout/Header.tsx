@@ -1,8 +1,10 @@
 
+import { useEffect, useState } from 'react';
 import { Bell, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HeaderProps {
   title: string;
@@ -10,16 +12,39 @@ interface HeaderProps {
 
 const Header = ({ title }: HeaderProps) => {
   const { user, isAdmin } = useAuth();
+  const [fullName, setFullName] = useState("");
+  
+  // Fetch user's full name from the profiles table
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching user profile:", error);
+          return;
+        }
+        
+        if (data && data.full_name) {
+          setFullName(data.full_name);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user]);
   
   // Get user display initials from email or full name
   const getInitials = () => {
-    if (!user) return "?";
-    
-    // Try to get full name from metadata
-    const fullName = user.user_metadata?.full_name || user.email;
-    if (!fullName) return "?";
-    
-    if (typeof fullName === 'string') {
+    if (fullName) {
       return fullName
         .split(' ')
         .map(name => name.charAt(0))
@@ -28,13 +53,17 @@ const Header = ({ title }: HeaderProps) => {
         .substring(0, 2);
     }
     
+    if (!user) return "?";
+    
+    // Fallback to email
     return user.email?.substring(0, 2).toUpperCase() || "?";
   };
   
   // Get display name
   const getDisplayName = () => {
+    if (fullName) return fullName;
     if (!user) return "";
-    return user.user_metadata?.full_name || user.email?.split('@')[0] || "Usuário";
+    return user.email?.split('@')[0] || "Usuário";
   };
 
   return (
@@ -54,7 +83,7 @@ const Header = ({ title }: HeaderProps) => {
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              3
+              0
             </span>
           </Button>
         </div>
