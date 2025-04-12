@@ -12,6 +12,11 @@ export const getDocumentUrl = async (filePath: string): Promise<string | null> =
 
   try {
     console.log("Getting document URL for:", filePath);
+    console.log("Current auth status:", await supabase.auth.getSession());
+    
+    // Log storage bucket info for debugging
+    const { data: bucketData } = await supabase.storage.getBucket('client_documents');
+    console.log("Bucket info:", bucketData);
     
     const { data, error } = await supabase.storage
       .from('client_documents')

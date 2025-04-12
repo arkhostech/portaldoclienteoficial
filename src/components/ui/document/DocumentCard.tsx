@@ -22,6 +22,7 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
   const handlePreview = async () => {
     if (!document.filePath) {
       toast.error("Nenhum arquivo disponível para visualização");
+      console.error("Document has no filePath:", document);
       return;
     }
 
@@ -29,9 +30,17 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
     const toastId = toast.loading("Carregando documento...");
     
     try {
+      console.log("Requesting signed URL for file:", document.filePath);
+      console.log("Document details:", {
+        id: document.id,
+        name: document.name,
+        type: document.type
+      });
+      
       const url = await getDocumentUrl(document.filePath);
       
       if (url) {
+        console.log("Successfully obtained signed URL for preview");
         toast.dismiss(toastId);
         setPreviewUrl(url);
         setPreviewOpen(true);

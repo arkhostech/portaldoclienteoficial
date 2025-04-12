@@ -4,15 +4,20 @@ import { toast } from "sonner";
 import { getDocumentUrl } from "@/services/documents/documentUrl";
 
 export const getFileIcon = (fileType: string) => {
+  if (!fileType) return <File className="h-10 w-10 text-gray-500" />;
+  
   const lowerType = fileType.toLowerCase();
   
-  if (lowerType.includes("pdf")) {
+  if (lowerType.includes("pdf") || lowerType === "application/pdf") {
     return <FileText className="h-10 w-10 text-red-500" />;
   } else if (
     lowerType.includes("jpg") || 
     lowerType.includes("jpeg") || 
     lowerType.includes("png") || 
-    lowerType.includes("image/")
+    lowerType.includes("image/") ||
+    lowerType === "image/jpeg" ||
+    lowerType === "image/png" ||
+    lowerType === "image/jpg"
   ) {
     return <Image className="h-10 w-10 text-blue-500" />;
   } else {
@@ -21,11 +26,18 @@ export const getFileIcon = (fileType: string) => {
 };
 
 export const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  if (!dateString) return '';
+  
+  try {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  } catch (e) {
+    console.error("Error formatting date:", e, dateString);
+    return '';
+  }
 };
 
 export const isPreviewable = (fileType: string) => {
@@ -34,24 +46,27 @@ export const isPreviewable = (fileType: string) => {
   const lowerType = fileType.toLowerCase();
   return (
     lowerType.includes("pdf") ||
+    lowerType === "application/pdf" ||
     lowerType.includes("jpg") ||
     lowerType.includes("jpeg") ||
     lowerType.includes("png") ||
-    lowerType.includes("image/jpeg") ||
-    lowerType.includes("image/png") ||
-    lowerType.includes("image/jpg")
+    lowerType === "image/jpeg" ||
+    lowerType === "image/png" ||
+    lowerType === "image/jpg"
   );
 };
 
 export const handleDocumentDownload = async (filePath: string | null, fileName: string) => {
   if (!filePath) {
     toast.error("Nenhum arquivo disponível para download");
+    console.error("No file path available for download:", { fileName });
     return;
   }
 
   const toastId = toast.loading("Preparando o download...");
   
   try {
+    console.log("Requesting signed URL for download:", filePath);
     const url = await getDocumentUrl(filePath);
     
     if (url) {

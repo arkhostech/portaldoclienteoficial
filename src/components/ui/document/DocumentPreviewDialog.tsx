@@ -22,26 +22,41 @@ const DocumentPreviewDialog = ({ isOpen, onClose, documentUrl, document: docData
     }
     
     // Log debug information for troubleshooting
-    if (isOpen && documentUrl === null) {
-      console.error('documentUrl is null. Check if file_path is valid and if Supabase returned a signed URL:', {
-        filePath: docData.filePath,
-        documentName: docData.name,
-        documentType: docData.type
+    if (isOpen) {
+      console.log("DocumentPreviewDialog opened with:", {
+        documentName: docData?.name,
+        documentType: docData?.type,
+        hasUrl: !!documentUrl
       });
+      
+      if (documentUrl === null) {
+        console.error('documentUrl is null. Check if file_path is valid and if Supabase returned a signed URL:', {
+          filePath: docData?.filePath,
+          documentName: docData?.name,
+          documentType: docData?.type
+        });
+      }
     }
   }, [isOpen, documentUrl, docData]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+    if (!dateString) return '';
+    
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+    } catch (e) {
+      console.error("Error formatting date:", e, dateString);
+      return '';
+    }
   };
 
-  const isPDF = docData.type.toLowerCase().includes("pdf");
+  const isPDF = docData?.type?.toLowerCase().includes("pdf") || docData?.type === "application/pdf";
   const isImage = ["jpg", "jpeg", "png", "image/jpeg", "image/png", "image/jpg"].some(ext => 
-    docData.type.toLowerCase().includes(ext)
+    docData?.type?.toLowerCase().includes(ext)
   );
 
   const handleDownload = () => {
@@ -60,9 +75,9 @@ const DocumentPreviewDialog = ({ isOpen, onClose, documentUrl, document: docData
       <DialogContent className="max-w-4xl w-[90vw] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>{docData.name}</span>
+            <span>{docData?.name || 'Documento'}</span>
             <div className="text-sm text-muted-foreground font-normal">
-              {formatDate(docData.uploadDate)} • {docData.size}
+              {formatDate(docData?.uploadDate)} • {docData?.size || 'Tamanho desconhecido'}
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -73,25 +88,31 @@ const DocumentPreviewDialog = ({ isOpen, onClose, documentUrl, document: docData
               <iframe 
                 src={`${documentUrl}#toolbar=0`}
                 className="w-full h-[70vh] border rounded-md"
-                title={docData.name}
+                title={docData?.name || 'PDF Document'}
                 onLoad={() => setLoadError(false)}
-                onError={() => setLoadError(true)}
+                onError={() => {
+                  setLoadError(true);
+                  console.error("Error loading PDF in iframe:", { documentUrl });
+                }}
               />
             ) : isImage ? (
               <div className="w-full h-[70vh] flex items-center justify-center bg-muted/20 rounded-md">
                 <img 
                   src={documentUrl} 
-                  alt={docData.name} 
+                  alt={docData?.name || 'Image'} 
                   className="max-w-full max-h-[70vh] object-contain"
                   onLoad={() => setLoadError(false)}
-                  onError={() => setLoadError(true)}
+                  onError={() => {
+                    setLoadError(true);
+                    console.error("Error loading image:", { documentUrl });
+                  }}
                 />
               </div>
             ) : (
               <div className="w-full h-[30vh] flex flex-col items-center justify-center bg-muted/20 rounded-md">
                 <File className="h-16 w-16 text-gray-400 mb-3" />
                 <p className="text-center text-muted-foreground">
-                  Visualização não disponível para este tipo de arquivo.
+                  Visualização não disponível para este tipo de arquivo ({docData?.type || 'tipo desconhecido'}).
                 </p>
                 <Button onClick={onClose} className="mt-4">Fechar</Button>
               </div>
