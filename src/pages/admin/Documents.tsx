@@ -9,18 +9,15 @@ import DocumentDeleteDialog from "@/components/admin/documents/DocumentDeleteDia
 import { useClients } from "@/hooks/useClients";
 import { toast } from "sonner";
 import { Document as DocumentType } from "@/services/documents/types";
-import { DocumentsHeader } from "@/components/admin/documents/DocumentsHeader";
-import { DocumentsSearch } from "@/components/admin/documents/DocumentsSearch";
-import { DocumentsAccordion } from "@/components/admin/documents/DocumentsAccordion";
-import { DocumentsAccordionHeader } from "@/components/admin/documents/DocumentsAccordionHeader";
-import { DocumentsLoading } from "@/components/admin/documents/DocumentsLoading";
-import { DocumentsEmpty } from "@/components/admin/documents/DocumentsEmpty";
+import { Input } from "@/components/ui/input";
+import { Search, FilePlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import ClientDocuments from "@/components/ui/document/ClientDocuments";
 import { highlightMatch } from "@/components/admin/documents/DocumentsUtils";
 
 export default function Documents() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const { clients, isLoading: isClientsLoading } = useClients();
   
   const {
@@ -42,28 +39,7 @@ export default function Documents() {
     handleConfirmDelete,
     handleDeleteDocument,
     handleDownloadDocument,
-    loadDocuments,
   } = useDocuments(selectedClientId);
-
-  // Function to handle document edit directly from the table
-  const handleDirectEdit = (document: DocumentType) => {
-    handleEditDocument(document);
-  };
-
-  // Function to handle document deletion directly from the table
-  const handleDirectDelete = (document: DocumentType) => {
-    handleConfirmDelete(document);
-  };
-
-  // Function to handle document download directly from the table
-  const handleDirectDownload = async (document: DocumentType) => {
-    try {
-      await handleDownloadDocument(document);
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.error("Erro ao baixar o documento");
-    }
-  };
 
   // Group documents by client
   const groupedDocuments = documents.reduce((acc, document) => {
@@ -103,62 +79,74 @@ export default function Documents() {
     return nameA.localeCompare(nameB);
   });
 
-  // Toggle all accordions
-  const toggleAllAccordions = () => {
-    if (expandedItems.length === sortedClientIds.length) {
-      setExpandedItems([]);
-    } else {
-      setExpandedItems([...sortedClientIds]);
-    }
-  };
-
-  // Handle accordion value change
-  const handleAccordionChange = (value: string[]) => {
-    setExpandedItems(value);
-  };
-
-  // Open upload dialog with preselected client
-  const handleOpenUploadForClient = (clientId: string) => {
-    setSelectedClientId(clientId);
-    setOpenUploadDialog(true);
-  };
-
   return (
     <MainLayout title="Documentos">
       <div className="container mx-auto py-6 space-y-6">
-        <DocumentsHeader onAddDocument={() => setOpenUploadDialog(true)} />
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold tracking-tight">Documentos</h1>
+            <p className="text-muted-foreground">
+              Gerencie os documentos dos clientes.
+            </p>
+          </div>
+          <div>
+            <Button 
+              onClick={() => setOpenUploadDialog(true)}
+              className="w-full md:w-auto"
+            >
+              <FilePlus className="mr-2 h-4 w-4" />
+              Adicionar Documento
+            </Button>
+          </div>
+        </div>
 
         <Card>
           <CardHeader>
-            <DocumentsAccordionHeader 
-              toggleAllAccordions={toggleAllAccordions}
-              expandedItems={expandedItems}
-              sortedClientIds={sortedClientIds}
-            />
+            <div className="flex flex-col md:flex-row justify-between gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Buscar por cliente ou documento..." 
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <DocumentsSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-            </div>
-
             {isLoading || isClientsLoading ? (
-              <DocumentsLoading />
+              <div className="space-y-3">
+                <div className="h-12 bg-muted animate-pulse rounded-md" />
+                <div className="h-12 bg-muted animate-pulse rounded-md" />
+                <div className="h-12 bg-muted animate-pulse rounded-md" />
+              </div>
             ) : sortedClientIds.length > 0 ? (
-              <DocumentsAccordion 
-                sortedClientIds={sortedClientIds}
-                expandedItems={expandedItems}
-                getClientName={getClientName}
-                groupedDocuments={groupedDocuments}
-                searchTerm={searchTerm}
-                clients={clients}
-                handleOpenUploadForClient={handleOpenUploadForClient}
-                handleDirectDownload={handleDirectDownload}
-                handleDirectEdit={handleDirectEdit}
-                handleDirectDelete={handleDirectDelete}
-                highlightMatch={highlightMatch}
-              />
+              <div className="space-y-2">
+                {sortedClientIds.map(clientId => (
+                  <ClientDocuments
+                    key={clientId}
+                    clientName={getClientName(clientId)}
+                    documents={groupedDocuments[clientId]}
+                    onEdit={handleEditDocument}
+                    onDelete={handleConfirmDelete}
+                    onDownload={handleDownloadDocument}
+                    highlightMatch={highlightMatch}
+                    searchTerm={searchTerm}
+                  />
+                ))}
+              </div>
             ) : (
-              <DocumentsEmpty searchTerm={searchTerm} />
+              <div className="py-12 text-center">
+                <FilePlus className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-2 text-lg font-semibold">Nenhum documento encontrado</h3>
+                <p className="text-muted-foreground">
+                  {searchTerm ? 
+                    "Não foram encontrados documentos correspondentes à sua pesquisa." : 
+                    "Comece adicionando um novo documento."
+                  }
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>
