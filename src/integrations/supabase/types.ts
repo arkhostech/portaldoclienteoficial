@@ -133,6 +133,44 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_payments: {
+        Row: {
+          amount: string
+          client_id: string
+          created_at: string
+          description: string | null
+          due_date: string
+          id: string
+          title: string
+        }
+        Insert: {
+          amount: string
+          client_id: string
+          created_at?: string
+          description?: string | null
+          due_date: string
+          id?: string
+          title: string
+        }
+        Update: {
+          amount?: string
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_payments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

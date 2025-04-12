@@ -1,45 +1,85 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/auth";
 
-// Mock data for payment dates - replace with real data later
-const paymentDates = [
-  {
-    date: new Date(2025, 3, 15), // April 15, 2025
-    description: "USCIS Filing Fee",
-    amount: "$535.00"
-  },
-  {
-    date: new Date(2025, 3, 22), // April 22, 2025
-    description: "Attorney Fee",
-    amount: "$1,200.00"
-  },
-  {
-    date: new Date(2025, 4, 10), // May 10, 2025
-    description: "Biometrics Fee",
-    amount: "$85.00"
-  }
-];
-
-// Create a map with payment dates as keys (to use as modifier)
-const paymentDaysMap = paymentDates.reduce((acc, payment) => {
-  const key = format(payment.date, "yyyy-MM-dd");
-  acc[key] = true;
-  return acc;
-}, {} as Record<string, boolean>);
+interface ScheduledPayment {
+  id: string;
+  client_id: string;
+  title: string;
+  amount: string;
+  due_date: string;
+  description: string | null;
+}
 
 const PaymentCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [payments, setPayments] = useState<ScheduledPayment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  
+  // Create a map with payment dates as keys (to use as modifier)
+  const paymentDaysMap = payments.reduce((acc, payment) => {
+    const key = format(new Date(payment.due_date), "yyyy-MM-dd");
+    acc[key] = true;
+    return acc;
+  }, {} as Record<string, boolean>);
   
   // Get payments for the selected date
-  const selectedPayments = paymentDates.filter(p => 
+  const selectedPayments = payments.filter(p => 
     selectedDate &&
-    p.date.toDateString() === selectedDate.toDateString()
+    format(new Date(p.due_date), "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
   );
+
+  // Fetch payments for the current user
+  useEffect(() => {
+    const fetchPayments = async () => {
+      if (!user) return;
+      
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("scheduled_payments")
+          .select("*")
+          .eq("client_id", user.id)
+          .order("due_date", { ascending: true });
+        
+        if (error) {
+          console.error("Error fetching payments:", error);
+          return;
+        }
+        
+        setPayments(data || []);
+      } catch (error) {
+        console.error("Error fetching payments:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchPayments();
+  }, [user]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center">
+            <CalendarDays className="h-5 w-5 mr-2 text-primary" />
+            <CardTitle>Calendário de Pagamentos</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -73,8 +113,9 @@ const PaymentCalendar = () => {
             <p className="font-medium">Pagamentos no dia {format(selectedDate!, "dd/MM/yyyy")}:</p>
             {selectedPayments.map((payment, index) => (
               <div key={index} className="p-2">
-                <p className="font-medium">{payment.description}</p>
+                <p className="font-medium">{payment.title}</p>
                 <p className="text-green-600">{payment.amount}</p>
+                {payment.description && <p className="text-xs text-muted-foreground">{payment.description}</p>}
               </div>
             ))}
           </div>

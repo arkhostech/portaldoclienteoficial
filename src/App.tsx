@@ -15,6 +15,7 @@ import Knowledge from "./pages/Knowledge";
 import NotFound from "./pages/NotFound";
 import Clients from "./pages/admin/Clients";
 import AdminDocuments from "./pages/admin/Documents";
+import AdminPayments from "./pages/admin/Payments";
 import Cases from "./pages/admin/Cases";
 import Reports from "./pages/admin/Reports";
 import ClientDocuments from "./pages/admin/ClientDocuments";
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/admin/clients" element={<Clients />} />
             <Route path="/admin/clients/:clientId/documents" element={<ClientDocuments />} />
             <Route path="/admin/documents" element={<AdminDocuments />} />
+            <Route path="/admin/payments" element={<AdminPayments />} />
             <Route path="/admin/cases" element={<Cases />} />
             <Route path="/admin/reports" element={<Reports />} />
             <Route path="/documents" element={<Documents />} />

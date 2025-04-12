@@ -5,7 +5,7 @@ import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, FileText, Settings, BarChart } from "lucide-react";
+import { Users, FileText, Settings, BarChart, DollarSign } from "lucide-react";
 
 const AdminDashboard = () => {
   const { isAdmin, user } = useAuth();
@@ -43,7 +43,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Admin Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/clients')}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center">
@@ -78,16 +78,33 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-all">
+          <Card className="hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/documents')}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center">
-                <Settings className="mr-2 h-5 w-5 text-brand-600" />
-                Configurações do Sistema
+                <FileText className="mr-2 h-5 w-5 text-brand-600" />
+                Documentos
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                Configure parâmetros e preferências do sistema.
+                Gerencie documentos dos clientes.
+              </p>
+              <Button variant="outline" className="w-full">
+                Acessar
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/payments')}>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center">
+                <DollarSign className="mr-2 h-5 w-5 text-brand-600" />
+                Pagamentos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Agende e gerencie pagamentos dos clientes.
               </p>
               <Button variant="outline" className="w-full">
                 Acessar
