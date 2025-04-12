@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserPlus, Search, Filter } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { Client } from "@/services/clientService";
 import { useClients } from "@/hooks/useClients";
 import ClientsTable from "@/components/admin/clients/ClientsTable";
@@ -23,9 +23,11 @@ const Clients = () => {
     isLoading, 
     isSubmitting, 
     handleCreateClient, 
-    handleUpdateClient, 
-    handleDeleteClient, 
-    selectClient 
+    handleUpdateClient,
+    handleDeleteClient,
+    handleResetPassword, 
+    selectClient, 
+    loadClients
   } = useClients();
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -125,6 +127,7 @@ const Clients = () => {
         open={openEditDialog}
         onOpenChange={setOpenEditDialog}
         onSubmit={handleUpdateClient}
+        onResetPassword={handleResetPassword}
         isSubmitting={isSubmitting}
       />
 

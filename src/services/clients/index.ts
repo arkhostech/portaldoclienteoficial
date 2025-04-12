@@ -12,3 +12,4 @@ export * from './createClientWithAuth';
 // Export client update/delete functions
 export * from './updateClient';
 export * from './deleteClient';
+export * from './resetPassword';

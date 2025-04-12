@@ -44,7 +44,8 @@ const ClientsTable = ({
   const filteredClients = clients.filter(client =>
     client.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (client.phone && client.phone.includes(searchTerm))
+    (client.phone && client.phone.includes(searchTerm)) ||
+    (client.process_type && client.process_type.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (isLoading) {
@@ -70,6 +71,7 @@ const ClientsTable = ({
           <TableHead>Nome</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Telefone</TableHead>
+          <TableHead>Tipo de Processo</TableHead>
           <TableHead>Status</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
@@ -80,6 +82,7 @@ const ClientsTable = ({
             <TableCell className="font-medium">{client.full_name}</TableCell>
             <TableCell>{client.email}</TableCell>
             <TableCell>{client.phone || "-"}</TableCell>
+            <TableCell>{client.process_type || "-"}</TableCell>
             <TableCell>
               <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
                 client.status === "active" 

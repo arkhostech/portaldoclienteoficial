@@ -22,9 +22,15 @@ import {
   FormMessage,
   FormDescription
 } from "@/components/ui/form";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { Loader2, Eye, EyeOff, User, Shield } from "lucide-react";
 import { ClientFormData, ClientWithAuthFormData } from "@/services/clientService";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Schema for client data without auth
@@ -33,7 +39,8 @@ const clientFormSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
   phone: z.string().optional(),
   address: z.string().optional(),
-  status: z.string().default("active")
+  status: z.string().default("active"),
+  process_type: z.string().min(1, { message: "Tipo de processo é obrigatório" }).optional()
 });
 
 // Schema for client data with auth
@@ -43,12 +50,31 @@ const clientWithAuthFormSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   status: z.string().default("active"),
+  process_type: z.string().min(1, { message: "Tipo de processo é obrigatório" }).optional(),
   password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
   confirmPassword: z.string().min(6, { message: "Confirme a senha" })
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
 });
+
+// Common process types for immigration
+const processTypes = [
+  "EB-1",
+  "EB-2",
+  "EB-3",
+  "EB-5",
+  "H-1B",
+  "L-1",
+  "O-1",
+  "Tourist Visa",
+  "Student Visa",
+  "Family Immigration",
+  "Asylum",
+  "Naturalization",
+  "Green Card",
+  "Other"
+];
 
 interface CreateClientModalProps {
   open: boolean;
@@ -75,7 +101,8 @@ const CreateClientModal = ({
       email: "",
       phone: "",
       address: "",
-      status: "active"
+      status: "active",
+      process_type: ""
     }
   });
 
@@ -88,6 +115,7 @@ const CreateClientModal = ({
       phone: "",
       address: "",
       status: "active",
+      process_type: "",
       password: "",
       confirmPassword: ""
     }
@@ -132,7 +160,7 @@ const CreateClientModal = ({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Adicionar Novo Cliente</DialogTitle>
           <DialogDescription>
@@ -203,6 +231,30 @@ const CreateClientModal = ({
                       <FormControl>
                         <Input {...field} placeholder="Endereço completo" />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={basicForm.control}
+                  name="process_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Processo*</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo de processo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {processTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -339,6 +391,30 @@ const CreateClientModal = ({
                       <FormControl>
                         <Input {...field} placeholder="Endereço completo" />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={authForm.control}
+                  name="process_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Processo*</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo de processo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {processTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

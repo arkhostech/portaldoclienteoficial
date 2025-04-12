@@ -9,23 +9,12 @@ import { Calendar, CheckSquare, FileText, MessageSquare, AlertTriangle } from "l
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
-import { Document, Task, Message, CaseStatus } from "@/utils/dummyData";
 
 const Dashboard = () => {
-  const [progress, setProgress] = useState(0);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [caseStatuses, setCaseStatuses] = useState<CaseStatus[]>([]);
-  const [clientName, setClientName] = useState("");
+  const [documents, setDocuments] = useState([]);
+  const [clientInfo, setClientInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
-
-  // Simulate loading animation for progress bar
-  useEffect(() => {
-    const timer = setTimeout(() => setProgress(65), 500);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Fetch real client data from the database
   useEffect(() => {
@@ -34,15 +23,15 @@ const Dashboard = () => {
     const fetchClientData = async () => {
       setIsLoading(true);
       try {
-        // Fetch client profile info
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('full_name')
+        // Fetch client info
+        const { data: clientData } = await supabase
+          .from('clients')
+          .select('*')
           .eq('id', user.id)
           .single();
         
-        if (profileData?.full_name) {
-          setClientName(profileData.full_name);
+        if (clientData) {
+          setClientInfo(clientData);
         }
         
         // Fetch client's documents
@@ -52,25 +41,10 @@ const Dashboard = () => {
           .eq('client_id', user.id);
           
         if (documentsData) {
-          const formattedDocs = documentsData.map(doc => ({
-            id: doc.id,
-            name: doc.title,
-            type: doc.file_type || 'Unknown',
-            category: 'Documents', // Default category
-            uploadedBy: 'Admin',
-            uploadDate: doc.created_at,
-            size: doc.file_size ? `${Math.round(doc.file_size / 1024)} KB` : 'Unknown',
-            needsSignature: false,
-            signed: false
-          }));
-          setDocuments(formattedDocs);
+          setDocuments(documentsData);
+        } else {
+          setDocuments([]);
         }
-        
-        // For tasks, messages and case statuses, we'd fetch from their respective tables
-        // Since these tables don't exist yet, we'll show empty states
-        setTasks([]);
-        setMessages([]);
-        setCaseStatuses([]);
         
       } catch (error) {
         console.error("Error fetching client data:", error);
@@ -82,9 +56,15 @@ const Dashboard = () => {
     fetchClientData();
   }, [user]);
 
-  const unreadMessages = messages.filter((msg) => !msg.read).length;
-  const pendingDocuments = documents.filter((doc) => doc.needsSignature && !doc.signed).length;
-  const pendingTasks = tasks.filter((task) => !task.completed).length;
+  if (isLoading) {
+    return (
+      <MainLayout title="Dashboard">
+        <div className="flex justify-center items-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout title="Dashboard">
@@ -92,7 +72,7 @@ const Dashboard = () => {
         {/* Welcome section */}
         <div className="flex flex-col md:flex-row gap-4 justify-between items-start">
           <div>
-            <h2 className="text-3xl font-bold">Olá, {clientName || 'Cliente'}!</h2>
+            <h2 className="text-3xl font-bold">Olá, {clientInfo?.full_name || 'Cliente'}!</h2>
             <p className="text-muted-foreground">
               Última atualização: {new Date().toLocaleDateString('pt-BR')}
             </p>
@@ -109,176 +89,100 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Status cards */}
-        {caseStatuses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {caseStatuses.map((status) => (
-              <StatusCard
-                key={status.id}
-                title={status.title}
-                status={status.status}
-                currentStep={status.currentStep}
-                nextSteps={status.nextSteps}
-                lastUpdated={status.lastUpdated}
-              />
-            ))}
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <h3 className="text-lg font-medium mb-2">Nenhum processo cadastrado</h3>
-              <p className="text-muted-foreground">
-                Não há processos ativos para este cliente no momento.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Progress and actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Status do Processo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {caseStatuses.length > 0 ? (
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-2 text-sm">
-                      <span>Progresso Total</span>
-                      <span className="font-medium">{progress}%</span>
-                    </div>
-                    <Progress value={progress} className="h-2" />
+        {/* Process information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações do Processo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {clientInfo?.process_type ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm text-muted-foreground">Tipo de Processo</span>
+                    <span className="font-medium">{clientInfo.process_type}</span>
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 pt-4">
-                    <div className="flex flex-col">
-                      <span className="text-sm text-muted-foreground">Data de Início</span>
-                      <span className="font-medium">15/03/2023</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm text-muted-foreground">Estimativa de Conclusão</span>
-                      <span className="font-medium">30/06/2023</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm text-muted-foreground">Tipo de Processo</span>
-                      <span className="font-medium">EB-2 NIW</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm text-muted-foreground">Advogado Responsável</span>
-                      <span className="font-medium">Dr. Maria Silva</span>
-                    </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-muted-foreground">Status</span>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs w-fit ${
+                      clientInfo.status === "active" 
+                        ? "bg-green-100 text-green-700" 
+                        : "bg-gray-100 text-gray-700"
+                    }`}>
+                      {clientInfo.status === "active" ? "Ativo" : "Inativo"}
+                    </span>
                   </div>
-                </div>
-              ) : (
-                <div className="py-4 text-center">
-                  <p className="text-muted-foreground">
-                    Nenhum processo ativo no momento.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Próxima Reunião</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center mb-4">
-                <Calendar className="h-10 w-10 text-brand-600 mr-4" />
-                <div>
-                  <p className="font-medium">Sem reuniões agendadas</p>
-                  <p className="text-sm text-muted-foreground">Entre em contato para agendar</p>
                 </div>
               </div>
-              <Button className="w-full mb-2">Solicitar Agendamento</Button>
-              <Button variant="outline" className="w-full">Histórico de Reuniões</Button>
-            </CardContent>
-          </Card>
-        </div>
+            ) : (
+              <div className="py-4 text-center">
+                <p className="text-muted-foreground">
+                  Nenhuma informação de processo disponível no momento.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Action items */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/documents" className="block">
-            <Card className={`h-full transition-all hover:border-brand-500 ${pendingDocuments > 0 ? 'border-orange-300 bg-orange-50' : ''}`}>
-              <CardContent className="flex items-center p-6">
-                <div className={`rounded-full p-3 mr-4 ${pendingDocuments > 0 ? 'bg-orange-100' : 'bg-muted'}`}>
-                  <FileText className={`h-6 w-6 ${pendingDocuments > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
-                </div>
-                <div>
-                  <h3 className="font-medium">Documentos</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {documents.length === 0 
-                      ? "Nenhum documento disponível" 
-                      : pendingDocuments > 0 
-                        ? `${pendingDocuments} documento(s) aguardando assinatura` 
-                        : `${documents.length} documento(s) disponível(is)`}
-                  </p>
-                </div>
-                {pendingDocuments > 0 && (
-                  <div className="ml-auto">
-                    <AlertTriangle className="h-5 w-5 text-orange-500" />
+        {/* Documents section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Documentos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {documents.length > 0 ? (
+              <div className="space-y-2">
+                {documents.slice(0, 5).map((doc) => (
+                  <div key={doc.id} className="flex justify-between items-center p-2 border rounded-md">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="font-medium">{doc.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(doc.created_at).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm">Visualizar</Button>
+                  </div>
+                ))}
+                
+                {documents.length > 5 && (
+                  <div className="text-center pt-2">
+                    <Link to="/documents">
+                      <Button variant="link">Ver todos os documentos</Button>
+                    </Link>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </Link>
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">
+                  Nenhum documento disponível no momento.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          <Link to="/messages" className="block">
-            <Card className={`h-full transition-all hover:border-brand-500 ${unreadMessages > 0 ? 'border-blue-300 bg-blue-50' : ''}`}>
-              <CardContent className="flex items-center p-6">
-                <div className={`rounded-full p-3 mr-4 ${unreadMessages > 0 ? 'bg-blue-100' : 'bg-muted'}`}>
-                  <MessageSquare className={`h-6 w-6 ${unreadMessages > 0 ? 'text-blue-500' : 'text-muted-foreground'}`} />
-                </div>
-                <div>
-                  <h3 className="font-medium">Mensagens</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {messages.length === 0 
-                      ? "Nenhuma mensagem disponível" 
-                      : unreadMessages > 0 
-                        ? `${unreadMessages} mensagem(ns) não lida(s)` 
-                        : "Todas as mensagens lidas"}
-                  </p>
-                </div>
-                {unreadMessages > 0 && (
-                  <div className="ml-auto">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white text-xs">
-                      {unreadMessages}
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/dashboard" className="block">
-            <Card className={`h-full transition-all hover:border-brand-500 ${pendingTasks > 0 ? 'border-purple-300 bg-purple-50' : ''}`}>
-              <CardContent className="flex items-center p-6">
-                <div className={`rounded-full p-3 mr-4 ${pendingTasks > 0 ? 'bg-purple-100' : 'bg-muted'}`}>
-                  <CheckSquare className={`h-6 w-6 ${pendingTasks > 0 ? 'text-purple-500' : 'text-muted-foreground'}`} />
-                </div>
-                <div>
-                  <h3 className="font-medium">Tarefas</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {tasks.length === 0 
-                      ? "Nenhuma tarefa disponível" 
-                      : pendingTasks > 0 
-                        ? `${pendingTasks} tarefa(s) pendente(s)` 
-                        : "Todas as tarefas concluídas"}
-                  </p>
-                </div>
-                {pendingTasks > 0 && (
-                  <div className="ml-auto">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-500 text-white text-xs">
-                      {pendingTasks}
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
+        {/* Meetings section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Próximas Reuniões</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-6">
+              <div className="text-center">
+                <Calendar className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">
+                  Nenhuma reunião agendada no momento.
+                </p>
+                <Button variant="outline" className="mt-4">Solicitar Agendamento</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

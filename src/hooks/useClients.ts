@@ -6,7 +6,8 @@ import {
   createClient, 
   createClientWithAuth,
   updateClient, 
-  deleteClient, 
+  deleteClient,
+  resetClientPassword,
   ClientFormData,
   ClientWithAuthFormData,
   Client 
@@ -95,6 +96,25 @@ export const useClients = () => {
     }
   };
 
+  // Reset client password
+  const handleResetPassword = async (id: string, password: string) => {
+    setIsSubmitting(true);
+    
+    try {
+      const success = await resetClientPassword(id, password);
+      return success;
+    } catch (error) {
+      console.error("Error resetting client password:", error);
+      toast.error("Erro ao redefinir senha do cliente");
+      return false;
+    } finally {
+      // Delay state update to prevent UI issues
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 300);
+    }
+  };
+
   // Delete a client
   const handleDeleteClient = async (id: string) => {
     setIsSubmitting(true);
@@ -134,6 +154,7 @@ export const useClients = () => {
     handleCreateClient,
     handleUpdateClient,
     handleDeleteClient,
+    handleResetPassword,
     selectClient
   };
 };
