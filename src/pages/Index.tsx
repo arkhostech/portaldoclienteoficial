@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import { useAuth } from "@/contexts/auth";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { signIn, user, isAdmin, loading } = useAuth();
+  const { signIn, user, isAdmin, loading, signOut } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,10 +29,14 @@ const Index = () => {
       if (!isAdmin) {
         navigate("/dashboard");
       } else {
-        toast.error("Administradores devem acessar pelo portal administrativo.");
+        // Using setTimeout to avoid potential state update loops
+        setTimeout(() => {
+          toast.error("Administradores devem acessar pelo portal administrativo.");
+          navigate('/admin-login');
+        }, 100);
       }
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, isAdmin, loading, navigate, signOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +61,7 @@ const Index = () => {
     );
   }
 
-  if (user) return null;
+  if (user && !isAdmin) return null;
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,21 +18,28 @@ import { useAuth } from "@/contexts/auth";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  const { signIn, user, isAdmin, loading } = useAuth();
+  const { signIn, user, isAdmin, loading, signOut } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // If user is logged in and we're done loading
     if (!loading && user) {
       if (isAdmin) {
+        // If admin, go to admin dashboard
         navigate("/admin");
       } else {
-        toast.error("Apenas administradores podem acessar este portal.");
+        // If not admin, log them out once and send to client portal
+        // Using setTimeout to avoid potential state update loops
+        setTimeout(() => {
+          toast.error("Apenas administradores podem acessar este portal.");
+          navigate('/');
+        }, 100);
       }
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, isAdmin, loading, navigate, signOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +64,7 @@ const AdminLogin = () => {
     );
   }
 
-  if (user) return null;
+  if (user && isAdmin) return null;
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">

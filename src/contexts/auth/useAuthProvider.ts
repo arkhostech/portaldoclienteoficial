@@ -91,14 +91,14 @@ export function useAuthProvider(): AuthContextType {
               const isUserAdmin = await checkUserRole(newSession.user.id);
               setIsAdmin(isUserAdmin);
               
+              // Only handle redirection for new sign-ins, not for refreshed sessions
               if (event === 'SIGNED_IN') {
-                // Only handle navigation for SIGNED_IN event, not for SESSION_REFRESHED
                 const currentPath = window.location.pathname;
                 
                 if (currentPath === '/admin-login') {
                   if (!isUserAdmin) {
                     toast.error("Apenas administradores podem acessar este portal.");
-                    await signOut();
+                    navigate('/');
                     return;
                   } else {
                     navigate("/admin");
@@ -109,25 +109,12 @@ export function useAuthProvider(): AuthContextType {
                 if (currentPath === '/') {
                   if (isUserAdmin) {
                     toast.error("Administradores devem acessar pelo portal administrativo.");
-                    await signOut();
+                    navigate('/admin-login');
                     return;
                   } else {
                     navigate("/dashboard");
                     return;
                   }
-                }
-                
-                // Path validation for SIGNED_IN only
-                if (isAdminPath(currentPath) && !isUserAdmin) {
-                  toast.error("Apenas administradores podem acessar este portal.");
-                  await signOut();
-                  return;
-                }
-                
-                if (isClientPath(currentPath) && isUserAdmin) {
-                  toast.error("Administradores devem acessar pelo portal administrativo.");
-                  await signOut();
-                  return;
                 }
               }
               setLoading(false);
@@ -162,31 +149,32 @@ export function useAuthProvider(): AuthContextType {
               setIsAdmin(isUserAdmin);
               setLoading(false);
               
-              // Only redirect if on login pages or wrong section
+              // Only redirect in specific cases to avoid loops
               const currentPath = window.location.pathname;
               
-              // Don't redirect on page refresh if already in correct section
-              // Only redirect if trying to access wrong section
-              if (isAdminPath(currentPath) && !isUserAdmin && currentPath !== '/admin-login') {
-                toast.error("Apenas administradores podem acessar este portal.");
-                await signOut();
-                return;
-              } 
-              
-              if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
+              // Only redirect on login pages or if trying to access wrong section
+              if (currentPath === '/admin-login') {
+                if (isUserAdmin) {
+                  navigate('/admin');
+                  return;
+                }
+                // If not admin, let them see the login page
+              } else if (currentPath === '/') {
+                if (!isUserAdmin && session) {
+                  navigate('/dashboard');
+                  return;
+                }
+                // If admin, let them see the client login page
+              } else if (isAdminPath(currentPath) && !isUserAdmin) {
+                // Only redirect if not on admin login page
+                if (currentPath !== '/admin-login') {
+                  toast.error("Apenas administradores podem acessar este portal.");
+                  navigate('/');
+                  return;
+                }
+              } else if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
                 toast.error("Administradores devem acessar pelo portal administrativo.");
-                await signOut();
-                return;
-              }
-              
-              // Redirect if on login pages only
-              if (currentPath === '/admin-login' && isUserAdmin) {
-                navigate('/admin');
-                return;
-              }
-              
-              if (currentPath === '/' && !isUserAdmin) {
-                navigate('/dashboard');
+                navigate('/admin-login');
                 return;
               }
             }
@@ -221,7 +209,7 @@ export function useAuthProvider(): AuthContextType {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, location.pathname, sessionChecked, checkUserRole, signOut]);
+  }, [navigate, location.pathname, sessionChecked, checkUserRole]);
 
   const value = {
     user,
