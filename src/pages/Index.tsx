@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import {
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, Mail, ShieldCheck, LogIn } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -24,15 +23,12 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
       if (!isAdmin) {
         navigate("/dashboard");
       } else {
-        // If admin trying to log in on client page, show error
         toast.error("Administradores devem acessar pelo portal administrativo.");
-        // Let AuthContext handle logout and redirection
       }
     }
   }, [user, isAdmin, loading, navigate]);
@@ -44,7 +40,6 @@ const Index = () => {
 
     try {
       await signIn(email, password);
-      // Role checking and redirects are handled in AuthContext
     } catch (error: any) {
       console.error(error);
       setError("Credenciais inválidas ou ocorreu um erro ao tentar fazer login.");
@@ -53,7 +48,6 @@ const Index = () => {
     }
   };
 
-  // If loading, don't render the form yet
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -62,12 +56,10 @@ const Index = () => {
     );
   }
 
-  // If already logged in, let the useEffect handle redirection
   if (user) return null;
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Admin Login Button */}
       <div className="absolute top-4 right-4 z-10">
         <Button 
           variant="outline"
@@ -78,7 +70,6 @@ const Index = () => {
         </Button>
       </div>
 
-      {/* Left side - Login Form */}
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 text-center">
@@ -143,7 +134,6 @@ const Index = () => {
         </Card>
       </div>
       
-      {/* Right side - Image and information */}
       <div className="hidden md:flex flex-1 bg-[#111111] text-white p-12 flex-col justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#222222] to-[#111111] opacity-90"></div>
         <div className="relative z-10 space-y-6">

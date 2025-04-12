@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import {
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -24,15 +23,12 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Redirect if already logged in as admin
   useEffect(() => {
     if (!loading && user) {
       if (isAdmin) {
         navigate("/admin");
       } else {
-        // If logged in but not admin, show error and logout
         toast.error("Apenas administradores podem acessar este portal.");
-        // Let the AuthContext handle logout and redirection
       }
     }
   }, [user, isAdmin, loading, navigate]);
@@ -44,7 +40,6 @@ const AdminLogin = () => {
 
     try {
       await signIn(email, password);
-      // Role checking and redirects are handled in AuthContext
     } catch (error: any) {
       console.error(error);
       setError("Credenciais inválidas ou você não tem permissão de administrador.");
@@ -53,7 +48,6 @@ const AdminLogin = () => {
     }
   };
 
-  // If loading, don't render the form yet
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -62,12 +56,10 @@ const AdminLogin = () => {
     );
   }
 
-  // If already logged in, let the useEffect handle redirection
   if (user) return null;
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Back button */}
       <div className="absolute top-4 left-4 z-10">
         <Button 
           variant="outline"
@@ -78,7 +70,6 @@ const AdminLogin = () => {
         </Button>
       </div>
 
-      {/* Left side - Admin Information */}
       <div className="hidden md:flex flex-1 bg-[#111111] text-white p-12 flex-col justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#222222] to-[#111111] opacity-90"></div>
         <div className="relative z-10 space-y-6">
@@ -106,7 +97,6 @@ const AdminLogin = () => {
         </div>
       </div>
 
-      {/* Right side - Login Form */}
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 text-center">

@@ -1,9 +1,8 @@
-
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface MainLayoutProps {
@@ -16,12 +15,10 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
   const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   
-  // Determine if the current path is in the admin section
   const isAdminPath = (path: string): boolean => {
     return path === '/admin-login' || path.startsWith('/admin');
   };
 
-  // Determine if the current path is in the client section
   const isClientPath = (path: string): boolean => {
     return path === '/' || path === '/dashboard' || 
            path === '/documents' || path === '/payments' || 
@@ -29,14 +26,10 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
   };
   
   useEffect(() => {
-    // Scroll to top when route changes
     window.scrollTo(0, 0);
     
-    // Only redirect if not loading and no user
-    // We don't want to check on every path change - just if there's no authenticated user
     if (!loading && !user) {
       console.log("No authenticated user detected, redirecting to login");
-      // Redirect to the appropriate login page based on the current path
       if (isAdminPath(location.pathname)) {
         navigate('/admin-login');
       } else {
@@ -45,12 +38,9 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
       return;
     }
     
-    // Only check path validity for wrong section access
-    // This prevents users from being logged out when browsing within their proper section
     if (!loading && user) {
       const currentPath = location.pathname;
       
-      // Only redirect if user is clearly in the wrong section
       if (isAdmin && isClientPath(currentPath) && currentPath !== '/') {
         console.log("Admin trying to access client section, redirecting to admin dashboard");
         navigate('/admin');
@@ -65,7 +55,6 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
     }
   }, [user, loading, navigate, isAdmin]);
 
-  // Show loading state with skeletons
   if (loading) {
     console.log("MainLayout: Showing loading skeleton");
     return (
@@ -90,7 +79,6 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
     );
   }
 
-  // Don't render if not authenticated
   if (!user) {
     console.log("MainLayout: User not authenticated, returning null");
     return null;
