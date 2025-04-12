@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { CalendarDays } from "lucide-react";
-import { DayProps } from "react-day-picker";
+import { format } from "date-fns";
 
 // Mock data for payment dates - replace with real data later
 const paymentDates = [
@@ -25,28 +25,21 @@ const paymentDates = [
   }
 ];
 
+// Create a map with payment dates as keys (to use as modifier)
+const paymentDaysMap = paymentDates.reduce((acc, payment) => {
+  const key = format(payment.date, "yyyy-MM-dd");
+  acc[key] = true;
+  return acc;
+}, {} as Record<string, boolean>);
+
 const PaymentCalendar = () => {
-  const [date, setDate] = useState<Date>(new Date());
-
-  // Function to style payment dates on calendar
-  const isDayWithPayment = (day: Date): boolean => {
-    return paymentDates.some(
-      payment => 
-        payment.date.getDate() === day.getDate() && 
-        payment.date.getMonth() === day.getMonth() && 
-        payment.date.getFullYear() === day.getFullYear()
-    );
-  };
-
-  // Function to get payment details for a specific date
-  const getPaymentDetails = (day: Date) => {
-    return paymentDates.filter(
-      payment => 
-        payment.date.getDate() === day.getDate() && 
-        payment.date.getMonth() === day.getMonth() && 
-        payment.date.getFullYear() === day.getFullYear()
-    );
-  };
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  
+  // Get payments for the selected date
+  const selectedPayments = paymentDates.filter(p => 
+    selectedDate &&
+    p.date.toDateString() === selectedDate.toDateString()
+  );
 
   return (
     <Card>
@@ -60,74 +53,32 @@ const PaymentCalendar = () => {
         <TooltipProvider>
           <Calendar
             mode="single"
-            selected={date}
-            onSelect={(newDate) => newDate && setDate(newDate)}
+            selected={selectedDate}
+            onSelect={setSelectedDate}
             className="mx-auto"
             modifiers={{
-              paymentDay: (day) => isDayWithPayment(day)
+              paymentDay: (day) => {
+                const key = format(day, "yyyy-MM-dd");
+                return paymentDaysMap[key];
+              }
             }}
             modifiersClassNames={{
               paymentDay: "bg-primary/20 font-bold text-primary rounded-md"
             }}
-            components={{
-              Day: (dayProps) => {
-                const {
-                  date: dayDate,
-                  selected,
-                  today,
-                  modifiers,
-                  modifiersClassNames,
-                  ...rest
-                } = dayProps;
-
-                const payments = getPaymentDetails(dayDate);
-
-                const className = modifiers?.paymentDay
-                  ? `${modifiersClassNames?.paymentDay ?? ''} ${rest.className ?? ''}`
-                  : rest.className ?? '';
-
-                if (payments.length > 0) {
-                  return (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          className={className}
-                          {...rest}
-                          data-selected={selected ? "true" : undefined}
-                          data-today={today ? "true" : undefined}
-                        >
-                          {dayDate.getDate()}
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="p-2 max-w-xs">
-                        <div className="space-y-1">
-                          {payments.map((payment, index) => (
-                            <div key={index} className="text-sm">
-                              <p className="font-medium">{payment.description}</p>
-                              <p className="text-green-600">{payment.amount}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                }
-
-                return (
-                  <div
-                    className={className}
-                    {...rest}
-                    data-selected={selected ? "true" : undefined}
-                    data-today={today ? "true" : undefined}
-                  >
-                    {dayDate.getDate()}
-                  </div>
-                );
-              }
-            }}
           />
         </TooltipProvider>
+
+        {selectedPayments.length > 0 && (
+          <div className="mt-4 space-y-2 text-sm text-center">
+            <p className="font-medium">Pagamentos no dia {format(selectedDate!, "dd/MM/yyyy")}:</p>
+            {selectedPayments.map((payment, index) => (
+              <div key={index} className="p-2">
+                <p className="font-medium">{payment.description}</p>
+                <p className="text-green-600">{payment.amount}</p>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="text-center mt-4">
           <div className="flex items-center justify-center space-x-4 text-sm">
