@@ -1,7 +1,5 @@
-
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
-import DocumentCard from "@/components/ui/DocumentCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +9,7 @@ import { toast } from "sonner";
 import { fetchDocuments } from "@/services/documents";
 import { Document, ClientDocumentView } from "@/services/documents/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DocumentCard } from "@/components/ui/document";
 
 const Documents = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,7 +18,6 @@ const Documents = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   
-  // Fetch documents for the current client
   useEffect(() => {
     const loadDocuments = async () => {
       if (!user) {
@@ -31,13 +29,11 @@ const Documents = () => {
       try {
         console.log("Fetching documents for user ID:", user.id);
         
-        // Use the service function which respects RLS policies
         const documentsData = await fetchDocuments(user.id);
         
         if (documentsData && documentsData.length > 0) {
           console.log("Documents found:", documentsData.length);
           
-          // Map backend Document to ClientDocumentView
           const clientDocuments: ClientDocumentView[] = documentsData.map(doc => ({
             id: doc.id,
             name: doc.title,
@@ -53,7 +49,6 @@ const Documents = () => {
           
           setDocuments(clientDocuments);
           
-          // Extract unique categories
           const uniqueCategories = [...new Set(clientDocuments.map(doc => doc.category))];
           setCategories(uniqueCategories);
         } else {
