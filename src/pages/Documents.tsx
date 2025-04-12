@@ -1,13 +1,13 @@
+
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FilePlus, Search } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { fetchDocuments } from "@/services/documents";
-import { Document, ClientDocumentView } from "@/services/documents/types";
+import { ClientDocumentView } from "@/services/documents/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DocumentCard } from "@/components/ui/document";
 
