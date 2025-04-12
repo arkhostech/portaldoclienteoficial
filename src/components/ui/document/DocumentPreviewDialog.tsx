@@ -11,7 +11,7 @@ interface DocumentPreviewDialogProps {
   document: ClientDocumentView;
 }
 
-const DocumentPreviewDialog = ({ isOpen, onClose, documentUrl, document }: DocumentPreviewDialogProps) => {
+const DocumentPreviewDialog = ({ isOpen, onClose, documentUrl, document: docData }: DocumentPreviewDialogProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -20,16 +20,16 @@ const DocumentPreviewDialog = ({ isOpen, onClose, documentUrl, document }: Docum
     });
   };
 
-  const isPDF = document.type.toLowerCase().includes("pdf");
+  const isPDF = docData.type.toLowerCase().includes("pdf");
   const isImage = ["jpg", "jpeg", "png", "image/jpeg", "image/png", "image/jpg"].some(ext => 
-    document.type.toLowerCase().includes(ext)
+    docData.type.toLowerCase().includes(ext)
   );
 
   const handleDownload = () => {
     if (documentUrl) {
       const link = document.createElement("a");
       link.href = documentUrl;
-      link.download = document.name;
+      link.download = docData.name;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -41,9 +41,9 @@ const DocumentPreviewDialog = ({ isOpen, onClose, documentUrl, document }: Docum
       <DialogContent className="max-w-4xl w-[90vw] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>{document.name}</span>
+            <span>{docData.name}</span>
             <div className="text-sm text-muted-foreground font-normal">
-              {formatDate(document.uploadDate)} • {document.size}
+              {formatDate(docData.uploadDate)} • {docData.size}
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -54,13 +54,13 @@ const DocumentPreviewDialog = ({ isOpen, onClose, documentUrl, document }: Docum
               <iframe 
                 src={`${documentUrl}#toolbar=0`}
                 className="w-full h-[70vh] border rounded-md"
-                title={document.name}
+                title={docData.name}
               />
             ) : isImage ? (
               <div className="w-full h-[70vh] flex items-center justify-center bg-muted/20 rounded-md">
                 <img 
                   src={documentUrl} 
-                  alt={document.name} 
+                  alt={docData.name} 
                   className="max-w-full max-h-[70vh] object-contain"
                 />
               </div>
