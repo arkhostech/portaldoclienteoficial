@@ -2,11 +2,11 @@
 import { File, FileText, Image } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Document } from "@/utils/dummyData";
+import { ClientDocumentView } from "@/services/documents/types";
 import { Button } from "@/components/ui/button";
 
 interface DocumentCardProps {
-  document: Document;
+  document: ClientDocumentView;
 }
 
 const DocumentCard = ({ document }: DocumentCardProps) => {

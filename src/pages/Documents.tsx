@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import DocumentCard from "@/components/ui/DocumentCard";
@@ -9,12 +8,12 @@ import { FilePlus, Search } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { fetchDocuments } from "@/services/documents";
-import { Document } from "@/services/documents/types";
+import { Document, ClientDocumentView } from "@/services/documents/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Documents = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<ClientDocumentView[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -36,11 +35,13 @@ const Documents = () => {
         
         if (documentsData && documentsData.length > 0) {
           console.log("Documents found:", documentsData.length);
-          const formattedDocs = documentsData.map(doc => ({
+          
+          // Map backend Document to ClientDocumentView
+          const clientDocuments: ClientDocumentView[] = documentsData.map(doc => ({
             id: doc.id,
             name: doc.title,
             type: doc.file_type || 'Unknown',
-            category: doc.description || 'General',  // Using description as category for now
+            category: doc.description || 'General',
             uploadedBy: 'Admin',
             uploadDate: doc.created_at,
             size: doc.file_size ? `${Math.round(doc.file_size / 1024)} KB` : 'Unknown',
@@ -48,10 +49,10 @@ const Documents = () => {
             signed: false
           }));
           
-          setDocuments(formattedDocs);
+          setDocuments(clientDocuments);
           
           // Extract unique categories
-          const uniqueCategories = [...new Set(formattedDocs.map(doc => doc.category))];
+          const uniqueCategories = [...new Set(clientDocuments.map(doc => doc.category))];
           setCategories(uniqueCategories);
         } else {
           console.log("No documents found for user ID:", user.id);

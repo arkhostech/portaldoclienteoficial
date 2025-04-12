@@ -9,10 +9,24 @@ export interface Document {
   file_size: number | null;
   created_at: string;
   updated_at: string;
+  status: string;
 }
 
 export interface DocumentFormData {
   title: string;
   description?: string;
   client_id: string;
+}
+
+// New interface for client-side document display
+export interface ClientDocumentView {
+  id: string;
+  name: string;
+  type: string;
+  category: string;
+  uploadedBy: string;
+  uploadDate: string;
+  size: string;
+  needsSignature: boolean;
+  signed: boolean;
 }
