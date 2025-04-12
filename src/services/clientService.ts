@@ -108,7 +108,8 @@ export const createClientWithAuth = async (clientData: ClientWithAuthFormData): 
     }
     
     // Check if the email exists in the returned users
-    const emailExists = authUsers?.users?.some(user => user.email === clientData.email);
+    // Define the type of user objects explicitly to avoid the "email" property error
+    const emailExists = authUsers?.users?.some((user: { email?: string }) => user.email === clientData.email);
     
     if (emailExists) {
       toast.error("Este email já está cadastrado no sistema de autenticação");
