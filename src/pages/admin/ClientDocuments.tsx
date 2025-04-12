@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -165,7 +164,7 @@ export default function ClientDocuments() {
                 documents={documents}
                 isLoading={false}
                 searchTerm={searchTerm}
-                clients={[]}  // Not needed for single client view
+                clients={client ? [client] : []}
                 onDownload={handleDirectDownload}
                 onEdit={handleDirectEdit}
                 onDelete={handleDirectDelete}

@@ -19,6 +19,7 @@ interface DocumentsTableProps {
   onDownload: (document: DocumentType) => void;
   onEdit: (document: DocumentType) => void;
   onDelete: (document: DocumentType) => void;
+  hideClientColumn?: boolean; // Added the missing property
 }
 
 export default function DocumentsTable({
@@ -28,7 +29,8 @@ export default function DocumentsTable({
   clients,
   onDownload,
   onEdit,
-  onDelete
+  onDelete,
+  hideClientColumn = false // Default to false
 }: DocumentsTableProps) {
   const filteredDocuments = documents.filter(doc =>
     doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,7 +82,7 @@ export default function DocumentsTable({
       <TableHeader>
         <TableRow>
           <TableHead>Título</TableHead>
-          <TableHead>Cliente</TableHead>
+          {!hideClientColumn && <TableHead>Cliente</TableHead>}
           <TableHead>Data</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
@@ -100,18 +102,20 @@ export default function DocumentsTable({
                 <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
               </div>
             </TableCell>
-            <TableCell 
-              className="hover:bg-muted/50"
-              onClick={() => handleCellClick(doc)}
-            >
-              <div className="flex items-center">
-                <User className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="truncate max-w-[150px]">
-                  {getClientName(doc.client_id)}
-                </span>
-                <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
-              </div>
-            </TableCell>
+            {!hideClientColumn && (
+              <TableCell 
+                className="hover:bg-muted/50"
+                onClick={() => handleCellClick(doc)}
+              >
+                <div className="flex items-center">
+                  <User className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate max-w-[150px]">
+                    {getClientName(doc.client_id)}
+                  </span>
+                  <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
+                </div>
+              </TableCell>
+            )}
             <TableCell>
               <div className="flex items-center">
                 <Clock className="h-3 w-3 mr-1 text-muted-foreground" />

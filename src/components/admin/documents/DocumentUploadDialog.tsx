@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -63,7 +62,6 @@ const DocumentUploadDialog = ({
     }
   });
 
-  // Update default client_id when preSelectedClientId changes
   if (preSelectedClientId && form.getValues("client_id") !== preSelectedClientId) {
     form.setValue("client_id", preSelectedClientId);
   }
@@ -77,9 +75,8 @@ const DocumentUploadDialog = ({
       }))
     ]);
     
-    // If no title is set yet and we're uploading a single file, use the file name
     if (!form.getValues("title") && acceptedFiles.length === 1) {
-      const fileName = acceptedFiles[0].name.split('.')[0]; // Get name without extension
+      const fileName = acceptedFiles[0].name.split('.')[0];
       form.setValue("title", fileName);
     }
   }, [form]);
@@ -88,7 +85,6 @@ const DocumentUploadDialog = ({
     setFiles(prevFiles => {
       const updatedFiles = prevFiles.filter(file => file.id !== id);
       
-      // If no files are left, clear the title if it was set automatically
       if (updatedFiles.length === 0) {
         form.setValue("title", "");
       }
@@ -119,20 +115,18 @@ const DocumentUploadDialog = ({
     setUploadProgress(0);
     
     try {
-      // Upload all files sequentially with a progress simulation
       let successCount = 0;
       const totalFiles = files.length;
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const fileData = { 
-          ...data,
-          // For multiple files, append a number to the title
           title: totalFiles > 1 ? `${data.title} (${i + 1})` : data.title,
-          file 
+          description: data.description,
+          client_id: data.client_id,
+          file
         };
         
-        // Simulate upload progress
         const intervalId = setInterval(() => {
           setUploadProgress(prev => Math.min(prev + 1, (i + 1) / totalFiles * 100 - 5));
         }, 50);
@@ -145,12 +139,10 @@ const DocumentUploadDialog = ({
           successCount++;
         }
         
-        // Update progress based on completed uploads
         setUploadProgress((i + 1) / totalFiles * 100);
       }
       
       if (successCount > 0) {
-        // Reset form and close dialog on successful upload
         setFiles([]);
         form.reset();
         onOpenChange(false);
@@ -164,7 +156,6 @@ const DocumentUploadDialog = ({
   const handleDialogClose = (open: boolean) => {
     if (!isUploading && !isSubmitting && open === false) {
       onOpenChange(open);
-      // Clean up file previews and reset form when dialog is closed
       setFiles(prevFiles => {
         prevFiles.forEach(file => {
           if (file.preview) {
