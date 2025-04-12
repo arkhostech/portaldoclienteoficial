@@ -57,6 +57,9 @@ export function AdminPaymentForm({ clients, onSuccess, initialData }: AdminPayme
         ? data.amount
         : `$${data.amount}`;
 
+      // Convert Date to ISO string for Supabase
+      const formattedDueDate = data.due_date.toISOString();
+
       if (initialData?.id) {
         // Update existing payment
         const { error } = await supabase
@@ -65,7 +68,7 @@ export function AdminPaymentForm({ clients, onSuccess, initialData }: AdminPayme
             client_id: data.client_id,
             title: data.title,
             amount: formattedAmount,
-            due_date: data.due_date,
+            due_date: formattedDueDate,
             description: data.description || null,
           })
           .eq("id", initialData.id);
@@ -78,7 +81,7 @@ export function AdminPaymentForm({ clients, onSuccess, initialData }: AdminPayme
           client_id: data.client_id,
           title: data.title,
           amount: formattedAmount,
-          due_date: data.due_date,
+          due_date: formattedDueDate,
           description: data.description || null,
         });
 
