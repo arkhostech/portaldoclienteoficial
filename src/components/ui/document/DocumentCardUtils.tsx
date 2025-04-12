@@ -1,3 +1,4 @@
+
 import { FileText, Image, File } from "lucide-react";
 import { toast } from "sonner";
 import { getDocumentUrl } from "@/services/documents/documentUrl";
@@ -82,6 +83,7 @@ export const handleDocumentDownload = async (filePath: string | null, fileName: 
       const link = document.createElement("a");
       link.href = url;
       link.download = fileName;
+      link.style.display = "none";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

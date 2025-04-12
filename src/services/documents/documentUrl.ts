@@ -36,11 +36,11 @@ export const getDocumentUrl = async (filePath: string): Promise<string | null> =
       console.error("Unexpected error checking bucket:", bucketErr);
     }
     
-    // Try to create signed URL
+    // Try to create signed URL - reduced to 60 seconds for security
     console.log("Creating signed URL for path:", filePath);
     const { data, error } = await supabase.storage
       .from('client_documents')
-      .createSignedUrl(filePath, 3600); // URL valid for 1 hour
+      .createSignedUrl(filePath, 60); // URL valid for 60 seconds
     
     if (error) {
       console.error("Error getting document URL:", error);

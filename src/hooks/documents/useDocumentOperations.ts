@@ -163,9 +163,14 @@ export const useDocumentOperations = (
         toast.dismiss(toastId);
         toast.success("Download iniciado");
         
-        // Open in a new tab to avoid navigation issues
-        const win = window.open(url, '_blank');
-        if (win) win.focus();
+        // Create and trigger download via an anchor element
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = document.title;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       } else {
         toast.dismiss(toastId);
         toast.error("Erro ao gerar link para download");
