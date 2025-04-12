@@ -46,20 +46,21 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
       return;
     }
     
-    // Redirect users based on their role and current path
+    // Only check path validity, don't force redirects on refresh
+    // This prevents users from being logged out on page refresh
     if (!loading && user) {
       const currentPath = location.pathname;
       
-      // If admin is trying to access client pages
-      if (isAdmin && isClientPath(currentPath)) {
-        console.log("Admin trying to access client pages, redirecting to admin dashboard");
+      // Only redirect if user is clearly in the wrong section
+      // This allows refreshing pages within the proper section
+      if (isAdmin && currentPath === '/') {
+        console.log("Admin trying to access client login, redirecting to admin dashboard");
         navigate('/admin');
         return;
       }
       
-      // If client is trying to access admin pages
-      if (!isAdmin && isAdminPath(currentPath)) {
-        console.log("Client trying to access admin pages, redirecting to client dashboard");
+      if (!isAdmin && currentPath === '/admin-login') {
+        console.log("Client trying to access admin login, redirecting to client dashboard");
         navigate('/dashboard');
         return;
       }
@@ -109,6 +110,6 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
       </div>
     </div>
   );
-};
+}
 
 export default MainLayout;

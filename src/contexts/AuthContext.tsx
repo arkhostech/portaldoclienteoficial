@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      (event, newSession) => {
         console.log("Auth state changed:", event, newSession?.user?.id);
         
         if (!mounted) return;
@@ -130,40 +130,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setIsAdmin(isUserAdmin);
               setLoading(false);
               
-              // Navigation based on role and event
+              // Only handle navigation for SIGNED_IN event, not for SESSION_REFRESHED
               if (event === 'SIGNED_IN') {
-                // Check if user is on the correct login page
+                // Handle navigation logic for sign in
                 const currentPath = window.location.pathname;
                 
-                // Handle admin login page
                 if (currentPath === '/admin-login') {
                   if (!isUserAdmin) {
-                    // Admin login page but user is not admin
                     toast.error("Apenas administradores podem acessar este portal.");
                     await signOut();
                     return;
                   } else {
-                    // Admin logged into admin login page - redirect to admin dashboard
                     navigate("/admin");
                     return;
                   }
                 } 
                 
-                // Handle client login page
                 if (currentPath === '/') {
                   if (isUserAdmin) {
-                    // Client login page but user is admin
                     toast.error("Administradores devem acessar pelo portal administrativo.");
                     await signOut();
                     return;
                   } else {
-                    // Client logged into client login page - redirect to client dashboard
                     navigate("/dashboard");
                     return;
                   }
                 }
                 
-                // If already on some path, check if it's appropriate for the role
+                // Path validation for SIGNED_IN only
                 if (isAdminPath(currentPath) && !isUserAdmin) {
                   toast.error("Apenas administradores podem acessar este portal.");
                   await signOut();
@@ -207,25 +201,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsAdmin(isUserAdmin);
             setLoading(false);
             
-            // Check if user is on the correct page based on role
+            // Only redirect if on login pages or wrong section
             const currentPath = window.location.pathname;
             
-            // Redirect if on wrong section
-            if (isAdminPath(currentPath) && !isUserAdmin) {
-              // Admin page but user is not admin
+            // Don't redirect on page refresh if already in correct section
+            // Only redirect if trying to access wrong section
+            if (isAdminPath(currentPath) && !isUserAdmin && currentPath !== '/admin-login') {
               toast.error("Apenas administradores podem acessar este portal.");
               await signOut();
               return;
             } 
             
-            if (isClientPath(currentPath) && isUserAdmin) {
-              // Client page but user is admin
+            if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
               toast.error("Administradores devem acessar pelo portal administrativo.");
               await signOut();
               return;
             }
             
-            // If on login page, redirect to appropriate dashboard
+            // Redirect if on login pages only
             if (currentPath === '/admin-login' && isUserAdmin) {
               navigate('/admin');
               return;
