@@ -1,7 +1,7 @@
 
 import { useState, useRef } from "react";
 import { 
-  Document, 
+  Document as DocumentType, 
   DocumentFormData,
   uploadDocument,
   updateDocumentMetadata,
@@ -12,9 +12,9 @@ import { toast } from "sonner";
 
 export const useDocumentOperations = (
   clientId: string | null,
-  documents: Document[],
-  setDocuments: React.Dispatch<React.SetStateAction<Document[]>>,
-  selectedDocument: Document | null
+  documents: DocumentType[],
+  setDocuments: React.Dispatch<React.SetStateAction<DocumentType[]>>,
+  selectedDocument: DocumentType | null
 ) => {
   // Operation state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -146,7 +146,7 @@ export const useDocumentOperations = (
     }
   };
 
-  const handleDownloadDocument = async (document: Document) => {
+  const handleDownloadDocument = async (document: DocumentType) => {
     if (!document.file_path) {
       toast.error("Nenhum arquivo disponível para download");
       return;
@@ -164,13 +164,13 @@ export const useDocumentOperations = (
         toast.success("Download iniciado");
         
         // Create and trigger download via an anchor element
-        const link = document.createElement("a");
+        const link = window.document.createElement("a");
         link.href = url;
         link.download = document.title;
         link.style.display = "none";
-        document.body.appendChild(link);
+        window.document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        window.document.body.removeChild(link);
       } else {
         toast.dismiss(toastId);
         toast.error("Erro ao gerar link para download");
