@@ -95,9 +95,10 @@ const Dashboard = () => {
       {/* Welcome section */}
       <WelcomeSection clientName={clientInfo?.full_name} />
       
-      <div className="grid grid-cols-1 gap-6 mt-6 lg:grid-cols-5">
-        {/* Main content - left column (3/5 width on large screens, full width on smaller screens) */}
-        <div className="lg:col-span-3 space-y-6">
+      {/* Responsive grid layout - adjusted for better spacing on all screen sizes */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6">
+        {/* Main content - left column */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-4 md:space-y-6">
           {/* Process information */}
           <ProcessInfoCard 
             processType={clientInfo?.process_type} 
@@ -111,9 +112,9 @@ const Dashboard = () => {
           <DocumentsCard documents={documents} />
         </div>
         
-        {/* Right sidebar (2/5 width on large screens, full width on smaller screens) */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Calendar for payment reminders */}
+        {/* Right sidebar */}
+        <div className="lg:col-span-5 xl:col-span-4 space-y-4 md:space-y-6">
+          {/* Calendar for payment reminders - made more responsive */}
           <PaymentCalendar />
           
           {/* Quick actions */}

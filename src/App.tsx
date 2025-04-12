@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/auth";
+import { ToastProvider } from "@/hooks/use-toast";
 import Index from "./pages/Index";
 import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";
@@ -25,28 +26,30 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/clients" element={<Clients />} />
-            <Route path="/admin/clients/:clientId/documents" element={<ClientDocuments />} />
-            <Route path="/admin/documents" element={<AdminDocuments />} />
-            <Route path="/admin/payments" element={<AdminPayments />} />
-            <Route path="/admin/cases" element={<Cases />} />
-            <Route path="/admin/reports" element={<Reports />} />
-            <Route path="/documents" element={<Documents />} />
-            <Route path="/payments" element={<Payments />} />
-            <Route path="/knowledge" element={<Knowledge />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
+      <ToastProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/clients" element={<Clients />} />
+              <Route path="/admin/clients/:clientId/documents" element={<ClientDocuments />} />
+              <Route path="/admin/documents" element={<AdminDocuments />} />
+              <Route path="/admin/payments" element={<AdminPayments />} />
+              <Route path="/admin/cases" element={<Cases />} />
+              <Route path="/admin/reports" element={<Reports />} />
+              <Route path="/documents" element={<Documents />} />
+              <Route path="/payments" element={<Payments />} />
+              <Route path="/knowledge" element={<Knowledge />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </ToastProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
