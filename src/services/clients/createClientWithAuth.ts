@@ -5,48 +5,47 @@ import { Client, ClientWithAuthFormData } from "./types";
 
 export const createClientWithAuth = async (clientFormData: ClientWithAuthFormData): Promise<Client | null> => {
   try {
-    // Create a separate connection to check if email already exists without using the admin's session
-    const tempClient = supabase.auth.signUp({
+    // First, create the auth user for the client WITHOUT signing in as that user
+    // We're using admin functions directly to create the user but stay logged in as admin
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: clientFormData.email,
       password: clientFormData.password,
-      options: {
-        data: {
-          full_name: clientFormData.full_name
-        }
+      email_confirm: true, // Auto-confirm the email
+      user_metadata: {
+        full_name: clientFormData.full_name,
+        role: 'client' // Explicitly set role in metadata
+      },
+      app_metadata: {
+        role: 'client' // Set role in app_metadata as well
       }
     });
     
-    const { error: signUpError, data: signUpData } = await tempClient;
-    
-    if (signUpError) {
-      console.error("Error checking existing user:", signUpError);
+    if (authError) {
+      console.error("Error creating auth user:", authError);
       
-      // If the error is that the user already exists, show a specific message
-      if (signUpError.message.includes("email already") || 
-          signUpError.message.includes("User already registered")) {
+      // Handle specific error messages
+      if (authError.message.includes("already registered") || 
+          authError.message.includes("email already")) {
         toast.error("Este email já está cadastrado no sistema de autenticação");
         return null;
       }
       
-      // Handle password validation errors
-      if (signUpError.message.includes("Password")) {
+      if (authError.message.includes("Password")) {
         toast.error("Senha inválida: mínimo de 6 caracteres");
         return null;
       } 
       
-      // Handle email validation errors
-      if (signUpError.message.includes("email")) {
+      if (authError.message.includes("email")) {
         toast.error("Email inválido");
         return null;
       }
       
       // Generic error
-      toast.error("Erro ao verificar usuário existente");
+      toast.error("Erro ao criar usuário: " + authError.message);
       return null;
     }
     
-    // If sign-up was successful, get the user ID from the response
-    if (!signUpData.user) {
+    if (!authData.user) {
       toast.error("Erro ao obter dados do usuário criado");
       return null;
     }
@@ -56,9 +55,10 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
     
     const clientWithId = {
       ...clientDataWithoutPassword,
-      id: signUpData.user.id
+      id: authData.user.id
     };
     
+    // Create client record in the clients table
     const { data: newClientData, error: clientError } = await supabase
       .from('clients')
       .insert([clientWithId])
@@ -67,7 +67,11 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
     
     if (clientError) {
       console.error("Error creating client record:", clientError);
-      toast.error("Erro ao criar registro do cliente");
+      
+      // If the client record creation fails, we should clean up by deleting the auth user
+      await supabase.auth.admin.deleteUser(authData.user.id);
+      
+      toast.error("Erro ao criar registro do cliente: permissão negada");
       return null;
     }
     
