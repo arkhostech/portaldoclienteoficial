@@ -99,19 +99,18 @@ export const createClient = async (clientData: ClientFormData): Promise<Client |
 export const createClientWithAuth = async (clientData: ClientWithAuthFormData): Promise<Client | null> => {
   try {
     // First check if the email is already in use in Auth
-    const { data: existingUsers, error: checkError } = await supabase.auth.admin.listUsers({
-      filter: {
-        email: clientData.email
-      }
-    });
-
+    const { data: authUsers, error: checkError } = await supabase.auth.admin.listUsers();
+    
     if (checkError) {
       console.error("Error checking existing user:", checkError);
       toast.error("Erro ao verificar usuário existente");
       return null;
     }
-
-    if (existingUsers?.users && existingUsers.users.length > 0) {
+    
+    // Check if the email exists in the returned users
+    const emailExists = authUsers?.users?.some(user => user.email === clientData.email);
+    
+    if (emailExists) {
       toast.error("Este email já está cadastrado no sistema de autenticação");
       return null;
     }
@@ -148,7 +147,7 @@ export const createClientWithAuth = async (clientData: ClientWithAuthFormData): 
       id: userData.user.id
     };
     
-    const { data: clientData, error: clientError } = await supabase
+    const { data: newClientData, error: clientError } = await supabase
       .from('clients')
       .insert([clientWithId])
       .select()
@@ -165,7 +164,7 @@ export const createClientWithAuth = async (clientData: ClientWithAuthFormData): 
     }
     
     toast.success("Cliente criado com sucesso com acesso ao portal");
-    return clientData;
+    return newClientData;
   } catch (error) {
     console.error("Unexpected error creating client with auth:", error);
     toast.error("Erro ao criar cliente com autenticação");
