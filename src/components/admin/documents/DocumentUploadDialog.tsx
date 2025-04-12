@@ -6,7 +6,7 @@ import FileDropzone from "./FileDropzone";
 import FileList from "./FileList";
 import DocumentUploadForm from "./DocumentUploadForm";
 import { DocumentUploadDialogProps, FileWithPreview } from "./types";
-import { DocumentFormValues } from "./DocumentUploadForm";
+import { DocumentFormValues } from "./types/form-types";
 
 const DocumentUploadDialog = ({
   open,
