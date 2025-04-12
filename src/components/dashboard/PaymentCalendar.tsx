@@ -4,7 +4,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { CalendarDays } from "lucide-react";
-import { DayContentProps } from "react-day-picker";
+import { DayProps } from "react-day-picker";
 
 // Mock data for payment dates - replace with real data later
 const paymentDates = [
@@ -70,7 +70,9 @@ const PaymentCalendar = () => {
               paymentDay: "bg-primary/20 font-bold text-primary rounded-md"
             }}
             components={{
-              Day: ({ date: dayDate, ...dayProps }: DayContentProps) => {
+              Day: ({ date: dayDate, ...dayProps }: DayProps) => {
+                // Cast dayProps to include children
+                const props = dayProps as React.ComponentPropsWithRef<"div">;
                 const payments = getPaymentDetails(dayDate);
                 
                 if (payments.length > 0) {
@@ -79,9 +81,9 @@ const PaymentCalendar = () => {
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          {...dayProps}
+                          {...props}
                         >
-                          {dayProps.children}
+                          {props.children}
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="p-2 max-w-xs">
@@ -98,7 +100,7 @@ const PaymentCalendar = () => {
                   );
                 }
                 
-                return <div {...dayProps}>{dayProps.children}</div>;
+                return <div {...props}>{props.children}</div>;
               }
             }}
           />
