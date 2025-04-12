@@ -5,7 +5,7 @@
 import * as React from "react"
 
 const TOAST_LIMIT = 3
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 5000 // Using 5 seconds instead of 1000000
 
 type ToasterToast = {
   id: string
@@ -119,7 +119,10 @@ function toast(props: ToastProps) {
   const id = genId()
 
   const dispatch = useToastStore((state) => state.dispatch)
-  const dismiss = () => dismiss(id)
+  const dismiss = () => dispatch({
+    type: actionTypes.DISMISS_TOAST,
+    toastId: id,
+  })
 
   dispatch({
     type: actionTypes.ADD_TOAST,
@@ -141,8 +144,7 @@ function toast(props: ToastProps) {
           ...props,
         },
       })
-    },
-    dismiss,
+    }
   }
 }
 
@@ -174,7 +176,7 @@ const ToastProvider = ({ children }: { children: React.ReactNode }) => {
       if (toast.open && toast.duration !== Infinity) {
         const timeout = setTimeout(() => {
           dispatch({ type: actionTypes.DISMISS_TOAST, toastId: toast.id })
-        }, toast.duration || 5000)
+        }, toast.duration || TOAST_REMOVE_DELAY)
 
         toastTimeouts.set(toast.id, timeout)
       }
