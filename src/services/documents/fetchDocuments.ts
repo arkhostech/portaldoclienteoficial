@@ -5,6 +5,8 @@ import { createDelayedToast } from "./utils";
 
 export const fetchDocuments = async (clientId: string | null = null): Promise<Document[]> => {
   try {
+    console.log("Fetching documents with clientId:", clientId || "all");
+    
     let query = supabase
       .from('documents')
       .select('*')
@@ -23,6 +25,7 @@ export const fetchDocuments = async (clientId: string | null = null): Promise<Do
       return [];
     }
     
+    console.log(`Successfully fetched ${data?.length || 0} documents`);
     return data || [];
   } catch (error) {
     console.error("Unexpected error fetching documents:", error);

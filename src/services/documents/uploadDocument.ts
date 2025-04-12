@@ -9,8 +9,12 @@ export const uploadDocument = async (
   documentData: DocumentFormData
 ): Promise<Document | null> => {
   try {
+    console.log("Uploading document for clientId:", clientId);
+    console.log("Document data:", documentData);
+    
     // Generate a unique file path
     const filePath = `${clientId}/${Date.now()}_${file.name}`;
+    console.log("Generated file path:", filePath);
     
     // Upload the file to storage
     const { data: fileData, error: uploadError } = await supabase.storage
@@ -26,15 +30,21 @@ export const uploadDocument = async (
       return null;
     }
     
+    console.log("File uploaded successfully");
+    
     // Create document record in the database
+    const documentRecord = {
+      ...documentData,
+      file_path: filePath,
+      file_type: file.type,
+      file_size: file.size
+    };
+    
+    console.log("Creating document record:", documentRecord);
+    
     const { data, error } = await supabase
       .from('documents')
-      .insert([{
-        ...documentData,
-        file_path: filePath,
-        file_type: file.type,
-        file_size: file.size
-      }])
+      .insert([documentRecord])
       .select()
       .single();
     
@@ -48,6 +58,8 @@ export const uploadDocument = async (
       await createDelayedToast("error", "Erro ao criar registro do documento", 300);
       return null;
     }
+    
+    console.log("Document record created successfully:", data);
     
     // Delay toast to prevent UI issues
     await createDelayedToast("success", "Documento enviado com sucesso", 600);

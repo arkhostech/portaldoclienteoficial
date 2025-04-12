@@ -1,14 +1,13 @@
 
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
-import StatusCard from "@/components/ui/StatusCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Calendar, CheckSquare, FileText, MessageSquare, AlertTriangle } from "lucide-react";
+import { FileText, MessageSquare, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const [documents, setDocuments] = useState([]);
@@ -23,24 +22,34 @@ const Dashboard = () => {
     const fetchClientData = async () => {
       setIsLoading(true);
       try {
+        console.log("Fetching client data for user ID:", user.id);
+        
         // Fetch client info
-        const { data: clientData } = await supabase
+        const { data: clientData, error: clientError } = await supabase
           .from('clients')
           .select('*')
           .eq('id', user.id)
           .single();
         
-        if (clientData) {
+        if (clientError) {
+          console.error("Error fetching client info:", clientError);
+          toast.error("Erro ao carregar informações do cliente");
+        } else if (clientData) {
+          console.log("Client info found:", clientData);
           setClientInfo(clientData);
         }
         
         // Fetch client's documents
-        const { data: documentsData } = await supabase
+        const { data: documentsData, error: documentsError } = await supabase
           .from('documents')
           .select('*')
           .eq('client_id', user.id);
           
-        if (documentsData) {
+        if (documentsError) {
+          console.error("Error fetching documents:", documentsError);
+          toast.error("Erro ao carregar documentos");
+        } else if (documentsData) {
+          console.log("Documents found:", documentsData.length);
           setDocuments(documentsData);
         } else {
           setDocuments([]);
@@ -48,6 +57,7 @@ const Dashboard = () => {
         
       } catch (error) {
         console.error("Error fetching client data:", error);
+        toast.error("Erro ao carregar dados do cliente");
       } finally {
         setIsLoading(false);
       }

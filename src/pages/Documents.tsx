@@ -5,11 +5,12 @@ import DocumentCard from "@/components/ui/DocumentCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FilePlus, Search, Upload } from "lucide-react";
+import { FilePlus, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 import { Document } from "@/utils/dummyData";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 const Documents = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,6 +26,8 @@ const Documents = () => {
       
       setIsLoading(true);
       try {
+        console.log("Fetching documents for user ID:", user.id);
+        
         const { data, error } = await supabase
           .from('documents')
           .select('*')
@@ -32,10 +35,12 @@ const Documents = () => {
         
         if (error) {
           console.error("Error fetching documents:", error);
+          toast.error("Erro ao carregar documentos");
           return;
         }
         
         if (data && data.length > 0) {
+          console.log("Documents found:", data.length);
           const formattedDocs = data.map(doc => ({
             id: doc.id,
             name: doc.title,
@@ -54,11 +59,13 @@ const Documents = () => {
           const uniqueCategories = [...new Set(formattedDocs.map(doc => doc.category))];
           setCategories(uniqueCategories);
         } else {
+          console.log("No documents found for user ID:", user.id);
           setDocuments([]);
           setCategories([]);
         }
       } catch (error) {
         console.error("Failed to fetch documents:", error);
+        toast.error("Erro ao carregar documentos");
       } finally {
         setIsLoading(false);
       }

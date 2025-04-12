@@ -89,6 +89,7 @@ export function useAuthProvider(): AuthContextType {
           setTimeout(async () => {
             if (mounted && newSession.user) {
               const isUserAdmin = await checkUserRole(newSession.user.id);
+              console.log("User is admin:", isUserAdmin);
               setIsAdmin(isUserAdmin);
               
               // Only handle redirection for new sign-ins, not for refreshed sessions
@@ -144,6 +145,7 @@ export function useAuthProvider(): AuthContextType {
             setUser(session.user);
             
             const isUserAdmin = await checkUserRole(session.user.id);
+            console.log("User is admin (from existing session):", isUserAdmin);
             
             if (mounted) {
               setIsAdmin(isUserAdmin);
