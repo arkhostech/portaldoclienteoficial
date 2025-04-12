@@ -1,6 +1,5 @@
 import { FileText, Image, File } from "lucide-react";
-import { toast } from "sonner";
-import { getDocumentUrl } from "@/services/documents/documentUrl";
+import { useDocumentDownload } from "@/hooks/documents/operations/useDocumentDownload";
 
 export const getFileIcon = (fileType: string) => {
   if (!fileType) return <File className="h-10 w-10 text-gray-500" />;
@@ -78,45 +77,6 @@ export const ensureFileExtension = (fileName: string, mimeType: string): string 
 };
 
 export const handleDocumentDownload = async (filePath: string | null, fileName: string) => {
-  if (!filePath) {
-    toast.error("Nenhum arquivo disponível para download");
-    console.error("Missing file path for download", { fileName });
-    return;
-  }
-
-  const toastId = toast.loading("Preparando o download...");
-
-  try {
-    const signedUrl = await getDocumentUrl(filePath);
-    if (!signedUrl) throw new Error("Signed URL is null");
-
-    const response = await fetch(signedUrl);
-    const contentType = response.headers.get("Content-Type") || "";
-
-    if (!response.ok || contentType.includes("text/html")) {
-      throw new Error(`Unexpected content type or error response: ${contentType}`);
-    }
-
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
-
-    const downloadFileName = ensureFileExtension(fileName, contentType);
-
-    const link = window.document.createElement("a");
-    link.href = blobUrl;
-    link.download = downloadFileName;
-    link.style.display = "none";
-
-    window.document.body.appendChild(link);
-    link.click();
-    window.document.body.removeChild(link);
-    window.URL.revokeObjectURL(blobUrl);
-
-    toast.dismiss(toastId);
-    toast.success("Download iniciado");
-  } catch (error) {
-    console.error("Secure download failed:", error, { filePath, fileName });
-    toast.dismiss(toastId);
-    toast.error("Erro ao baixar o documento");
-  }
+  const { handleDownloadDocument } = useDocumentDownload();
+  return handleDownloadDocument({ filePath, fileName });
 };

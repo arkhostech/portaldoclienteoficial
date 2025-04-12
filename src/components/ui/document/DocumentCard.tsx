@@ -8,7 +8,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { getDocumentUrl } from "@/services/documents/documentUrl";
 import DocumentPreviewDialog from "./DocumentPreviewDialog";
-import { getFileIcon, formatDate, isPreviewable, handleDocumentDownload } from "./DocumentCardUtils";
+import { getFileIcon, formatDate, isPreviewable } from "./DocumentCardUtils";
+import { useDocumentDownload } from "@/hooks/documents/operations/useDocumentDownload";
 
 interface DocumentCardProps {
   document: ClientDocumentView;
@@ -18,6 +19,7 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { handleDownloadDocument } = useDocumentDownload();
 
   const handlePreview = async () => {
     if (!document.filePath) {
@@ -63,7 +65,7 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
   };
 
   const handleDownload = () => {
-    handleDocumentDownload(document.filePath, document.name);
+    handleDownloadDocument({ filePath: document.filePath, fileName: document.name });
   };
 
   const canPreview = isPreviewable(document.type);
