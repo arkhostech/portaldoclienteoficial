@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { 
   Document as DocumentType, 
@@ -152,25 +151,38 @@ export const useDocumentOperations = (
       return;
     }
     
-    // Show loading toast
     const toastId = toast.loading("Preparando o download...");
     
     try {
       const url = await getDocumentUrl(document.file_path);
       
       if (url) {
-        // Dismiss the loading toast
-        toast.dismiss(toastId);
-        toast.success("Download iniciado");
-        
+        // Use fetch to get the file as a blob
+        const response = await fetch(url);
+        const contentType = response.headers.get("Content-Type") || "";
+
+        if (!response.ok || contentType.includes("text/html")) {
+          throw new Error(`Unexpected content type or error response: ${contentType}`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+
         // Create and trigger download via an anchor element
-        const link = window.document.createElement("a");
-        link.href = url;
+        const link = document.createElement("a");
+        link.href = blobUrl;
         link.download = document.title;
         link.style.display = "none";
-        window.document.body.appendChild(link);
+        
+        document.body.appendChild(link);
         link.click();
-        window.document.body.removeChild(link);
+        document.body.removeChild(link);
+        
+        // Clean up the blob URL
+        window.URL.revokeObjectURL(blobUrl);
+        
+        toast.dismiss(toastId);
+        toast.success("Download iniciado");
       } else {
         toast.dismiss(toastId);
         toast.error("Erro ao gerar link para download");
