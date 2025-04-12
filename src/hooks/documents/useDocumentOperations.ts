@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { 
   Document as DocumentType, 
@@ -108,7 +109,7 @@ export const useDocumentOperations = (
       
       addTimeout(() => {
         setIsUpdating(false);
-      }, 1000);
+        }, 1000);
       return false;
     }
   };
@@ -169,14 +170,14 @@ export const useDocumentOperations = (
         const blobUrl = window.URL.createObjectURL(blob);
 
         // Create and trigger download via an anchor element
-        const link = document.createElement("a");
+        const link = window.document.createElement("a");
         link.href = blobUrl;
         link.download = document.title;
         link.style.display = "none";
         
-        document.body.appendChild(link);
+        window.document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        window.document.body.removeChild(link);
         
         // Clean up the blob URL
         window.URL.revokeObjectURL(blobUrl);
