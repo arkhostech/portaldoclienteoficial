@@ -121,7 +121,7 @@ const ProcessInfoCard = ({
             App Store
           </a>
           <a 
-            href="https://play.google.com/store/apps/details?id=us.ocmentor.casetracker" 
+            href="https://play.google.com/store/search?q=uscis+case+tracker&c=apps" 
             target="_blank" 
             rel="noopener noreferrer"
             className="bg-black text-white text-xs px-3 py-2 rounded-md flex items-center gap-1 hover:bg-gray-800 transition"
