@@ -6,6 +6,8 @@ import { Client, ClientWithAuthFormData } from "./types";
 
 export const createClientWithAuth = async (clientFormData: ClientWithAuthFormData): Promise<Client | null> => {
   try {
+    console.log("Creating client with auth using admin client");
+    
     // Use the admin client with service role for auth operations
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: clientFormData.email,
@@ -50,6 +52,8 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
       return null;
     }
     
+    console.log("Auth user created successfully:", authData.user.id);
+    
     // Create the client record with the user ID
     const { password, ...clientDataWithoutPassword } = clientFormData;
     
@@ -57,6 +61,8 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
       ...clientDataWithoutPassword,
       id: authData.user.id
     };
+    
+    console.log("Creating client record in database");
     
     // Create client record in the clients table
     // We can use the regular client here as we have RLS policies in place
@@ -77,6 +83,7 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
       return null;
     }
     
+    console.log("Client record created successfully");
     toast.success("Cliente criado com sucesso com acesso ao portal");
     return newClientData;
   } catch (error) {
