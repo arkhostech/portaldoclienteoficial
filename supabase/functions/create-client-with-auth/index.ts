@@ -1,26 +1,13 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import type { Database } from "../_shared/database.types.ts";
+import { corsHeaders, handleCors } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limiter.ts";
+import { createAdminClient, isAdmin, validateAuth } from "../_shared/auth.ts";
+import { sanitizeInput, validateClientFormData } from "../_shared/validation.ts";
 
-// CORS headers for the function
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-// Create a Supabase client with the service role key (secure in edge function)
-const supabaseAdmin = createClient<Database>(
-  Deno.env.get("SUPABASE_URL") ?? "",
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false
-    }
-  }
-);
+// Create admin client
+const supabaseAdmin = createAdminClient();
 
 interface ClientWithAuthFormData {
   full_name: string;
@@ -31,94 +18,10 @@ interface ClientWithAuthFormData {
   status?: string;
 }
 
-// Simple rate limiting implementation using in-memory cache
-// Note: This provides basic protection but will reset on function restart
-const MAX_REQUESTS_PER_MINUTE = 10;
-const requestCache = new Map<string, { count: number, timestamp: number }>();
-
-// Function to check if a user is an admin
-async function isAdmin(userId: string): Promise<boolean> {
-  try {
-    // Using the profiles table to check if user has admin role
-    const { data, error } = await supabaseAdmin
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-    
-    if (error || !data) {
-      console.error("Error checking admin status:", error);
-      return false;
-    }
-    
-    return data.role === 'admin';
-  } catch (error) {
-    console.error("Unexpected error checking admin status:", error);
-    return false;
-  }
-}
-
-// Function to validate email format
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-// Function to validate password strength
-function isValidPassword(password: string): boolean {
-  // At least 6 characters (minimum requirement)
-  return password.length >= 6;
-}
-
-// Function to sanitize input data
-function sanitizeInput(input: string): string {
-  // Basic sanitization - remove potentially harmful characters
-  return input.replace(/[<>"'&]/g, '');
-}
-
-// Check rate limiting
-function checkRateLimit(userId: string): { allowed: boolean, message?: string } {
-  const now = Date.now();
-  const minute = 60 * 1000; // milliseconds in a minute
-  
-  // Get current request data for this user
-  const userData = requestCache.get(userId);
-  
-  if (!userData) {
-    // First request from this user
-    requestCache.set(userId, { count: 1, timestamp: now });
-    return { allowed: true };
-  }
-  
-  // If timestamp is older than a minute, reset the counter
-  if (now - userData.timestamp > minute) {
-    requestCache.set(userId, { count: 1, timestamp: now });
-    return { allowed: true };
-  }
-  
-  // If under the limit, increment the counter
-  if (userData.count < MAX_REQUESTS_PER_MINUTE) {
-    requestCache.set(userId, { 
-      count: userData.count + 1, 
-      timestamp: userData.timestamp 
-    });
-    return { allowed: true };
-  }
-  
-  // Rate limit exceeded
-  return { 
-    allowed: false, 
-    message: `Rate limit exceeded. Try again later.` 
-  };
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: corsHeaders,
-    });
-  }
+  const corsResponse = handleCors(req);
+  if (corsResponse) return corsResponse;
 
   try {
     // Only allow POST methods for this function
@@ -131,29 +34,20 @@ serve(async (req) => {
 
     // 1. Authenticate and authorize the calling user
     const authHeader = req.headers.get("Authorization") || "";
-    const jwt = authHeader.replace("Bearer ", "");
+    const authResult = await validateAuth(supabaseAdmin, authHeader);
     
-    if (!jwt) {
-      console.log("Auth failure: No JWT token provided");
+    if (!authResult.valid) {
+      console.log(`Auth failure: ${authResult.error}`);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     
-    // Verify the JWT token and get the user
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(jwt);
-    
-    if (authError || !user) {
-      console.log("Auth failure: Invalid JWT token");
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const user = authResult.user;
     
     // Check if the user is an admin
-    const adminStatus = await isAdmin(user.id);
+    const adminStatus = await isAdmin(supabaseAdmin, user.id);
     if (!adminStatus) {
       console.log(`Auth failure: User ${user.id} is not an admin`);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -175,10 +69,11 @@ serve(async (req) => {
     // 3. Parse and validate input
     const clientFormData: ClientWithAuthFormData = await req.json();
     
-    // Validate required fields
-    if (!clientFormData.full_name || !clientFormData.email || !clientFormData.password) {
+    // Validate required fields and formats
+    const validation = validateClientFormData(clientFormData);
+    if (!validation.valid) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({ error: validation.errors?.join(", ") || "Invalid input" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -191,22 +86,6 @@ serve(async (req) => {
       phone: clientFormData.phone ? sanitizeInput(clientFormData.phone) : undefined,
       address: clientFormData.address ? sanitizeInput(clientFormData.address) : undefined,
     };
-    
-    // Validate email format
-    if (!isValidEmail(sanitizedData.email)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid email format" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    // Validate password strength
-    if (!isValidPassword(clientFormData.password)) {
-      return new Response(
-        JSON.stringify({ error: "Password must be at least 6 characters" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
     
     console.log("Creating client with auth:", {
       admin_id: user.id,
@@ -240,10 +119,10 @@ serve(async (req) => {
       email_confirm: true, // Auto-confirm the email
       user_metadata: {
         full_name: sanitizedData.full_name,
-        role: 'client' // Explicitly set role in metadata
+        role: 'client'
       },
       app_metadata: {
-        role: 'client' // Set role in app_metadata as well
+        role: 'client'
       }
     });
     
