@@ -53,12 +53,12 @@ export const handleDocumentDownload = async (filePath: string | null, fileName: 
       toast.success("Download iniciado");
       
       // Create an anchor element and trigger download
-      const link = window.document.createElement("a");
+      const link = document.createElement("a");
       link.href = url;
       link.download = fileName;
-      window.document.body.appendChild(link);
+      document.body.appendChild(link);
       link.click();
-      window.document.body.removeChild(link);
+      document.body.removeChild(link);
     } else {
       toast.dismiss(toastId);
       toast.error("Erro ao gerar link para download");

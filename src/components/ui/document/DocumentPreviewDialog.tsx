@@ -1,5 +1,5 @@
 
-import { Download, Eye, File } from "lucide-react";
+import { Download, File } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ClientDocumentView } from "@/services/documents/types";
@@ -21,18 +21,18 @@ const DocumentPreviewDialog = ({ isOpen, onClose, documentUrl, document }: Docum
   };
 
   const isPDF = document.type.toLowerCase().includes("pdf");
-  const isImage = ["jpg", "jpeg", "png"].some(ext => 
+  const isImage = ["jpg", "jpeg", "png", "image/jpeg", "image/png", "image/jpg"].some(ext => 
     document.type.toLowerCase().includes(ext)
   );
 
   const handleDownload = () => {
     if (documentUrl) {
-      const link = window.document.createElement("a");
+      const link = document.createElement("a");
       link.href = documentUrl;
       link.download = document.name;
-      window.document.body.appendChild(link);
+      document.body.appendChild(link);
       link.click();
-      window.document.body.removeChild(link);
+      document.body.removeChild(link);
     }
   };
 

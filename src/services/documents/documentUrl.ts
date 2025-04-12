@@ -4,6 +4,8 @@ import { createDelayedToast } from "./utils";
 
 export const getDocumentUrl = async (filePath: string): Promise<string | null> => {
   try {
+    console.log("Getting document URL for:", filePath);
+    
     const { data, error } = await supabase.storage
       .from('client_documents')
       .createSignedUrl(filePath, 3600); // URL valid for 1 hour
@@ -14,6 +16,7 @@ export const getDocumentUrl = async (filePath: string): Promise<string | null> =
       return null;
     }
     
+    console.log("Successfully generated signed URL");
     return data.signedUrl;
   } catch (error) {
     console.error("Unexpected error getting document URL:", error);
