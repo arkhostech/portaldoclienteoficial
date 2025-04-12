@@ -17,3 +17,4 @@ enabled = true
 enabled = true
 [edge_functions.create-client-with-auth]
 verify_jwt = true
+
