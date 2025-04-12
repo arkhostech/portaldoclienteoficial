@@ -56,7 +56,7 @@ const ProcessInfoCard = ({
         <CardContent>
           {processType ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col space-y-1">
                   <span className="text-sm text-muted-foreground">Tipo de Processo</span>
                   <span className="font-medium">{processType}</span>
@@ -87,7 +87,7 @@ const ProcessInfoCard = ({
                 )}
 
                 {lastUpdate && (
-                  <div className="col-span-1 md:col-span-2 pt-2 border-t mt-2">
+                  <div className="col-span-1 sm:col-span-2 pt-2 border-t mt-2">
                     <div className="flex flex-col">
                       <span className="text-sm text-muted-foreground">Última atualização</span>
                       <span className="font-medium">{formatDate(lastUpdate)}</span>
@@ -106,7 +106,7 @@ const ProcessInfoCard = ({
         </CardContent>
       </Card>
 
-      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex flex-col gap-4">
         <div className="flex-1">
           <h3 className="font-medium flex items-center gap-1 text-blue-700">
             🔔 Receba atualizações automáticas sobre o status do seu processo USCIS
@@ -115,7 +115,7 @@ const ProcessInfoCard = ({
             Baixe um aplicativo gratuito como <span className="font-medium">Case Tracker for USCIS & NVC</span> ou <span className="font-medium">MigraConnect Case Tracker</span>. Insira seu número de recibo e receba alertas em tempo real no seu celular.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
           <a 
             href="https://apps.apple.com/us/app/case-tracker-for-uscis/id921827126" 
             target="_blank" 

@@ -23,7 +23,7 @@ const QuickActionsCard = () => {
   };
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader className="pb-2">
         <div className="flex items-center">
           <Zap className="h-5 w-5 mr-2 text-primary" />
@@ -31,32 +31,34 @@ const QuickActionsCard = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button 
-          className="w-full justify-start" 
-          variant="outline"
-          onClick={handleContactAttorney}
-        >
-          <Phone className="mr-2 h-4 w-4" />
-          Contatar Advogado
-        </Button>
-        
-        <Button 
-          className="w-full justify-start" 
-          variant="outline"
-          onClick={handleScheduleCall}
-        >
-          <Calendar className="mr-2 h-4 w-4" />
-          Agendar Ligação
-        </Button>
-        
-        <Button 
-          className="w-full justify-start" 
-          variant="outline"
-          onClick={handleUpdateInfo}
-        >
-          <UserCog className="mr-2 h-4 w-4" />
-          Atualizar Meus Dados
-        </Button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-1 gap-2">
+          <Button 
+            className="w-full justify-start" 
+            variant="outline"
+            onClick={handleContactAttorney}
+          >
+            <Phone className="mr-2 h-4 w-4" />
+            Contatar Advogado
+          </Button>
+          
+          <Button 
+            className="w-full justify-start" 
+            variant="outline"
+            onClick={handleScheduleCall}
+          >
+            <Calendar className="mr-2 h-4 w-4" />
+            Agendar Ligação
+          </Button>
+          
+          <Button 
+            className="w-full justify-start" 
+            variant="outline"
+            onClick={handleUpdateInfo}
+          >
+            <UserCog className="mr-2 h-4 w-4" />
+            Atualizar Meus Dados
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

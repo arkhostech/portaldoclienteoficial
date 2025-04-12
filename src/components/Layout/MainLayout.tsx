@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -14,6 +15,7 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
   const location = useLocation();
   const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const isAdminPath = (path: string): boolean => {
     return path === '/admin-login' || path.startsWith('/admin');
@@ -87,10 +89,16 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
   console.log("MainLayout: Rendering main layout");
   return (
     <div className="flex min-h-screen bg-white">
-      <Sidebar />
-      <div className="flex-1 ml-64 flex flex-col">
-        <Header title={title} />
-        <main className="flex-1 p-6 overflow-auto">
+      <Sidebar 
+        isOpen={isMobileMenuOpen} 
+        setIsOpen={setIsMobileMenuOpen} 
+      />
+      <div className="flex-1 flex flex-col transition-all duration-300 sm:ml-20 lg:ml-64">
+        <Header 
+          title={title} 
+          toggleSidebar={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        />
+        <main className="flex-1 p-4 md:p-6 overflow-auto">
           {children}
         </main>
       </div>

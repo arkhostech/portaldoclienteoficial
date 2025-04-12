@@ -95,8 +95,8 @@ const Dashboard = () => {
       {/* Welcome section */}
       <WelcomeSection clientName={clientInfo?.full_name} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
-        {/* Main content - left column (3/5 width) */}
+      <div className="grid grid-cols-1 gap-6 mt-6 lg:grid-cols-5">
+        {/* Main content - left column (3/5 width on large screens, full width on smaller screens) */}
         <div className="lg:col-span-3 space-y-6">
           {/* Process information */}
           <ProcessInfoCard 
@@ -111,7 +111,7 @@ const Dashboard = () => {
           <DocumentsCard documents={documents} />
         </div>
         
-        {/* Right sidebar (2/5 width) */}
+        {/* Right sidebar (2/5 width on large screens, full width on smaller screens) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Calendar for payment reminders */}
           <PaymentCalendar />
