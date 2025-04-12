@@ -96,56 +96,61 @@ export const createClient = async (clientData: ClientFormData): Promise<Client |
   }
 };
 
-export const createClientWithAuth = async (clientData: ClientWithAuthFormData): Promise<Client | null> => {
+export const createClientWithAuth = async (clientFormData: ClientWithAuthFormData): Promise<Client | null> => {
   try {
-    // First check if the email is already in use in Auth
-    const { data: authUsers, error: checkError } = await supabase.auth.admin.listUsers();
+    // First check if the email is already in use by trying to sign up
+    // This will fail if the email is already in use
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: clientFormData.email,
+      password: clientFormData.password,
+      options: {
+        data: {
+          full_name: clientFormData.full_name
+        }
+      }
+    });
     
-    if (checkError) {
-      console.error("Error checking existing user:", checkError);
+    if (signUpError) {
+      console.error("Error checking existing user:", signUpError);
+      
+      // If the error is that the user already exists, show a specific message
+      if (signUpError.message.includes("email already") || 
+          signUpError.message.includes("User already registered")) {
+        toast.error("Este email já está cadastrado no sistema de autenticação");
+        return null;
+      }
+      
+      // Handle password validation errors
+      if (signUpError.message.includes("Password")) {
+        toast.error("Senha inválida: mínimo de 6 caracteres");
+        return null;
+      } 
+      
+      // Handle email validation errors
+      if (signUpError.message.includes("email")) {
+        toast.error("Email inválido");
+        return null;
+      }
+      
+      // Generic error
       toast.error("Erro ao verificar usuário existente");
       return null;
     }
     
-    // Check if the email exists in the returned users
-    // Define the type of user objects explicitly to avoid the "email" property error
-    const emailExists = authUsers?.users?.some((user: { email?: string }) => user.email === clientData.email);
+    // If sign-up was successful, get the user ID from the response
+    const { data: authData } = await supabase.auth.getUser();
     
-    if (emailExists) {
-      toast.error("Este email já está cadastrado no sistema de autenticação");
+    if (!authData.user) {
+      toast.error("Erro ao obter dados do usuário criado");
       return null;
     }
-
-    // Start a transaction by creating the auth user
-    const { data: userData, error: userError } = await supabase.auth.admin.createUser({
-      email: clientData.email,
-      password: clientData.password,
-      email_confirm: true, // Auto-confirm the email
-      user_metadata: {
-        full_name: clientData.full_name
-      }
-    });
-
-    if (userError) {
-      console.error("Error creating auth user:", userError);
-      
-      if (userError.message.includes("Password")) {
-        toast.error("Senha inválida: mínimo de 6 caracteres");
-      } else if (userError.message.includes("email")) {
-        toast.error("Email inválido ou já cadastrado");
-      } else {
-        toast.error("Erro ao criar autenticação para o cliente");
-      }
-      return null;
-    }
-
-    // If auth user is created successfully, create the client record with the same ID
-    const { password, ...clientDataWithoutPassword } = clientData;
     
-    // Use the auth user ID as the client ID
+    // Create the client record with the user ID
+    const { password, ...clientDataWithoutPassword } = clientFormData;
+    
     const clientWithId = {
       ...clientDataWithoutPassword,
-      id: userData.user.id
+      id: authData.user.id
     };
     
     const { data: newClientData, error: clientError } = await supabase
@@ -157,17 +162,25 @@ export const createClientWithAuth = async (clientData: ClientWithAuthFormData): 
     if (clientError) {
       console.error("Error creating client record:", clientError);
       
-      // If client creation fails, attempt to delete the auth user to maintain consistency
-      await supabase.auth.admin.deleteUser(userData.user.id);
+      // If client creation fails, attempt to delete the auth user
+      // Note: We can't use admin.deleteUser since we don't have admin rights
+      // The user will need to be deleted manually or through a server-side function
       
       toast.error("Erro ao criar registro do cliente");
       return null;
     }
     
+    // Sign out the current user to return to the previous session
+    await supabase.auth.signOut();
+    
     toast.success("Cliente criado com sucesso com acesso ao portal");
     return newClientData;
   } catch (error) {
     console.error("Unexpected error creating client with auth:", error);
+    
+    // Sign out just in case
+    await supabase.auth.signOut();
+    
     toast.error("Erro ao criar cliente com autenticação");
     return null;
   }
