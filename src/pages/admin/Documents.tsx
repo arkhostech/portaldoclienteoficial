@@ -1,20 +1,21 @@
 
 import { useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Plus, Search } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useDocuments } from "@/hooks/documents/useDocuments";
 import DocumentUploadDialog from "@/components/admin/documents/DocumentUploadDialog";
 import DocumentEditDialog from "@/components/admin/documents/DocumentEditDialog";
 import DocumentDeleteDialog from "@/components/admin/documents/DocumentDeleteDialog";
 import { useClients } from "@/hooks/useClients";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Document as DocumentType } from "@/services/documents/types";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import DocumentsTable from "@/components/admin/documents/DocumentsTable";
+import { DocumentsHeader } from "@/components/admin/documents/DocumentsHeader";
+import { DocumentsSearch } from "@/components/admin/documents/DocumentsSearch";
+import { DocumentsAccordion } from "@/components/admin/documents/DocumentsAccordion";
+import { DocumentsAccordionHeader } from "@/components/admin/documents/DocumentsAccordionHeader";
+import { DocumentsLoading } from "@/components/admin/documents/DocumentsLoading";
+import { DocumentsEmpty } from "@/components/admin/documents/DocumentsEmpty";
+import { highlightMatch } from "@/components/admin/documents/DocumentsUtils";
 
 export default function Documents() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -122,138 +123,42 @@ export default function Documents() {
     setOpenUploadDialog(true);
   };
 
-  // Function to highlight matched text in a string
-  const highlightMatch = (text: string, term: string) => {
-    if (!term || term === "") return text;
-    
-    const regex = new RegExp(`(${term})`, 'gi');
-    const parts = text.split(regex);
-    
-    return parts.map((part, i) => 
-      regex.test(part) ? <mark key={i} className="bg-yellow-200 px-0.5 rounded-sm">{part}</mark> : part
-    );
-  };
-
   return (
     <MainLayout title="Documentos">
       <div className="container mx-auto py-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Documentos</h1>
-          <Button onClick={() => setOpenUploadDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Adicionar documento
-          </Button>
-        </div>
+        <DocumentsHeader onAddDocument={() => setOpenUploadDialog(true)} />
 
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Gerenciar documentos</CardTitle>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={toggleAllAccordions}
-              >
-                {expandedItems.length === sortedClientIds.length ? "Recolher todos" : "Expandir todos"}
-              </Button>
-            </div>
+            <DocumentsAccordionHeader 
+              toggleAllAccordions={toggleAllAccordions}
+              expandedItems={expandedItems}
+              sortedClientIds={sortedClientIds}
+            />
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Buscar por cliente ou documento..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
+              <DocumentsSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             </div>
 
             {isLoading || isClientsLoading ? (
-              <div className="flex justify-center py-10">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              </div>
+              <DocumentsLoading />
             ) : sortedClientIds.length > 0 ? (
-              <Accordion 
-                type="multiple" 
-                value={expandedItems} 
-                onValueChange={handleAccordionChange}
-                className="space-y-2"
-              >
-                {sortedClientIds.map(clientId => {
-                  const clientDocs = groupedDocuments[clientId] || [];
-                  const filteredDocs = searchTerm 
-                    ? clientDocs.filter(doc => 
-                        doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()))
-                      )
-                    : clientDocs;
-                  
-                  // Skip if no documents match the search (but include if client name matches)
-                  const clientName = getClientName(clientId).toLowerCase();
-                  const clientMatchesSearch = clientName.includes(searchTerm.toLowerCase());
-                  
-                  if (searchTerm && filteredDocs.length === 0 && !clientMatchesSearch) {
-                    return null;
-                  }
-                  
-                  return (
-                    <AccordionItem 
-                      key={clientId} 
-                      value={clientId}
-                      className="border rounded-lg overflow-hidden bg-white"
-                    >
-                      <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50">
-                        <div className="flex items-center justify-between w-full text-left">
-                          <div className="flex items-center">
-                            <span className="font-medium">
-                              {searchTerm && clientName.includes(searchTerm.toLowerCase())
-                                ? highlightMatch(getClientName(clientId), searchTerm)
-                                : getClientName(clientId)}
-                            </span>
-                            <span className="ml-2 text-sm text-muted-foreground">
-                              ({clientDocs.length} {clientDocs.length === 1 ? 'documento' : 'documentos'})
-                            </span>
-                          </div>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-4 pb-4 pt-0">
-                        <div className="flex justify-between items-center mb-4">
-                          <div className="text-sm text-muted-foreground">
-                            {filteredDocs.length} {filteredDocs.length === 1 ? 'documento' : 'documentos'} {searchTerm && 'encontrados'}
-                          </div>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => handleOpenUploadForClient(clientId)}
-                          >
-                            <Plus className="h-4 w-4 mr-1" /> Adicionar
-                          </Button>
-                        </div>
-                        
-                        <DocumentsTable 
-                          documents={filteredDocs}
-                          isLoading={false}
-                          searchTerm={searchTerm}
-                          clients={clients}
-                          onDownload={handleDirectDownload}
-                          onEdit={handleDirectEdit}
-                          onDelete={handleDirectDelete}
-                          hideClientColumn={true}
-                        />
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
+              <DocumentsAccordion 
+                sortedClientIds={sortedClientIds}
+                expandedItems={expandedItems}
+                getClientName={getClientName}
+                groupedDocuments={groupedDocuments}
+                searchTerm={searchTerm}
+                clients={clients}
+                handleOpenUploadForClient={handleOpenUploadForClient}
+                handleDirectDownload={handleDirectDownload}
+                handleDirectEdit={handleDirectEdit}
+                handleDirectDelete={handleDirectDelete}
+                highlightMatch={highlightMatch}
+              />
             ) : (
-              <div className="text-center py-10">
-                <p className="text-muted-foreground">Nenhum documento encontrado.</p>
-              </div>
+              <DocumentsEmpty searchTerm={searchTerm} />
             )}
           </CardContent>
         </Card>
