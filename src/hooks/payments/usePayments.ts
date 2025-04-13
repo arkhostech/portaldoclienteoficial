@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Client } from "@/services/clients/types";
 
 interface ScheduledPayment {
@@ -67,11 +67,7 @@ export function usePayments(clients: Client[]) {
       setSortedClientIds(sortedIds);
     } catch (error) {
       console.error("Error fetching payments:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao buscar pagamentos agendados",
-        variant: "destructive"
-      });
+      toast.error("Erro ao buscar pagamentos agendados");
     } finally {
       setIsLoading(false);
     }
@@ -87,19 +83,11 @@ export function usePayments(clients: Client[]) {
           .eq("id", id);
 
         if (error) throw error;
-        toast({
-          title: "Sucesso",
-          description: "Pagamento excluído com sucesso",
-          variant: "default"
-        });
+        toast.success("Pagamento excluído com sucesso");
         fetchPayments();
       } catch (error) {
         console.error("Error deleting payment:", error);
-        toast({
-          title: "Erro",
-          description: "Erro ao excluir pagamento",
-          variant: "destructive"
-        });
+        toast.error("Erro ao excluir pagamento");
       }
     }
   };
