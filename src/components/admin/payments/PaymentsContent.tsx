@@ -1,12 +1,9 @@
 
 import { Client } from "@/services/clients/types";
 import { ScheduledPayment } from "@/hooks/payments/usePayments";
-import { PaymentsAccordion } from "./PaymentsAccordion";
 import { PaymentsAccordionHeader } from "./PaymentsAccordionHeader";
-import { highlightMatch } from "./PaymentsUtils";
-import { LoadingPayments } from "./LoadingPayments";
-import { EmptyPaymentsState } from "./EmptyPaymentsState";
-import { NoSearchResults } from "./NoSearchResults";
+import { ContentContainer } from "./ContentContainer";
+import { PaymentsList } from "./PaymentsList";
 
 interface PaymentsContentProps {
   isLoading: boolean;
@@ -35,36 +32,23 @@ export function PaymentsContent({
   onDelete,
   toggleAllAccordions,
 }: PaymentsContentProps) {
-  if (isLoading) {
-    return <LoadingPayments />;
-  }
-
-  if (payments.length === 0) {
-    return <EmptyPaymentsState />;
-  }
-
   return (
-    <div>
+    <ContentContainer isLoading={isLoading} payments={payments}>
       <PaymentsAccordionHeader 
         toggleAllAccordions={toggleAllAccordions}
         expandedItems={expandedItems}
         sortedClientIds={sortedClientIds}
       />
       
-      {filteredClientIds.length === 0 ? (
-        <NoSearchResults />
-      ) : (
-        <PaymentsAccordion 
-          groupedPayments={groupedPayments}
-          sortedClientIds={filteredClientIds}
-          expandedItems={expandedItems}
-          clients={clients}
-          searchTerm={searchTerm}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          highlightMatch={highlightMatch}
-        />
-      )}
-    </div>
+      <PaymentsList 
+        groupedPayments={groupedPayments}
+        filteredClientIds={filteredClientIds}
+        expandedItems={expandedItems}
+        clients={clients}
+        searchTerm={searchTerm}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
+    </ContentContainer>
   );
 }
