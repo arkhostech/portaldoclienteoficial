@@ -1,16 +1,18 @@
 
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { DollarSign, CalendarPlus, Search, Trash2, Edit } from "lucide-react";
-import { format } from "date-fns";
+import { DollarSign, CalendarPlus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useClients } from "@/hooks/useClients";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminPaymentForm } from "@/components/admin/payments/AdminPaymentForm";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
+import { PaymentsAccordion } from "@/components/admin/payments/PaymentsAccordion";
+import { PaymentsAccordionHeader } from "@/components/admin/payments/PaymentsAccordionHeader";
+import { highlightMatch } from "@/components/admin/payments/PaymentsUtils";
 
 interface ScheduledPayment {
   id: string;
@@ -30,6 +32,11 @@ export default function AdminPayments() {
   const [openDialog, setOpenDialog] = useState(false);
   const [editPayment, setEditPayment] = useState<ScheduledPayment | null>(null);
   const { clients, isLoading: isClientsLoading } = useClients();
+
+  // Accordion state
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [groupedPayments, setGroupedPayments] = useState<Record<string, ScheduledPayment[]>>({});
+  const [sortedClientIds, setSortedClientIds] = useState<string[]>([]);
 
   // Fetch all payments
   const fetchPayments = async () => {
@@ -55,9 +62,33 @@ export default function AdminPayments() {
       );
 
       setPayments(paymentsWithClientNames);
+      
+      // Group payments by client
+      const grouped = paymentsWithClientNames.reduce<Record<string, ScheduledPayment[]>>((acc, payment) => {
+        if (!acc[payment.client_id]) {
+          acc[payment.client_id] = [];
+        }
+        acc[payment.client_id].push(payment);
+        return acc;
+      }, {});
+      
+      setGroupedPayments(grouped);
+      
+      // Sort client IDs by client name
+      const sortedIds = Object.keys(grouped).sort((a, b) => {
+        const clientA = clients.find(c => c.id === a);
+        const clientB = clients.find(c => c.id === b);
+        return (clientA?.full_name || "").localeCompare(clientB?.full_name || "");
+      });
+      
+      setSortedClientIds(sortedIds);
     } catch (error) {
       console.error("Error fetching payments:", error);
-      toast.error("Erro ao buscar pagamentos agendados");
+      toast({
+        title: "Erro",
+        description: "Erro ao buscar pagamentos agendados",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -80,11 +111,19 @@ export default function AdminPayments() {
           .eq("id", id);
 
         if (error) throw error;
-        toast.success("Pagamento excluído com sucesso");
+        toast({
+          title: "Sucesso",
+          description: "Pagamento excluído com sucesso",
+          variant: "default"
+        });
         fetchPayments();
       } catch (error) {
         console.error("Error deleting payment:", error);
-        toast.error("Erro ao excluir pagamento");
+        toast({
+          title: "Erro",
+          description: "Erro ao excluir pagamento",
+          variant: "destructive"
+        });
       }
     }
   };
@@ -98,16 +137,38 @@ export default function AdminPayments() {
     setOpenDialog(true);
   };
 
-  // Filter payments based on search term
-  const filteredPayments = payments.filter((payment) => {
-    const searchString = searchTerm.toLowerCase();
-    return (
-      payment.title.toLowerCase().includes(searchString) ||
-      payment.amount.toLowerCase().includes(searchString) ||
-      payment.client_name?.toLowerCase().includes(searchString) ||
-      (payment.description && payment.description.toLowerCase().includes(searchString))
-    );
-  });
+  // Toggle all accordions
+  const toggleAllAccordions = () => {
+    if (expandedItems.length === sortedClientIds.length) {
+      setExpandedItems([]);
+    } else {
+      setExpandedItems([...sortedClientIds]);
+    }
+  };
+
+  // Filter client IDs based on search
+  const getFilteredClientIds = () => {
+    if (!searchTerm) return sortedClientIds;
+    
+    return sortedClientIds.filter(clientId => {
+      const client = clients.find(c => c.id === clientId);
+      const payments = groupedPayments[clientId] || [];
+      
+      // Check if client name matches
+      if (client?.full_name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return true;
+      }
+      
+      // Check if any payment details match
+      return payments.some(payment => 
+        payment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.amount.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (payment.description && payment.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    });
+  };
+
+  const filteredClientIds = getFilteredClientIds();
 
   return (
     <MainLayout title="Pagamentos Agendados">
@@ -159,7 +220,6 @@ export default function AdminPayments() {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex flex-col md:flex-row justify-between gap-4">
-              <CardTitle>Pagamentos</CardTitle>
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -176,62 +236,40 @@ export default function AdminPayments() {
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
               </div>
-            ) : filteredPayments.length === 0 ? (
+            ) : payments.length === 0 ? (
               <div className="text-center py-8">
                 <DollarSign className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
                 <h3 className="mt-2 text-lg font-semibold">Nenhum pagamento agendado</h3>
                 <p className="text-muted-foreground">
-                  {searchTerm
-                    ? "Nenhum pagamento encontrado para essa busca."
-                    : "Agende um novo pagamento para começar."}
+                  Agende um novo pagamento para começar.
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4">Cliente</th>
-                      <th className="text-left py-3 px-4">Título</th>
-                      <th className="text-left py-3 px-4">Valor</th>
-                      <th className="text-left py-3 px-4">Data de Vencimento</th>
-                      <th className="text-left py-3 px-4">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredPayments.map((payment) => (
-                      <tr key={payment.id} className="border-b hover:bg-muted/50">
-                        <td className="py-3 px-4">{payment.client_name}</td>
-                        <td className="py-3 px-4">{payment.title}</td>
-                        <td className="py-3 px-4 font-medium">{payment.amount}</td>
-                        <td className="py-3 px-4">
-                          {format(new Date(payment.due_date), "dd/MM/yyyy")}
-                        </td>
-                        <td className="py-2 px-4">
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(payment)}
-                            >
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Editar</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => handleDelete(payment.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Excluir</span>
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div>
+                <PaymentsAccordionHeader 
+                  toggleAllAccordions={toggleAllAccordions}
+                  expandedItems={expandedItems}
+                  sortedClientIds={sortedClientIds}
+                />
+                
+                {filteredClientIds.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">
+                      Nenhum pagamento encontrado para essa busca.
+                    </p>
+                  </div>
+                ) : (
+                  <PaymentsAccordion 
+                    groupedPayments={groupedPayments}
+                    sortedClientIds={filteredClientIds}
+                    expandedItems={expandedItems}
+                    clients={clients}
+                    searchTerm={searchTerm}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    highlightMatch={highlightMatch}
+                  />
+                )}
               </div>
             )}
           </CardContent>
