@@ -5,7 +5,7 @@ import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, FileText, Settings, BarChart, DollarSign } from "lucide-react";
+import { Users, FileText, Settings, BarChart, DollarSign, FileTextIcon } from "lucide-react";
 
 const AdminDashboard = () => {
   const { isAdmin, user } = useAuth();
@@ -44,15 +44,18 @@ const AdminDashboard = () => {
 
         {/* Admin Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/clients')}>
-            <CardHeader className="pb-2">
+          <Card 
+            className="flex flex-col hover:shadow-md transition-all cursor-pointer group" 
+            onClick={() => navigate('/admin/clients')}
+          >
+            <CardHeader className="pb-2 flex-grow-0">
               <CardTitle className="flex items-center">
-                <Users className="mr-2 h-5 w-5 text-brand-600" />
+                <Users className="mr-2 h-5 w-5 text-brand-600 group-hover:text-brand-700 transition-colors" />
                 Gerenciar Clientes
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
+            <CardContent className="flex flex-col flex-grow justify-between">
+              <p className="text-muted-foreground mb-4 flex-grow">
                 Visualize, adicione e edite clientes no sistema.
               </p>
               <Button variant="outline" className="w-full">
@@ -61,15 +64,18 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/cases')}>
-            <CardHeader className="pb-2">
+          <Card 
+            className="flex flex-col hover:shadow-md transition-all cursor-pointer group" 
+            onClick={() => navigate('/admin/cases')}
+          >
+            <CardHeader className="pb-2 flex-grow-0">
               <CardTitle className="flex items-center">
-                <FileText className="mr-2 h-5 w-5 text-brand-600" />
+                <FileText className="mr-2 h-5 w-5 text-brand-600 group-hover:text-brand-700 transition-colors" />
                 Gerenciar Processos
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
+            <CardContent className="flex flex-col flex-grow justify-between">
+              <p className="text-muted-foreground mb-4 flex-grow">
                 Visualize e atualize o status dos processos ativos.
               </p>
               <Button variant="outline" className="w-full">
@@ -78,15 +84,18 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/documents')}>
-            <CardHeader className="pb-2">
+          <Card 
+            className="flex flex-col hover:shadow-md transition-all cursor-pointer group" 
+            onClick={() => navigate('/admin/documents')}
+          >
+            <CardHeader className="pb-2 flex-grow-0">
               <CardTitle className="flex items-center">
-                <FileText className="mr-2 h-5 w-5 text-brand-600" />
+                <FileTextIcon className="mr-2 h-5 w-5 text-brand-600 group-hover:text-brand-700 transition-colors" />
                 Documentos
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
+            <CardContent className="flex flex-col flex-grow justify-between">
+              <p className="text-muted-foreground mb-4 flex-grow">
                 Gerencie documentos dos clientes.
               </p>
               <Button variant="outline" className="w-full">
@@ -95,15 +104,18 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-all cursor-pointer" onClick={() => navigate('/admin/payments')}>
-            <CardHeader className="pb-2">
+          <Card 
+            className="flex flex-col hover:shadow-md transition-all cursor-pointer group" 
+            onClick={() => navigate('/admin/payments')}
+          >
+            <CardHeader className="pb-2 flex-grow-0">
               <CardTitle className="flex items-center">
-                <DollarSign className="mr-2 h-5 w-5 text-brand-600" />
+                <DollarSign className="mr-2 h-5 w-5 text-brand-600 group-hover:text-brand-700 transition-colors" />
                 Pagamentos
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
+            <CardContent className="flex flex-col flex-grow justify-between">
+              <p className="text-muted-foreground mb-4 flex-grow">
                 Agende e gerencie pagamentos dos clientes.
               </p>
               <Button variant="outline" className="w-full">
