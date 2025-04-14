@@ -1,7 +1,6 @@
 
 import { CalendarPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DialogTrigger } from "@/components/ui/dialog";
 
 interface PageHeaderProps {
   openDialog: () => void;
@@ -16,12 +15,10 @@ export function PageHeader({ openDialog }: PageHeaderProps) {
           Gerencie os pagamentos agendados para os clientes.
         </p>
       </div>
-      <DialogTrigger asChild>
-        <Button className="w-full md:w-auto" onClick={openDialog}>
-          <CalendarPlus className="mr-2 h-4 w-4" />
-          Agendar Novo Pagamento
-        </Button>
-      </DialogTrigger>
+      <Button className="w-full md:w-auto" onClick={openDialog}>
+        <CalendarPlus className="mr-2 h-4 w-4" />
+        Agendar Novo Pagamento
+      </Button>
     </div>
   );
 }
