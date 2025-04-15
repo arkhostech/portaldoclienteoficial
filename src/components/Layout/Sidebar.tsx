@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,6 @@ import {
   LogOut,
   Users,
   Settings,
-  BarChart,
   FileText,
   X
 } from 'lucide-react';
@@ -70,11 +68,6 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           title: 'Pagamentos', 
           icon: <CreditCard className="h-5 w-5" />, 
           href: '/admin/payments' 
-        },
-        { 
-          title: 'Relatórios', 
-          icon: <BarChart className="h-5 w-5" />, 
-          href: '/admin/reports' 
         },
         { 
           title: 'Configurações', 
