@@ -6,7 +6,7 @@ import { ContactInfoFields } from "./fields/ContactInfoFields";
 import { ProcessTypeField } from "./fields/ProcessTypeField";
 
 interface BasicInfoFieldsProps {
-  form: UseFormReturn<ClientFormData & { confirmPassword: string }>;
+  form: UseFormReturn<ClientFormData>;
 }
 
 export const BasicInfoFields = ({ form }: BasicInfoFieldsProps) => {

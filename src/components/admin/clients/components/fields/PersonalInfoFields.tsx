@@ -11,7 +11,7 @@ import {
 import { ClientFormData } from "../../schemas/clientSchema";
 
 interface PersonalInfoFieldsProps {
-  form: UseFormReturn<ClientFormData & { confirmPassword: string }>;
+  form: UseFormReturn<ClientFormData>;
 }
 
 export const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {

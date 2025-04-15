@@ -17,7 +17,7 @@ export interface ClientFormData {
   phone?: string;
   address?: string;
   status: string;
-  process_type?: string;
+  process_type: string;
 }
 
 export interface ClientWithAuthFormData extends ClientFormData {

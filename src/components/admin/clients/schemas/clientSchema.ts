@@ -8,7 +8,7 @@ export const clientFormSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   status: z.string().default("active"),
-  process_type: z.string().min(1, { message: "Tipo de processo é obrigatório" }).optional(),
+  process_type: z.string().min(1, { message: "Tipo de processo é obrigatório" }),
   password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
   confirmPassword: z.string().min(6, { message: "Confirme a senha" })
 }).refine((data) => data.password === data.confirmPassword, {

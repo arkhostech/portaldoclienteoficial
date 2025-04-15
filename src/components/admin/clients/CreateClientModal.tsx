@@ -13,8 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
-import { ClientWithAuthFormData } from "@/services/clientService";
-import { clientFormSchema } from "./schemas/clientSchema";
+import { ClientWithAuthFormData } from "@/services/clients/types";
+import { clientFormSchema, ClientFormData } from "./schemas/clientSchema";
 import { BasicInfoFields } from "./components/BasicInfoFields";
 import { PasswordFields } from "./components/PasswordFields";
 
@@ -31,7 +31,7 @@ const CreateClientModal = ({
   onSubmit,
   isSubmitting
 }: CreateClientModalProps) => {
-  const form = useForm<ClientWithAuthFormData & { confirmPassword: string }>({
+  const form = useForm<ClientFormData>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
       full_name: "",
@@ -45,11 +45,11 @@ const CreateClientModal = ({
     }
   });
 
-  const handleSubmit = async (data: ClientWithAuthFormData & { confirmPassword: string }) => {
+  const handleSubmit = async (data: ClientFormData) => {
     // Remove confirmPassword before submitting
     const { confirmPassword, ...clientData } = data;
     
-    const success = await onSubmit(clientData);
+    const success = await onSubmit(clientData as ClientWithAuthFormData);
     if (success) {
       handleDialogClose(false);
       form.reset();

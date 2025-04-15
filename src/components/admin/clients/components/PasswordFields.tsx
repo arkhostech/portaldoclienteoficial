@@ -15,7 +15,7 @@ import {
 import { ClientFormData } from "../schemas/clientSchema";
 
 interface PasswordFieldsProps {
-  form: UseFormReturn<ClientFormData & { confirmPassword: string }>;
+  form: UseFormReturn<ClientFormData>;
 }
 
 export const PasswordFields = ({ form }: PasswordFieldsProps) => {

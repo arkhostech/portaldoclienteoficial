@@ -17,7 +17,7 @@ import {
 import { ClientFormData, processTypes } from "../../schemas/clientSchema";
 
 interface ProcessTypeFieldProps {
-  form: UseFormReturn<ClientFormData & { confirmPassword: string }>;
+  form: UseFormReturn<ClientFormData>;
 }
 
 export const ProcessTypeField = ({ form }: ProcessTypeFieldProps) => {
