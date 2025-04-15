@@ -1,38 +1,143 @@
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarDays, Users, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Payment {
+  id: string;
+  client_name: string;
+  title: string;
+  value: string;
+  due_date: string;
+}
+
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+  process_type: string | null;
+  date: string;
+}
 
 const RecentActivitySection = () => {
-  // Sample data for recent activities
-  // In a real application, these would come from API calls
-  const recentPayments = [
-    { id: 1, client: "Ana Silva", title: "Renovação de Visto", value: "R$ 2.500,00", dueDate: new Date(2025, 3, 20) },
-    { id: 2, client: "Miguel Santos", title: "Pagamento EB3", value: "R$ 5.000,00", dueDate: new Date(2025, 3, 22) },
-    { id: 3, client: "Julia Pereira", title: "Retainer Fee", value: "R$ 3.200,00", dueDate: new Date(2025, 3, 25) },
-    { id: 4, client: "Roberto Martins", title: "Consultoria", value: "R$ 1.800,00", dueDate: new Date(2025, 3, 28) },
-    { id: 5, client: "Carolina Ferreira", title: "Ajustes de Status", value: "R$ 2.250,00", dueDate: new Date(2025, 4, 2) },
-  ];
+  const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
+  const [newClients, setNewClients] = useState<Client[]>([]);
+  const [upcomingPayments, setUpcomingPayments] = useState<Payment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const newClients = [
-    { id: 1, name: "Felipe Oliveira", email: "felipe.o@example.com", date: new Date(2025, 3, 15) },
-    { id: 2, client: "Mariana Costa", email: "mariana.c@example.com", date: new Date(2025, 3, 14) },
-    { id: 3, client: "Paulo Vieira", email: "paulo.v@example.com", date: new Date(2025, 3, 13) },
-    { id: 4, client: "Daniela Alves", email: "dani.alves@example.com", date: new Date(2025, 3, 12) },
-    { id: 5, client: "Luiz Henrique", email: "luiz.h@example.com", date: new Date(2025, 3, 10) },
-  ];
+  useEffect(() => {
+    const fetchActivityData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch recent payments
+        const { data: paymentsData, error: paymentsError } = await supabase
+          .from("scheduled_payments")
+          .select(`
+            id,
+            title,
+            amount,
+            due_date,
+            description,
+            client_id,
+            clients(full_name)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
+        if (paymentsError) throw paymentsError;
+        
+        const formattedRecentPayments = paymentsData?.map(payment => ({
+          id: payment.id,
+          client_name: payment.clients?.full_name || 'Cliente não encontrado',
+          title: payment.title,
+          value: payment.amount,
+          due_date: payment.due_date,
+        })) || [];
+        
+        setRecentPayments(formattedRecentPayments);
+        
+        // Fetch new clients
+        const { data: clientsData, error: clientsError } = await supabase
+          .from("clients")
+          .select("id, full_name, email, process_type, created_at")
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
+        if (clientsError) throw clientsError;
+        
+        const formattedNewClients = clientsData?.map(client => ({
+          id: client.id,
+          name: client.full_name,
+          email: client.email,
+          process_type: client.process_type,
+          date: client.created_at,
+        })) || [];
+        
+        setNewClients(formattedNewClients);
+        
+        // Fetch upcoming payments
+        const today = new Date();
+        const { data: upcomingData, error: upcomingError } = await supabase
+          .from("scheduled_payments")
+          .select(`
+            id,
+            title,
+            amount,
+            due_date,
+            description,
+            client_id,
+            clients(full_name)
+          `)
+          .gte('due_date', today.toISOString().split('T')[0])
+          .order('due_date', { ascending: true })
+          .limit(5);
+        
+        if (upcomingError) throw upcomingError;
+        
+        const formattedUpcomingPayments = upcomingData?.map(payment => ({
+          id: payment.id,
+          client_name: payment.clients?.full_name || 'Cliente não encontrado',
+          title: payment.title,
+          value: payment.amount,
+          due_date: payment.due_date,
+        })) || [];
+        
+        setUpcomingPayments(formattedUpcomingPayments);
+        
+      } catch (error) {
+        console.error("Error fetching activity data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchActivityData();
+  }, []);
 
-  const upcomingPayments = [
-    { id: 1, client: "Ana Silva", title: "Renovação de Visto", value: "R$ 2.500,00", dueDate: new Date(2025, 3, 20) },
-    { id: 2, client: "Miguel Santos", title: "Pagamento EB3", value: "R$ 5.000,00", dueDate: new Date(2025, 3, 22) },
-    { id: 3, client: "Julia Pereira", title: "Retainer Fee", value: "R$ 3.200,00", dueDate: new Date(2025, 3, 25) },
-  ];
-
-  const formatDate = (date: Date) => {
-    return format(date, "dd 'de' MMMM", { locale: ptBR });
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "dd 'de' MMMM", { locale: ptBR });
+    } catch (error) {
+      console.error("Date parsing error:", error);
+      return "Data inválida";
+    }
   };
+
+  const renderLoadingState = () => (
+    <div className="p-4 text-center text-muted-foreground">
+      Carregando dados...
+    </div>
+  );
+
+  const renderEmptyState = (message: string) => (
+    <div className="p-4 text-center text-muted-foreground">
+      {message}
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -60,20 +165,26 @@ const RecentActivitySection = () => {
               <CardTitle className="text-lg">Últimos Pagamentos Agendados</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentPayments.map((payment) => (
-                  <div key={payment.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                    <div>
-                      <h4 className="font-medium">{payment.client}</h4>
-                      <p className="text-sm text-muted-foreground">{payment.title}</p>
+              {isLoading ? (
+                renderLoadingState()
+              ) : recentPayments.length === 0 ? (
+                renderEmptyState("Nenhum pagamento recente encontrado")
+              ) : (
+                <div className="space-y-4">
+                  {recentPayments.map((payment) => (
+                    <div key={payment.id} className="flex items-center justify-between border-b pb-2 last:border-0">
+                      <div>
+                        <h4 className="font-medium">{payment.client_name}</h4>
+                        <p className="text-sm text-muted-foreground">{payment.title}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{payment.value}</p>
+                        <p className="text-xs text-muted-foreground">Vence em {formatDate(payment.due_date)}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium">{payment.value}</p>
-                      <p className="text-xs text-muted-foreground">Vence em {formatDate(payment.dueDate)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -84,19 +195,27 @@ const RecentActivitySection = () => {
               <CardTitle className="text-lg">Novos Clientes</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {newClients.map((client) => (
-                  <div key={client.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                    <div>
-                      <h4 className="font-medium">{client.name}</h4>
-                      <p className="text-sm text-muted-foreground">{client.email}</p>
+              {isLoading ? (
+                renderLoadingState()
+              ) : newClients.length === 0 ? (
+                renderEmptyState("Nenhum cliente recente encontrado")
+              ) : (
+                <div className="space-y-4">
+                  {newClients.map((client) => (
+                    <div key={client.id} className="flex items-center justify-between border-b pb-2 last:border-0">
+                      <div>
+                        <h4 className="font-medium">{client.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {client.process_type || "Processo não definido"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Adicionado em {formatDate(client.date)}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Adicionado em {formatDate(client.date)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -107,20 +226,26 @@ const RecentActivitySection = () => {
               <CardTitle className="text-lg">Próximos Vencimentos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {upcomingPayments.map((payment) => (
-                  <div key={payment.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                    <div>
-                      <h4 className="font-medium">{payment.client}</h4>
-                      <p className="text-sm text-muted-foreground">{payment.title}</p>
+              {isLoading ? (
+                renderLoadingState()
+              ) : upcomingPayments.length === 0 ? (
+                renderEmptyState("Nenhum vencimento próximo encontrado")
+              ) : (
+                <div className="space-y-4">
+                  {upcomingPayments.map((payment) => (
+                    <div key={payment.id} className="flex items-center justify-between border-b pb-2 last:border-0">
+                      <div>
+                        <h4 className="font-medium">{payment.client_name}</h4>
+                        <p className="text-sm text-muted-foreground">{payment.title}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{payment.value}</p>
+                        <p className="text-xs text-muted-foreground">Vence em {formatDate(payment.due_date)}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium">{payment.value}</p>
-                      <p className="text-xs text-muted-foreground">Vence em {formatDate(payment.dueDate)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
