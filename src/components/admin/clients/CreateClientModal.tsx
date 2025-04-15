@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
@@ -12,58 +11,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage,
-  FormDescription
-} from "@/components/ui/form";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Form } from "@/components/ui/form";
+import { Loader2 } from "lucide-react";
 import { ClientWithAuthFormData } from "@/services/clientService";
-
-// Schema for client data with auth
-const clientFormSchema = z.object({
-  full_name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
-  email: z.string().email({ message: "Email inválido" }),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  status: z.string().default("active"),
-  process_type: z.string().min(1, { message: "Tipo de processo é obrigatório" }).optional(),
-  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
-  confirmPassword: z.string().min(6, { message: "Confirme a senha" })
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não coincidem",
-  path: ["confirmPassword"],
-});
-
-// Common process types for immigration
-const processTypes = [
-  "EB-1",
-  "EB-2",
-  "EB-3",
-  "EB-5",
-  "H-1B",
-  "L-1",
-  "O-1",
-  "Tourist Visa",
-  "Student Visa",
-  "Family Immigration",
-  "Asylum",
-  "Naturalization",
-  "Green Card",
-  "Other"
-];
+import { clientFormSchema } from "./schemas/clientSchema";
+import { BasicInfoFields } from "./components/BasicInfoFields";
+import { PasswordFields } from "./components/PasswordFields";
 
 interface CreateClientModalProps {
   open: boolean;
@@ -78,10 +31,6 @@ const CreateClientModal = ({
   onSubmit,
   isSubmitting
 }: CreateClientModalProps) => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // Form for client with auth
   const form = useForm<ClientWithAuthFormData & { confirmPassword: string }>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
@@ -116,14 +65,6 @@ const CreateClientModal = ({
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
-
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
@@ -136,143 +77,9 @@ const CreateClientModal = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pt-4">
-            <FormField
-              control={form.control}
-              name="full_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome Completo*</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Nome Completo" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email*</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="email" placeholder="email@exemplo.com" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha*</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          {...field} 
-                          type={showPassword ? "text" : "password"} 
-                          placeholder="Senha"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-full"
-                          onClick={togglePasswordVisibility}
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormDescription className="text-xs">
-                      Mínimo de 6 caracteres
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirmar Senha*</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          {...field} 
-                          type={showConfirmPassword ? "text" : "password"} 
-                          placeholder="Confirmar Senha"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-full"
-                          onClick={toggleConfirmPasswordVisibility}
-                        >
-                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Telefone</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="(XX) XXXXX-XXXX" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Endereço</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Endereço completo" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="process_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Processo*</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo de processo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {processTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <BasicInfoFields form={form} />
+            <PasswordFields form={form} />
+            
             <DialogFooter>
               <Button 
                 type="button" 
@@ -297,4 +104,3 @@ const CreateClientModal = ({
 };
 
 export default CreateClientModal;
-
