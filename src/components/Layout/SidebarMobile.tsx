@@ -1,5 +1,5 @@
 
-import { X } from 'lucide-react';
+import { X, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { NavItem } from '@/hooks/useSidebarNavigation';

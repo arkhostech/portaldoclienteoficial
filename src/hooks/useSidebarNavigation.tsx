@@ -2,6 +2,15 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
+import { 
+  LayoutDashboard, 
+  Users, 
+  FileText, 
+  CreditCard,
+  Settings,
+  FolderOpen,
+  BookOpen
+} from 'lucide-react';
 
 export interface NavItem {
   title: string;
