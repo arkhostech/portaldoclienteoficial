@@ -73,6 +73,7 @@ export default function AdminPayments() {
               onEdit={handleEdit}
               onDelete={handleDelete}
               toggleAllAccordions={toggleAllAccordions}
+              setExpandedItems={setExpandedItems}
             />
           </CardContent>
         </Card>

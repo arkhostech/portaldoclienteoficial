@@ -36,6 +36,7 @@ interface PaymentsAccordionProps {
   onEdit: (payment: ScheduledPayment) => void;
   onDelete: (paymentId: string) => void;
   highlightMatch: (text: string, term: string) => React.ReactNode;
+  onValueChange: (value: string[]) => void;
 }
 
 export function PaymentsAccordion({
@@ -46,7 +47,8 @@ export function PaymentsAccordion({
   searchTerm,
   onEdit,
   onDelete,
-  highlightMatch
+  highlightMatch,
+  onValueChange
 }: PaymentsAccordionProps) {
   const getClientName = (clientId: string): string => {
     const client = clients.find(c => c.id === clientId);
@@ -57,6 +59,7 @@ export function PaymentsAccordion({
     <Accordion 
       type="multiple" 
       value={expandedItems}
+      onValueChange={onValueChange}
       className="space-y-2"
     >
       {sortedClientIds.map(clientId => {
@@ -129,7 +132,10 @@ export function PaymentsAccordion({
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => onEdit(payment)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(payment);
+                              }}
                             >
                               <Edit className="h-4 w-4" />
                               <span className="sr-only">Editar</span>
@@ -138,7 +144,10 @@ export function PaymentsAccordion({
                               variant="outline"
                               size="sm"
                               className="text-destructive hover:text-destructive"
-                              onClick={() => onDelete(payment.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(payment.id);
+                              }}
                             >
                               <Trash2 className="h-4 w-4" />
                               <span className="sr-only">Excluir</span>

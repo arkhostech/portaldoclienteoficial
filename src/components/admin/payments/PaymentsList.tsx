@@ -13,6 +13,7 @@ interface PaymentsListProps {
   searchTerm: string;
   onEdit: (payment: ScheduledPayment) => void;
   onDelete: (paymentId: string) => void;
+  onValueChange: (value: string[]) => void;
 }
 
 export function PaymentsList({
@@ -23,6 +24,7 @@ export function PaymentsList({
   searchTerm,
   onEdit,
   onDelete,
+  onValueChange
 }: PaymentsListProps) {
   if (filteredClientIds.length === 0) {
     return <NoSearchResults />;
@@ -38,6 +40,7 @@ export function PaymentsList({
       onEdit={onEdit}
       onDelete={onDelete}
       highlightMatch={highlightMatch}
+      onValueChange={onValueChange}
     />
   );
 }

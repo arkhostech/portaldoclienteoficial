@@ -17,6 +17,7 @@ interface PaymentsContentProps {
   onEdit: (payment: ScheduledPayment) => void;
   onDelete: (paymentId: string) => void;
   toggleAllAccordions: () => void;
+  setExpandedItems: (value: string[]) => void;
 }
 
 export function PaymentsContent({
@@ -31,6 +32,7 @@ export function PaymentsContent({
   onEdit,
   onDelete,
   toggleAllAccordions,
+  setExpandedItems,
 }: PaymentsContentProps) {
   return (
     <ContentContainer isLoading={isLoading} payments={payments}>
@@ -48,6 +50,7 @@ export function PaymentsContent({
         searchTerm={searchTerm}
         onEdit={onEdit}
         onDelete={onDelete}
+        onValueChange={setExpandedItems}
       />
     </ContentContainer>
   );
