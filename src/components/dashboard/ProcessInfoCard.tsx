@@ -32,7 +32,7 @@ const ProcessInfoCard = ({
       </CardHeader>
       <CardContent>
         {processType ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-5">
                 <div>
@@ -67,10 +67,10 @@ const ProcessInfoCard = ({
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex flex-col space-y-2">
+              <div className="space-y-2">
+                <div className="flex flex-col space-y-1">
                   <span className="text-sm text-muted-foreground">Status</span>
-                  <div className="w-full max-w-full overflow-hidden">
+                  <div className="w-full overflow-x-auto">
                     <ProcessTracker 
                       currentStatus={status as "documentacao" | "em_andamento" | "concluido"} 
                       className="sm:flex-row" 
