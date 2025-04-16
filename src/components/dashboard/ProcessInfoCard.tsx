@@ -1,8 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { CalendarClock, User, AlertCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import ProcessTracker from "./ProcessTracker";
 
 interface ProcessInfoCardProps {
   processType?: string;
@@ -14,34 +13,11 @@ interface ProcessInfoCardProps {
 
 const ProcessInfoCard = ({ 
   processType, 
-  status,
+  status = "documentacao",
   startDate,
   responsibleAgent,
   lastUpdate
 }: ProcessInfoCardProps) => {
-  
-  const getStatusBadge = (status?: string) => {
-    if (!status) return null;
-    
-    const statusMap: Record<string, { color: string, label: string }> = {
-      'active': { color: 'bg-green-100 text-green-700', label: 'Ativo' },
-      'pending': { color: 'bg-yellow-100 text-yellow-700', label: 'Pendente' },
-      'review': { color: 'bg-yellow-100 text-yellow-700', label: 'Em Análise' },
-      'approved': { color: 'bg-blue-100 text-blue-700', label: 'Aprovado' },
-      'denied': { color: 'bg-red-100 text-red-700', label: 'Negado' },
-      'rfe': { color: 'bg-orange-100 text-orange-700', label: 'RFE' },
-      'inactive': { color: 'bg-gray-100 text-gray-700', label: 'Inativo' },
-    };
-
-    const { color, label } = statusMap[status] || statusMap.inactive;
-    
-    return (
-      <Badge className={`${color} hover:${color}`}>
-        {label}
-      </Badge>
-    );
-  };
-
   return (
     <div className="space-y-4">
       <Card className="border-l-4 border-l-primary">
@@ -55,7 +31,7 @@ const ProcessInfoCard = ({
         </CardHeader>
         <CardContent>
           {processType ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col space-y-1">
                   <span className="text-sm text-muted-foreground">Tipo de Processo</span>
@@ -63,7 +39,7 @@ const ProcessInfoCard = ({
                 </div>
                 <div className="flex flex-col space-y-1">
                   <span className="text-sm text-muted-foreground">Status</span>
-                  {getStatusBadge(status)}
+                  <ProcessTracker currentStatus={status as "documentacao" | "em_andamento" | "concluido"} />
                 </div>
 
                 {startDate && (
