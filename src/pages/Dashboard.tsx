@@ -92,8 +92,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 gap-4 mt-6">
         {/* Process Info and Calendar Section */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          {/* Process Info Card - Adjusted width */}
-          <div className="md:col-span-8">
+          {/* Process Info Card - Further adjusted width */}
+          <div className="md:col-span-9">
             <ProcessInfoCard 
               processType={clientInfo?.process_type} 
               status={clientInfo?.status}
@@ -103,8 +103,8 @@ const Dashboard = () => {
             />
           </div>
           
-          {/* Calendar Card with integrated payment summary - Adjusted width */}
-          <div className="md:col-span-4">
+          {/* Calendar Card with integrated payment summary - Further adjusted width */}
+          <div className="md:col-span-3">
             <PaymentCalendar />
           </div>
         </div>

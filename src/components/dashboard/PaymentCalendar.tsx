@@ -65,7 +65,7 @@ const PaymentCalendar = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <CalendarDays className="h-5 w-5 mr-2 text-primary" />
-              <CardTitle className="text-base sm:text-lg">Calendário de Pagamentos</CardTitle>
+              <CardTitle className="text-base">Calendário</CardTitle>
             </div>
           </div>
         </CardHeader>
@@ -82,56 +82,35 @@ const PaymentCalendar = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <CalendarDays className="h-5 w-5 mr-2 text-primary" />
-            <CardTitle className="text-base sm:text-lg">Calendário de Pagamentos</CardTitle>
+            <CardTitle className="text-base">Calendário</CardTitle>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-3 pt-0">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {/* Calendar section - Made smaller */}
-          <div className="flex justify-center">
-            <TooltipProvider>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="mx-auto max-w-full scale-90 origin-top-left"
-                modifiers={{
-                  paymentDay: (day) => {
-                    const key = format(day, "yyyy-MM-dd");
-                    return paymentDaysMap[key];
-                  }
-                }}
-                modifiersClassNames={{
-                  paymentDay: "bg-primary/20 font-bold text-primary rounded-md"
-                }}
-              />
-            </TooltipProvider>
-          </div>
-          
+      <CardContent className="p-2 pt-0">
+        <div className="space-y-3">
           {/* Payment Summary section */}
-          <div className="flex flex-col border-t lg:border-t-0 lg:border-l border-border lg:pl-4 pt-3 lg:pt-0">
-            <div className="flex items-center mb-4">
+          <div className="flex flex-col">
+            <div className="flex items-center mb-2">
               <CircleDollarSign className="h-5 w-5 mr-2 text-primary" />
-              <h3 className="font-semibold">Resumo de Pagamentos</h3>
+              <h3 className="font-semibold text-sm">Resumo de Pagamentos</h3>
             </div>
             
-            <div className="space-y-5 flex-1">
+            <div className="space-y-3">
               <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Próximo pagamento:</span>
-                  <span className="font-medium">15/06/2025</span>
+                <div className="flex justify-between mb-1">
+                  <span className="text-xs text-muted-foreground">Próximo:</span>
+                  <span className="font-medium text-sm">15/06/2025</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Valor:</span>
-                  <span className="font-medium text-green-600">R$ 1.500,00</span>
+                  <span className="text-xs text-muted-foreground">Valor:</span>
+                  <span className="font-medium text-sm text-green-600">R$ 1.500,00</span>
                 </div>
               </div>
               
-              <div className="mt-auto pt-3 border-t">
+              <div className="pt-2 border-t">
                 <div className="flex justify-between">
-                  <span className="font-medium">Total aberto:</span>
-                  <span className="font-semibold">R$ 4.500,00</span>
+                  <span className="text-xs font-medium">Total aberto:</span>
+                  <span className="font-semibold text-sm">R$ 4.500,00</span>
                 </div>
               </div>
             </div>

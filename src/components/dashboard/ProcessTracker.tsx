@@ -26,7 +26,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
   };
 
   return (
-    <div className={cn("flex w-full py-2 gap-2", className)}>
+    <div className={cn("flex w-full py-2 gap-1", className)}>
       {steps.map((step) => {
         const status = getStepStatus(step.id);
         
@@ -34,14 +34,14 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
           <div
             key={step.id}
             className={cn(
-              "flex-1 rounded-lg p-3 transition-all flex flex-col justify-between",
+              "flex-1 rounded-lg p-2 transition-all flex flex-col justify-between",
               status === "complete" && "bg-blue-600 text-white",
               status === "current" && "border-2 border-blue-600",
               status === "upcoming" && "bg-gray-100 text-gray-500",
             )}
             style={{
-              minHeight: '140px',
-              minWidth: '160px', // Reduced width for all cards
+              minHeight: '130px',
+              width: '150px', // Fixed width for all cards
             }}
           >
             <div className="flex flex-col space-y-2">

@@ -33,12 +33,12 @@ const ProcessInfoCard = ({
       <CardContent>
         {processType ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="space-y-3">
                 <div>
-                  <h3 className="text-base font-semibold mb-3">Informações do Serviço</h3>
+                  <h3 className="text-base font-semibold mb-2">Informações do Serviço</h3>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div className="flex flex-col space-y-1">
                       <span className="text-sm text-muted-foreground">Área</span>
                       <span className="font-medium">{area}</span>
@@ -52,7 +52,7 @@ const ProcessInfoCard = ({
                     <div className="flex flex-col space-y-1">
                       <span className="text-sm text-muted-foreground">Responsável</span>
                       <div className="flex items-center mt-1">
-                        <Avatar className="h-10 w-10 mr-3">
+                        <Avatar className="h-8 w-8 mr-2">
                           <AvatarImage 
                             src="/lovable-uploads/d2fc1e07-1881-4ff2-a860-5dfae4df31e5.png" 
                             alt="Legacy Imigra" 
@@ -67,10 +67,10 @@ const ProcessInfoCard = ({
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex flex-col space-y-1">
-                  <span className="text-sm text-muted-foreground">Status</span>
-                  <div className="w-full overflow-x-auto">
+              <div className="space-y-1">
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground mb-1">Status</span>
+                  <div className="w-full overflow-x-auto pb-1">
                     <ProcessTracker 
                       currentStatus={status as "documentacao" | "em_andamento" | "concluido"} 
                       className="sm:flex-row" 
