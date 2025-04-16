@@ -26,7 +26,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
   };
 
   return (
-    <div className={cn("flex flex-col sm:flex-row gap-2", className)}>
+    <div className={cn("flex flex-col gap-2 w-full", className)}>
       {steps.map((step, index) => {
         const status = getStepStatus(step.id);
         
@@ -34,7 +34,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
           <div
             key={step.id}
             className={cn(
-              "flex-1 p-2 rounded-md border transition-all min-w-[120px]",
+              "flex-1 p-2 rounded-md border transition-all min-w-0",
               status === "complete" && "bg-green-50 border-green-200",
               status === "current" && "border-primary border-2",
               status === "upcoming" && "border-gray-200 bg-gray-50",
@@ -57,7 +57,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
               </div>
               <span 
                 className={cn(
-                  "text-sm font-medium whitespace-nowrap",
+                  "text-sm font-medium truncate",
                   status === "complete" && "text-green-700",
                   status === "current" && "text-primary",
                   status === "upcoming" && "text-gray-500"
