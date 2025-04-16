@@ -26,7 +26,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
   };
 
   return (
-    <div className={cn("flex gap-3 w-full px-4 py-2", className)}>
+    <div className={cn("flex w-full px-2 py-2 gap-2", className)}>
       {steps.map((step) => {
         const status = getStepStatus(step.id);
         
@@ -34,12 +34,15 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
           <div
             key={step.id}
             className={cn(
-              "flex-1 rounded-lg p-3 transition-all min-h-[120px] flex flex-col justify-between",
+              "flex-1 rounded-lg p-3 transition-all flex flex-col justify-between",
               status === "complete" && "bg-blue-600 text-white",
               status === "current" && "border-2 border-blue-600",
               status === "upcoming" && "bg-gray-100 text-gray-500",
             )}
-            style={{ width: 'calc(100% / 3 - 8px)' }} 
+            style={{
+              width: 'calc(100% / 3 - 8px)',
+              minHeight: '120px',
+            }}
           >
             <div className="flex flex-col space-y-2">
               <div className="flex items-center space-x-2">
