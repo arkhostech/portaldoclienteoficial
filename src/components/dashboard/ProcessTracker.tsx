@@ -41,6 +41,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
             )}
             style={{
               minHeight: '160px',
+              minWidth: step.id === "em_andamento" ? '220px' : '180px', // Increased width for "Em Andamento"
             }}
           >
             <div className="flex flex-col space-y-2">
@@ -66,7 +67,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
               </div>
               
               <h3 className={cn(
-                "font-medium w-full whitespace-nowrap overflow-hidden text-ellipsis",
+                "font-medium w-full",
                 status === "complete" && "text-white",
                 status === "current" && "text-blue-600",
                 status === "upcoming" && "text-gray-600"
@@ -76,7 +77,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
               
               <div className="mt-1">
                 <span className={cn(
-                  "text-xs py-1 px-3 rounded-full inline-block whitespace-nowrap",
+                  "text-xs py-1 px-3 rounded-full inline-block",
                   status === "complete" && "bg-white/20 text-white",
                   status === "current" && "bg-blue-100 text-blue-600",
                   status === "upcoming" && "bg-gray-200 text-gray-500"
