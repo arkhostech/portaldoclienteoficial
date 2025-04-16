@@ -90,10 +90,10 @@ const Dashboard = () => {
       <WelcomeSection clientName={clientInfo?.full_name} />
       
       <div className="grid grid-cols-1 gap-4 mt-6">
-        {/* Process Info and Calendar Section - Adjusted Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Process Info Card - 2/3 width on medium+ screens */}
-          <div className="md:col-span-2">
+        {/* Process Info and Calendar Section - Updated Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          {/* Process Info Card - Reduced width */}
+          <div className="md:col-span-5">
             <ProcessInfoCard 
               processType={clientInfo?.process_type} 
               status={clientInfo?.status}
@@ -103,14 +103,46 @@ const Dashboard = () => {
             />
           </div>
           
-          {/* Payment Calendar - 1/3 width on medium+ screens */}
-          <div className="md:col-span-1">
-            <PaymentCalendar />
+          {/* Calendar and Payment Summary - Side by side layout */}
+          <div className="md:col-span-7">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+              {/* Payment Calendar - Left side */}
+              <div className="h-full">
+                <PaymentCalendar />
+              </div>
+              
+              {/* Payment Summary - Right side */}
+              <div className="h-full">
+                <div className="bg-card border rounded-md shadow-sm p-4 h-full flex flex-col">
+                  <div className="flex items-center mb-3">
+                    <h3 className="text-base font-medium">Resumo de Pagamentos</h3>
+                  </div>
+                  
+                  <div className="space-y-3 flex-1">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Próximo pagamento:</span>
+                      <span className="font-medium">15/06/2025</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Valor:</span>
+                      <span className="font-medium text-green-600">R$ 1.500,00</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 pt-3 border-t">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Total aberto:</span>
+                      <span className="font-semibold">R$ 4.500,00</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
         {/* Documents Section - Reduced top margin */}
-        <div className="mt-2">
+        <div className="mt-1">
           <DocumentsCard documents={documents} />
         </div>
       </div>

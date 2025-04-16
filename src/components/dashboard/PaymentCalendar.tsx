@@ -95,11 +95,11 @@ const PaymentCalendar = () => {
       <CardHeader className="pb-2">
         <div className="flex items-center">
           <CalendarDays className="h-4 sm:h-5 w-4 sm:w-5 mr-2 text-primary" />
-          <CardTitle className="text-base sm:text-lg">Calendário de Pagamentos</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Calendário</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col justify-between">
-        <div className="w-full mb-3">
+      <CardContent className="flex-1 flex flex-col justify-between py-1 px-2 sm:px-3 sm:py-2">
+        <div className="w-full">
           <TooltipProvider>
             <Calendar
               mode="single"
@@ -119,41 +119,45 @@ const PaymentCalendar = () => {
           </TooltipProvider>
         </div>
           
-        {/* Monthly payments summary section */}
-        <div className="w-full border-t pt-3 mt-auto">
-          <h3 className="font-medium text-sm sm:text-base flex items-center mb-2">
-            <CircleDollarSign className="h-4 w-4 mr-2 text-primary" />
-            Pagamentos em {selectedDate && format(selectedDate, "MMMM yyyy")}
-          </h3>
-          
-          <div className="overflow-y-auto max-h-[150px]">
-            {monthlyPayments.length > 0 ? (
-              <div className="space-y-2">
-                {monthlyPayments.slice(0, 3).map((payment) => (
+        {/* Monthly payments summary section - More compact */}
+        {monthlyPayments.length > 0 ? (
+          <div className="w-full border-t pt-2 mt-auto">
+            <h3 className="text-xs sm:text-sm flex items-center mb-1">
+              <CircleDollarSign className="h-3 w-3 mr-1 text-primary" />
+              Pagamentos {selectedDate && format(selectedDate, "MMM")}
+            </h3>
+            
+            <div className="overflow-y-auto max-h-[60px]">
+              <div className="space-y-1">
+                {monthlyPayments.slice(0, 2).map((payment) => (
                   <div 
                     key={payment.id} 
-                    className="border-b pb-2 last:border-0"
+                    className="text-xs py-0.5"
                   >
-                    <div className="font-medium text-xs sm:text-sm">
-                      {format(new Date(payment.due_date), "d 'de' MMMM")}
+                    <div className="flex items-center">
+                      <span className="font-medium mr-1">
+                        {format(new Date(payment.due_date), "d/MM")}:
+                      </span>
+                      <span className="truncate flex-1">{payment.title}</span>
+                      <span className="text-green-600 font-medium ml-1">{payment.amount}</span>
                     </div>
-                    <div className="text-xs sm:text-sm mt-0.5 truncate">{payment.title}</div>
-                    <div className="text-green-600 font-medium text-xs sm:text-sm">{payment.amount}</div>
                   </div>
                 ))}
-                {monthlyPayments.length > 3 && (
-                  <div className="text-xs text-primary font-medium text-center pt-1">
-                    +{monthlyPayments.length - 3} mais pagamentos
+                {monthlyPayments.length > 2 && (
+                  <div className="text-xs text-primary font-medium pt-0.5 text-right">
+                    +{monthlyPayments.length - 2} mais
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="text-center py-3 text-muted-foreground text-sm">
-                <p>Nenhum pagamento agendado para este mês.</p>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="w-full border-t pt-2 mt-auto">
+            <div className="text-center py-1 text-muted-foreground text-xs">
+              <p>Nenhum pagamento neste mês.</p>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
