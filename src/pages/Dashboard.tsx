@@ -90,8 +90,8 @@ const Dashboard = () => {
       <WelcomeSection clientName={clientInfo?.full_name} />
       
       <div className="grid grid-cols-1 gap-4 md:gap-6 mt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="md:col-span-1 lg:col-span-2">
             <ProcessInfoCard 
               processType={clientInfo?.process_type} 
               status={clientInfo?.status}
@@ -100,7 +100,7 @@ const Dashboard = () => {
               lastUpdate={clientInfo?.last_update_date || clientInfo?.updated_at}
             />
           </div>
-          <div className="lg:col-span-1">
+          <div className="md:col-span-1">
             <PaymentCalendar />
           </div>
         </div>
