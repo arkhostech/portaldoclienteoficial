@@ -27,7 +27,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
 
   return (
     <div className={cn("flex justify-center w-full px-4 py-4", className)}>
-      <div className="flex justify-between w-full max-w-[780px]">
+      <div className="flex justify-between w-full max-w-[900px]">
         {steps.map((step) => {
           const status = getStepStatus(step.id);
           
@@ -35,14 +35,14 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
             <div
               key={step.id}
               className={cn(
-                "flex-1 rounded-lg p-3 mx-2 transition-all flex flex-col justify-between",
+                "flex-1 rounded-lg p-4 mx-2 transition-all flex flex-col justify-between",
                 status === "complete" && "bg-blue-600 text-white",
                 status === "current" && "border-2 border-blue-600",
                 status === "upcoming" && "bg-gray-100 text-gray-500",
               )}
               style={{
-                minHeight: '140px',
-                width: 'calc(33% - 8px)', // Wider cards with proper spacing calculation
+                minHeight: '160px',
+                width: 'calc(33.33% - 16px)', // More balanced width calculation
               }}
             >
               <div className="flex flex-col space-y-2">
