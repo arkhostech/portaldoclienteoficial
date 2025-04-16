@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +8,6 @@ import {
   WelcomeSection, 
   ProcessInfoCard, 
   DocumentsCard,
-  QuickActionsCard,
   PaymentCalendar
 } from "@/components/dashboard";
 
@@ -19,7 +17,6 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
-  // Fetch real client data from the database
   useEffect(() => {
     if (!user) return;
 
@@ -28,7 +25,6 @@ const Dashboard = () => {
       try {
         console.log("Fetching client data for user ID:", user.id);
         
-        // Fetch client info - RLS will ensure this only returns the client's own data
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
           .select('*')
@@ -38,7 +34,6 @@ const Dashboard = () => {
         if (clientError) {
           console.error("Error fetching client info:", clientError);
           if (clientError.code === 'PGRST116') {
-            // No rows returned - this is an access error or data not found
             toast.error("Não foi possível acessar os dados do cliente");
           } else {
             toast.error("Erro ao carregar informações do cliente");
@@ -48,7 +43,6 @@ const Dashboard = () => {
           setClientInfo(clientData);
         }
         
-        // Fetch client's documents
         const { data: documentsData, error: documentsError } = await supabase
           .from('documents')
           .select('*')
@@ -92,14 +86,10 @@ const Dashboard = () => {
 
   return (
     <MainLayout title="Dashboard">
-      {/* Welcome section */}
       <WelcomeSection clientName={clientInfo?.full_name} />
       
-      {/* Responsive grid layout - adjusted for better spacing on all screen sizes */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6">
-        {/* Main content - left column */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-4 md:space-y-6">
-          {/* Process information */}
           <ProcessInfoCard 
             processType={clientInfo?.process_type} 
             status={clientInfo?.status}
@@ -107,18 +97,10 @@ const Dashboard = () => {
             responsibleAgent={clientInfo?.responsible_agent}
             lastUpdate={clientInfo?.last_update_date || clientInfo?.updated_at}
           />
-
-          {/* Documents section */}
           <DocumentsCard documents={documents} />
         </div>
-        
-        {/* Right sidebar */}
-        <div className="lg:col-span-5 xl:col-span-4 space-y-4 md:space-y-6">
-          {/* Calendar for payment reminders - made more responsive */}
+        <div className="lg:col-span-5 xl:col-span-4">
           <PaymentCalendar />
-          
-          {/* Quick actions */}
-          <QuickActionsCard />
         </div>
       </div>
     </MainLayout>
