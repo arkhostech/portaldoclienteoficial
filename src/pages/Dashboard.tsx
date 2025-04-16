@@ -89,11 +89,11 @@ const Dashboard = () => {
     <MainLayout title="Dashboard">
       <WelcomeSection clientName={clientInfo?.full_name} />
       
-      <div className="grid grid-cols-1 gap-6 mt-6">
+      <div className="grid grid-cols-1 gap-4 mt-6">
         {/* Process Info and Calendar Section */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          {/* Process Info Card - Restored width */}
-          <div className="md:col-span-6">
+          {/* Process Info Card - Increased width */}
+          <div className="md:col-span-7">
             <ProcessInfoCard 
               processType={clientInfo?.process_type} 
               status={clientInfo?.status}
@@ -103,13 +103,13 @@ const Dashboard = () => {
             />
           </div>
           
-          {/* Calendar Card with integrated payment summary */}
-          <div className="md:col-span-6">
+          {/* Calendar Card with integrated payment summary - Reduced width */}
+          <div className="md:col-span-5">
             <PaymentCalendar />
           </div>
         </div>
         
-        {/* Documents Section - Reduced gap */}
+        {/* Documents Section */}
         <div>
           <DocumentsCard documents={documents} />
         </div>
