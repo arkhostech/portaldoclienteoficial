@@ -92,7 +92,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 gap-4 mt-6">
         {/* Process Info and Calendar Section */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          {/* Process Info Card - Further adjusted width */}
+          {/* Process Info Card - Takes more space */}
           <div className="md:col-span-9">
             <ProcessInfoCard 
               processType={clientInfo?.process_type} 
@@ -103,15 +103,20 @@ const Dashboard = () => {
             />
           </div>
           
-          {/* Calendar Card with integrated payment summary - Further adjusted width */}
+          {/* Calendar Card - Takes less space */}
           <div className="md:col-span-3">
-            <PaymentCalendar />
+            <PaymentCalendar showCalendar={true} />
           </div>
         </div>
         
-        {/* Documents Section */}
-        <div>
+        {/* Documents Section - Half height */}
+        <div className="max-h-[300px] overflow-y-auto">
           <DocumentsCard documents={documents} />
+        </div>
+
+        {/* Payment Summary Card */}
+        <div className="md:col-span-3">
+          <PaymentCalendar showCalendar={false} />
         </div>
       </div>
     </MainLayout>

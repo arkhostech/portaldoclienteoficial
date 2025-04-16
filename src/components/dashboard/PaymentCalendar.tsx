@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +17,11 @@ interface ScheduledPayment {
   description: string | null;
 }
 
-const PaymentCalendar = () => {
+interface PaymentCalendarProps {
+  showCalendar?: boolean;
+}
+
+const PaymentCalendar = ({ showCalendar = true }: PaymentCalendarProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [payments, setPayments] = useState<ScheduledPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,8 +69,14 @@ const PaymentCalendar = () => {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <CalendarDays className="h-5 w-5 mr-2 text-primary" />
-              <CardTitle className="text-base">Calendário</CardTitle>
+              {showCalendar ? (
+                <CalendarDays className="h-5 w-5 mr-2 text-primary" />
+              ) : (
+                <CircleDollarSign className="h-5 w-5 mr-2 text-primary" />
+              )}
+              <CardTitle className="text-base">
+                {showCalendar ? "Calendário" : "Resumo de Pagamentos"}
+              </CardTitle>
             </div>
           </div>
         </CardHeader>
@@ -76,25 +87,56 @@ const PaymentCalendar = () => {
     );
   }
 
+  // Calendar View
+  if (showCalendar) {
+    return (
+      <Card className="h-full">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <CalendarDays className="h-5 w-5 mr-2 text-primary" />
+              <CardTitle className="text-base">Calendário</CardTitle>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-2 pt-0">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            className="rounded-md border"
+            modifiers={{
+              payment: Object.keys(paymentDaysMap).map(
+                (dateString) => new Date(dateString)
+              ),
+            }}
+            modifiersStyles={{
+              payment: { 
+                fontWeight: "bold",
+                backgroundColor: "#e0f2fe",
+                borderRadius: "0" 
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Payment Summary View
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <CalendarDays className="h-5 w-5 mr-2 text-primary" />
-            <CardTitle className="text-base">Calendário</CardTitle>
+            <CircleDollarSign className="h-5 w-5 mr-2 text-primary" />
+            <CardTitle className="text-base">Resumo de Pagamentos</CardTitle>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-2 pt-0">
+      <CardContent className="p-4 pt-0">
         <div className="space-y-3">
-          {/* Payment Summary section */}
-          <div className="flex flex-col">
-            <div className="flex items-center mb-2">
-              <CircleDollarSign className="h-5 w-5 mr-2 text-primary" />
-              <h3 className="font-semibold text-sm">Resumo de Pagamentos</h3>
-            </div>
-            
+          <div className="flex flex-col">            
             <div className="space-y-3">
               <div>
                 <div className="flex justify-between mb-1">

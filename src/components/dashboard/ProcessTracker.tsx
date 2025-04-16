@@ -42,6 +42,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
             style={{
               minHeight: '130px',
               width: '150px', // Fixed width for all cards
+              flex: '1 0 auto',
             }}
           >
             <div className="flex flex-col space-y-2">
