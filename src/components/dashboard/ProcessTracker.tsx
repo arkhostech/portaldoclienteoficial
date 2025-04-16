@@ -26,7 +26,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
   };
 
   return (
-    <div className={cn("flex gap-3 w-full px-2", className)}>
+    <div className={cn("flex gap-3 w-full px-4 py-2", className)}>
       {steps.map((step) => {
         const status = getStepStatus(step.id);
         
@@ -63,7 +63,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
               </div>
               
               <h3 className={cn(
-                "font-medium whitespace-nowrap overflow-hidden text-ellipsis",
+                "font-medium truncate w-full",
                 status === "complete" && "text-white",
                 status === "current" && "text-blue-600",
                 status === "upcoming" && "text-gray-600"
