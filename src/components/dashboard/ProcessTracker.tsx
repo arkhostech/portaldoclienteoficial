@@ -39,6 +39,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
               status === "current" && "border-2 border-blue-600",
               status === "upcoming" && "bg-gray-100 text-gray-500",
             )}
+            style={{ width: 'calc(100% / 3 - 8px)' }} 
           >
             <div className="flex flex-col space-y-2">
               <div className="flex items-center space-x-2">
