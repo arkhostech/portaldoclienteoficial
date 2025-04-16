@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,8 +89,8 @@ const Dashboard = () => {
     <MainLayout title="Dashboard">
       <WelcomeSection clientName={clientInfo?.full_name} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6">
-        <div className="lg:col-span-7 xl:col-span-8 space-y-4 md:space-y-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6 mt-6">
+        <div className="xl:col-span-8 space-y-4 md:space-y-6">
           <ProcessInfoCard 
             processType={clientInfo?.process_type} 
             status={clientInfo?.status}
@@ -99,7 +100,7 @@ const Dashboard = () => {
           />
           <DocumentsCard documents={documents} />
         </div>
-        <div className="lg:col-span-5 xl:col-span-4">
+        <div className="xl:col-span-4">
           <PaymentCalendar />
         </div>
       </div>
