@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 type ProcessStatus = "documentacao" | "em_andamento" | "concluido";
 
 const steps = [
-  { id: "documentacao", label: "Documentação" },
-  { id: "em_andamento", label: "Em Andamento" },
-  { id: "concluido", label: "Concluído" },
+  { id: "documentacao", label: "Documentação", step: 1 },
+  { id: "em_andamento", label: "Em Andamento", step: 2 },
+  { id: "concluido", label: "Concluído", step: 3 },
 ] as const;
 
 interface ProcessTrackerProps {
@@ -26,45 +26,62 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
   };
 
   return (
-    <div className={cn("flex flex-col gap-2 w-full", className)}>
-      {steps.map((step, index) => {
+    <div className={cn("flex flex-col sm:flex-row gap-3 w-full", className)}>
+      {steps.map((step) => {
         const status = getStepStatus(step.id);
         
         return (
           <div
             key={step.id}
             className={cn(
-              "flex-1 p-2 rounded-md border transition-all min-w-0",
-              status === "complete" && "bg-green-50 border-green-200",
-              status === "current" && "border-primary border-2",
-              status === "upcoming" && "border-gray-200 bg-gray-50",
+              "flex-1 rounded-lg p-4 transition-all",
+              status === "complete" && "bg-blue-600 text-white",
+              status === "current" && "border-2 border-blue-600",
+              status === "upcoming" && "bg-gray-100 text-gray-500",
             )}
           >
-            <div className="flex items-center gap-2">
-              <div 
-                className={cn(
-                  "w-5 h-5 rounded-full flex items-center justify-center text-xs shrink-0",
-                  status === "complete" && "bg-green-500 text-white",
-                  status === "current" && "border-2 border-primary",
-                  status === "upcoming" && "border-2 border-gray-300"
-                )}
-              >
-                {status === "complete" ? (
-                  <Check className="w-3 h-3" />
-                ) : (
-                  <span>{index + 1}</span>
-                )}
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center space-x-2">
+                <div 
+                  className={cn(
+                    "w-6 h-6 rounded-full flex items-center justify-center",
+                    status === "complete" && "bg-white",
+                    status === "current" && "bg-blue-600 text-white",
+                    status === "upcoming" && "border border-gray-400"
+                  )}
+                >
+                  <Check className={cn(
+                    "w-4 h-4",
+                    status === "complete" && "text-blue-600",
+                    status === "current" && "text-white",
+                    status === "upcoming" && "text-gray-400"
+                  )} />
+                </div>
+                <span className="text-xs font-medium uppercase tracking-wider">
+                  STEP {step.step}
+                </span>
               </div>
-              <span 
-                className={cn(
-                  "text-sm font-medium truncate",
-                  status === "complete" && "text-green-700",
-                  status === "current" && "text-primary",
-                  status === "upcoming" && "text-gray-500"
-                )}
-              >
+              
+              <h3 className={cn(
+                "font-medium",
+                status === "complete" && "text-white",
+                status === "current" && "text-blue-600",
+                status === "upcoming" && "text-gray-600"
+              )}>
                 {step.label}
-              </span>
+              </h3>
+              
+              <div className="mt-1">
+                <span className={cn(
+                  "text-xs py-1 px-3 rounded-full inline-block",
+                  status === "complete" && "bg-white/20 text-white",
+                  status === "current" && "bg-blue-100 text-blue-600",
+                  status === "upcoming" && "bg-gray-200 text-gray-500"
+                )}>
+                  {status === "complete" ? "Completed" : 
+                   status === "current" ? "In Progress" : "Pending"}
+                </span>
+              </div>
             </div>
           </div>
         );
