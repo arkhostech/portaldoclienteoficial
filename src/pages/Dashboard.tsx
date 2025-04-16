@@ -98,6 +98,7 @@ const Dashboard = () => {
               startDate={clientInfo?.process_start_date}
               responsibleAgent={clientInfo?.responsible_agent}
               lastUpdate={clientInfo?.last_update_date || clientInfo?.updated_at}
+              area={clientInfo?.service_area || "Imigração"}
             />
           </div>
           <div className="md:col-span-1">
