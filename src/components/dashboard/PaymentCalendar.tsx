@@ -76,7 +76,7 @@ const PaymentCalendar = () => {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader className="pb-2">
           <div className="flex items-center">
             <CalendarDays className="h-5 w-5 mr-2 text-primary" />
@@ -91,88 +91,67 @@ const PaymentCalendar = () => {
   }
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex items-center">
           <CalendarDays className="h-4 sm:h-5 w-4 sm:w-5 mr-2 text-primary" />
           <CardTitle className="text-base sm:text-lg">Calendário de Pagamentos</CardTitle>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-4">
-          <div className="w-full">
-            <TooltipProvider>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="mx-auto max-w-full pointer-events-auto"
-                modifiers={{
-                  paymentDay: (day) => {
-                    const key = format(day, "yyyy-MM-dd");
-                    return paymentDaysMap[key];
-                  }
-                }}
-                modifiersClassNames={{
-                  paymentDay: "bg-primary/20 font-bold text-primary rounded-md"
-                }}
-              />
-            </TooltipProvider>
-
-            {selectedPayments.length > 0 && (
-              <div className="mt-4 space-y-2 text-sm">
-                <p className="font-medium">Pagamentos no dia {selectedDate && format(selectedDate, "dd/MM/yyyy")}:</p>
-                <div className="overflow-x-auto">
-                  {selectedPayments.map((payment, index) => (
-                    <div key={index} className="p-2 border-b last:border-0">
-                      <p className="font-medium text-sm md:text-base">{payment.title}</p>
-                      <p className="text-green-600 text-sm md:text-base">{payment.amount}</p>
-                      {payment.description && <p className="text-xs text-muted-foreground">{payment.description}</p>}
+      <CardContent className="flex-1 flex flex-col justify-between">
+        <div className="w-full mb-3">
+          <TooltipProvider>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="mx-auto max-w-full pointer-events-auto"
+              modifiers={{
+                paymentDay: (day) => {
+                  const key = format(day, "yyyy-MM-dd");
+                  return paymentDaysMap[key];
+                }
+              }}
+              modifiersClassNames={{
+                paymentDay: "bg-primary/20 font-bold text-primary rounded-md"
+              }}
+            />
+          </TooltipProvider>
+        </div>
+          
+        {/* Monthly payments summary section */}
+        <div className="w-full border-t pt-3 mt-auto">
+          <h3 className="font-medium text-sm sm:text-base flex items-center mb-2">
+            <CircleDollarSign className="h-4 w-4 mr-2 text-primary" />
+            Pagamentos em {selectedDate && format(selectedDate, "MMMM yyyy")}
+          </h3>
+          
+          <div className="overflow-y-auto max-h-[150px]">
+            {monthlyPayments.length > 0 ? (
+              <div className="space-y-2">
+                {monthlyPayments.slice(0, 3).map((payment) => (
+                  <div 
+                    key={payment.id} 
+                    className="border-b pb-2 last:border-0"
+                  >
+                    <div className="font-medium text-xs sm:text-sm">
+                      {format(new Date(payment.due_date), "d 'de' MMMM")}
                     </div>
-                  ))}
-                </div>
+                    <div className="text-xs sm:text-sm mt-0.5 truncate">{payment.title}</div>
+                    <div className="text-green-600 font-medium text-xs sm:text-sm">{payment.amount}</div>
+                  </div>
+                ))}
+                {monthlyPayments.length > 3 && (
+                  <div className="text-xs text-primary font-medium text-center pt-1">
+                    +{monthlyPayments.length - 3} mais pagamentos
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-3 text-muted-foreground text-sm">
+                <p>Nenhum pagamento agendado para este mês.</p>
               </div>
             )}
-
-            <div className="text-center mt-4">
-              <div className="flex items-center justify-center flex-wrap gap-2 text-xs sm:text-sm">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-primary/20 mr-2"></div>
-                  <span>Pagamento Agendado</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Monthly payments summary section */}
-          <div className="w-full pt-4 border-t">
-            <h3 className="font-medium text-sm sm:text-base flex items-center mb-4">
-              <CircleDollarSign className="h-4 w-4 mr-2 text-primary" />
-              Pagamentos em {selectedDate && format(selectedDate, "MMMM yyyy")}
-            </h3>
-            
-            <div className="overflow-x-auto">
-              {monthlyPayments.length > 0 ? (
-                <div className="space-y-4">
-                  {monthlyPayments.map((payment) => (
-                    <div 
-                      key={payment.id} 
-                      className="border-b pb-3 last:border-0"
-                    >
-                      <div className="font-medium text-xs sm:text-sm">
-                        {format(new Date(payment.due_date), "d 'de' MMMM, yyyy")}
-                      </div>
-                      <div className="text-xs sm:text-sm mt-1">{payment.title}</div>
-                      <div className="text-green-600 font-medium text-xs sm:text-sm">{payment.amount}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4 text-muted-foreground text-sm">
-                  <p>Nenhum pagamento agendado para este mês.</p>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </CardContent>

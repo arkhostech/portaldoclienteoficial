@@ -1,7 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarClock, User, AlertCircle, Briefcase } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { AlertCircle } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import ProcessTracker from "./ProcessTracker";
 
@@ -19,7 +18,6 @@ const ProcessInfoCard = ({
   status = "documentacao",
   startDate,
   responsibleAgent,
-  lastUpdate,
   area = "Imigração"
 }: ProcessInfoCardProps) => {
   return (
@@ -80,12 +78,7 @@ const ProcessInfoCard = ({
                   </div>
                 </div>
 
-                {lastUpdate && (
-                  <div className="flex flex-col border-t pt-4">
-                    <span className="text-sm text-muted-foreground">Última atualização</span>
-                    <span className="font-medium">{formatDate(lastUpdate)}</span>
-                  </div>
-                )}
+                {/* Last update date section removed as requested */}
               </div>
             </div>
           </div>

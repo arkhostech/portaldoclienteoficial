@@ -89,24 +89,30 @@ const Dashboard = () => {
     <MainLayout title="Dashboard">
       <WelcomeSection clientName={clientInfo?.full_name} />
       
-      <div className="grid grid-cols-1 gap-4 md:gap-6 mt-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="md:col-span-1 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-4 mt-6">
+        {/* Process Info and Calendar Section - Adjusted Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Process Info Card - 2/3 width on medium+ screens */}
+          <div className="md:col-span-2">
             <ProcessInfoCard 
               processType={clientInfo?.process_type} 
               status={clientInfo?.status}
               startDate={clientInfo?.process_start_date}
               responsibleAgent={clientInfo?.responsible_agent}
-              lastUpdate={clientInfo?.last_update_date || clientInfo?.updated_at}
               area={clientInfo?.service_area || "Imigração"}
             />
           </div>
+          
+          {/* Payment Calendar - 1/3 width on medium+ screens */}
           <div className="md:col-span-1">
             <PaymentCalendar />
           </div>
         </div>
         
-        <DocumentsCard documents={documents} />
+        {/* Documents Section - Reduced top margin */}
+        <div className="mt-2">
+          <DocumentsCard documents={documents} />
+        </div>
       </div>
     </MainLayout>
   );
