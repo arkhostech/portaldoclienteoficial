@@ -54,7 +54,7 @@ const ProcessInfoCard = ({
                       <div className="flex items-center mt-1">
                         <Avatar className="h-10 w-10 mr-3">
                           <AvatarImage 
-                            src="https://cdn.tailgrids.com/2.2/assets/core-components/images/avatar/image-05.jpg" 
+                            src="/lovable-uploads/d2fc1e07-1881-4ff2-a860-5dfae4df31e5.png" 
                             alt="Legacy Imigra" 
                             className="h-full w-full object-cover object-center"
                           />
@@ -77,8 +77,6 @@ const ProcessInfoCard = ({
                     />
                   </div>
                 </div>
-
-                {/* Last update date section removed as requested */}
               </div>
             </div>
           </div>
