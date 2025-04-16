@@ -11,6 +11,7 @@ import {
   DocumentsCard,
   PaymentCalendar
 } from "@/components/dashboard";
+import { PaymentSummary } from "@/components/dashboard/PaymentSummary";
 
 const Dashboard = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -92,7 +93,6 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 gap-4 mt-6">
         {/* Process Info and Calendar Section */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          {/* Process Info Card - Further adjusted width */}
           <div className="md:col-span-9">
             <ProcessInfoCard 
               processType={clientInfo?.process_type} 
@@ -103,15 +103,31 @@ const Dashboard = () => {
             />
           </div>
           
-          {/* Calendar Card with integrated payment summary - Further adjusted width */}
+          {/* Calendar Card with integrated payment summary */}
           <div className="md:col-span-3">
             <PaymentCalendar />
           </div>
         </div>
         
-        {/* Documents Section */}
-        <div>
-          <DocumentsCard documents={documents} />
+        {/* Documents and Payment Summary Section - New Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Left Column - Documents Card (50% width) and Payment Summary below it */}
+          <div className="flex flex-col gap-4">
+            {/* Documents Card - Reduced to 50% width */}
+            <div>
+              <DocumentsCard documents={documents} />
+            </div>
+            
+            {/* Payment Summary Card - Below Documents */}
+            <div>
+              <PaymentSummary />
+            </div>
+          </div>
+          
+          {/* Right Column - New Calendar Card */}
+          <div>
+            <PaymentCalendar showFullCalendar={true} />
+          </div>
         </div>
       </div>
     </MainLayout>
