@@ -121,7 +121,7 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
                 payment: { 
                   fontWeight: 'bold', 
                   color: '#000', 
-                  backgroundColor: 'hsl(var(--primary))', 
+                  backgroundColor: '#e7c164', 
                   borderRadius: '50%' 
                 }
               }}
