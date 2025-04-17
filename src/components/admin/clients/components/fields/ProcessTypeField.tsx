@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { ClientFormData, processTypes, processStatusOptions } from "../../schemas/clientSchema";
+import { ClientFormData } from "@/services/clients/types";
+import { processTypes, processStatusOptions } from "../../schemas/clientSchema";
 
 interface ProcessTypeFieldProps {
   form: UseFormReturn<ClientFormData>;

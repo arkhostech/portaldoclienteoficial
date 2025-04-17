@@ -1,5 +1,6 @@
 
 import { z } from "zod";
+import { ProcessStatus } from "@/services/clients/types";
 
 // Schema for client data with auth
 export const clientFormSchema = z.object({
@@ -23,7 +24,7 @@ export const processStatusOptions = [
   { value: "documentacao", label: "Documentação" },
   { value: "em_andamento", label: "Em Andamento" },
   { value: "concluido", label: "Concluído" }
-];
+] as const;
 
 // Common process types for immigration
 export const processTypes = [
@@ -41,4 +42,4 @@ export const processTypes = [
   "Naturalization",
   "Green Card",
   "Other"
-];
+] as const;

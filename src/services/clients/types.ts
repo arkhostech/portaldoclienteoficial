@@ -5,7 +5,7 @@ export interface Client {
   email: string;
   phone: string | null;
   address: string | null;
-  status: string;
+  status: ProcessStatus;
   process_type: string | null;
   created_at: string;
   updated_at: string;
@@ -16,7 +16,7 @@ export interface ClientFormData {
   email: string;
   phone?: string;
   address?: string;
-  status: string;
+  status: ProcessStatus;
   process_type: string;
 }
 
