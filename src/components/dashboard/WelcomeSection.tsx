@@ -29,4 +29,3 @@ const WelcomeSection = ({ clientName }: WelcomeSectionProps) => {
 };
 
 export default WelcomeSection;
-
