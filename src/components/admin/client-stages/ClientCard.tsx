@@ -10,12 +10,16 @@ interface ClientCardProps {
 }
 
 const ClientCard = ({ client }: ClientCardProps) => {
+  const dragItem: ClientDragItem = {
+    id: client.id,
+    currentStatus: client.status
+  };
+  
+  console.log(`ClientCard - Creating drag item:`, dragItem);
+  
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ItemTypes.CLIENT_CARD,
-    item: { 
-      id: client.id,
-      currentStatus: client.status 
-    } as ClientDragItem,
+    item: dragItem,
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),

@@ -1,6 +1,6 @@
 
 import { useDrop } from "react-dnd";
-import { ItemTypes } from "./ItemTypes";
+import { ItemTypes, ClientDragItem } from "./ItemTypes";
 import { ProcessStatus } from "@/services/clients/types";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +14,11 @@ interface StageColumnProps {
 const StageColumn = ({ title, status, onDrop, children }: StageColumnProps) => {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: ItemTypes.CLIENT_CARD,
-    drop: (item: { id: string }) => onDrop(item.id, status),
+    drop: (item: ClientDragItem) => {
+      console.log(`StageColumn - Dropped item:`, item);
+      console.log(`StageColumn - Target status:`, status);
+      onDrop(item.id, status);
+    },
     collect: (monitor) => ({
       isOver: monitor.isOver(),
     }),
