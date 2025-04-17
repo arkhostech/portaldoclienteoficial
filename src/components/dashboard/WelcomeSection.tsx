@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { FileText, MessageSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
 interface WelcomeSectionProps {
   clientName: string;
@@ -18,14 +18,9 @@ const WelcomeSection = ({ clientName }: WelcomeSectionProps) => {
         </p>
       </div>
       <div className="flex gap-2 w-full sm:w-auto justify-end">
-        <Button variant="outline" className="text-xs md:text-sm flex-1 sm:flex-none justify-center">
-          <FileText className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-          <span className="hidden sm:inline">Ver Relatórios</span>
-          <span className="sm:hidden">Relatórios</span>
-        </Button>
         <Button className="text-xs md:text-sm flex-1 sm:flex-none justify-center">
           <MessageSquare className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-          <span className="hidden sm:inline">Contatar Advogado</span>
+          <span className="hidden sm:inline">Contatar Escritório</span>
           <span className="sm:hidden">Contatar</span>
         </Button>
       </div>
@@ -34,3 +29,4 @@ const WelcomeSection = ({ clientName }: WelcomeSectionProps) => {
 };
 
 export default WelcomeSection;
+
