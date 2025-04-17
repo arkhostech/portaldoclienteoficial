@@ -1,3 +1,4 @@
+
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -78,7 +79,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
                 <span className={cn(
                   "text-xs py-1 px-3 rounded-full inline-block whitespace-nowrap",
                   status === "complete" && "bg-white/20 text-white",
-                  status === "current" && "bg-[#FEC6A1] text-[#b39044]",
+                  status === "current" && "bg-[#FDE68A] text-[#92400E]", // Updated colors
                   status === "upcoming" && "bg-gray-200 text-gray-500"
                 )}>
                   {status === "complete" ? "Completed" : 
