@@ -1,6 +1,6 @@
 
-import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ProcessStep from "./process/ProcessStep";
 
 type ProcessStatus = "documentacao" | "em_andamento" | "concluido";
 
@@ -27,69 +27,15 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
 
   return (
     <div className={cn("flex w-full py-2 gap-1", className)}>
-      {steps.map((step) => {
-        const status = getStepStatus(step.id);
-        
-        return (
-          <div
-            key={step.id}
-            className={cn(
-              "flex-1 rounded-lg p-2 transition-all flex flex-col justify-between",
-              status === "complete" && "bg-[#006494] text-white", // Updated blue
-              status === "current" && "bg-[#F5D547] text-black border-2 border-[#e5c542]", // Updated yellow
-              status === "upcoming" && "bg-gray-100 text-gray-500",
-            )}
-            style={{
-              minHeight: '130px',
-              width: '150px',
-            }}
-          >
-            <div className="flex flex-col space-y-2">
-              <div className="flex items-center space-x-2">
-                <div 
-                  className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center",
-                    status === "complete" && "bg-white",
-                    status === "current" && "bg-[#b39044] text-white",
-                    status === "upcoming" && "border border-gray-400"
-                  )}
-                >
-                  <Check className={cn(
-                    "w-4 h-4",
-                    status === "complete" && "text-[#006494]", // Updated blue
-                    status === "current" && "text-white",
-                    status === "upcoming" && "text-gray-400"
-                  )} />
-                </div>
-                <span className="text-xs font-medium uppercase tracking-wider">
-                  STEP {step.step}
-                </span>
-              </div>
-              
-              <h3 className={cn(
-                "font-medium w-full whitespace-nowrap",
-                status === "complete" && "text-white",
-                status === "current" && "text-[#b39044]",
-                status === "upcoming" && "text-gray-600"
-              )}>
-                {step.label}
-              </h3>
-              
-              <div className="mt-1">
-                <span className={cn(
-                  "text-xs py-1 px-3 rounded-full inline-block whitespace-nowrap",
-                  status === "complete" && "bg-white/20 text-white",
-                  status === "current" && "bg-[#FDE68A] text-[#92400E]",
-                  status === "upcoming" && "bg-gray-200 text-gray-500"
-                )}>
-                  {status === "complete" ? "Completed" : 
-                   status === "current" ? "In Progress" : "Pending"}
-                </span>
-              </div>
-            </div>
-          </div>
-        );
-      })}
+      {steps.map((step) => (
+        <ProcessStep
+          key={step.id}
+          id={step.id}
+          label={step.label}
+          step={step.step}
+          status={getStepStatus(step.id)}
+        />
+      ))}
     </div>
   );
 };
