@@ -120,7 +120,7 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
                 payment: { 
                   fontWeight: 'bold', 
                   color: '#000', 
-                  backgroundColor: '#FEC6A1', 
+                  backgroundColor: '#F97316', 
                   borderRadius: '50%' 
                 }
               }}
