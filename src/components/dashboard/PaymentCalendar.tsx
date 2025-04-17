@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,19 +25,16 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   
-  // Create a map with payment dates as keys (to use as modifier)
   const paymentDaysMap = payments.reduce((acc, payment) => {
     const key = format(new Date(payment.due_date), "yyyy-MM-dd");
     acc[key] = true;
     return acc;
   }, {} as Record<string, boolean>);
   
-  // Function to highlight days with payments
   const dayHasPayment = (date: Date) => {
     return paymentDaysMap[format(date, "yyyy-MM-dd")] || false;
   };
   
-  // Fetch payments for the current user
   useEffect(() => {
     const fetchPayments = async () => {
       if (!user) return;
@@ -106,7 +102,12 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
               payment: (date) => dayHasPayment(date),
             }}
             modifiersStyles={{
-              payment: { fontWeight: 'bold', color: '#0ea5e9', textDecoration: 'underline' }
+              payment: { 
+                fontWeight: 'bold', 
+                backgroundColor: '#FEC6A1', 
+                color: 'black', 
+                borderRadius: '8px'
+              }
             }}
           />
         </div>
