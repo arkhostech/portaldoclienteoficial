@@ -21,9 +21,10 @@ import SidebarDesktop from './SidebarDesktop';
 interface SidebarProps {
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
+  onCollapseChange?: (collapsed: boolean) => void;
 }
 
-const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
+const Sidebar = ({ isOpen, setIsOpen, onCollapseChange }: SidebarProps) => {
   const { isAdmin, signOut } = useAuth();
   const { navItems, currentPath } = useSidebarNavigation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -35,8 +36,19 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   };
 
   const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    if (onCollapseChange) {
+      onCollapseChange(newCollapsedState);
+    }
   };
+
+  // Initialize collapse state notification
+  useEffect(() => {
+    if (onCollapseChange) {
+      onCollapseChange(isCollapsed);
+    }
+  }, []);
 
   return (
     <>

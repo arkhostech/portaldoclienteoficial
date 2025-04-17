@@ -16,6 +16,7 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
   const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
   const isAdminPath = (path: string): boolean => {
     return path === '/admin-login' || path.startsWith('/admin');
@@ -86,14 +87,19 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
     return null;
   }
 
+  const handleSidebarCollapse = (collapsed: boolean) => {
+    setIsSidebarCollapsed(collapsed);
+  };
+
   console.log("MainLayout: Rendering main layout");
   return (
     <div className="flex min-h-screen bg-white">
       <Sidebar 
         isOpen={isMobileMenuOpen} 
         setIsOpen={setIsMobileMenuOpen} 
+        onCollapseChange={handleSidebarCollapse}
       />
-      <div className="flex-1 flex flex-col transition-all duration-300 sm:ml-16 lg:ml-16">
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarCollapsed ? 'sm:ml-16 lg:ml-16' : 'sm:ml-16 lg:ml-56'}`}>
         <Header 
           title={title} 
           toggleSidebar={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

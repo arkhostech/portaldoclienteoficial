@@ -27,7 +27,7 @@ const SidebarDesktop = ({
   return (
     <>
       {/* Desktop sidebar */}
-      <div className={`hidden lg:flex h-screen bg-secondary flex-col fixed left-0 top-0 ${sidebarWidth} transition-all duration-300 z-30`}>
+      <div className={`hidden lg:flex h-screen bg-secondary flex-col fixed left-0 top-0 ${sidebarWidth} transition-all duration-300 z-20`}>
         <div className="flex justify-between items-center p-4">
           {!isCollapsed && (
             <h1 className="text-white text-xl font-bold truncate">
