@@ -11,13 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Client, ClientFormData } from "@/services/clients/types";
 import { EditClientTab } from "./components/tabs/EditClientTab";
 import { PasswordResetTab } from "./components/tabs/PasswordResetTab";
+import { usePasswordReset } from "@/hooks/usePasswordReset";
 
 interface EditClientModalProps {
   client: Client | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (id: string, data: ClientFormData) => Promise<boolean>;
-  onResetPassword?: (id: string, password: string) => Promise<boolean>;
   isSubmitting: boolean;
 }
 
@@ -26,10 +26,12 @@ const EditClientModal = ({
   open,
   onOpenChange,
   onSubmit,
-  onResetPassword,
   isSubmitting
 }: EditClientModalProps) => {
   const [activeTab, setActiveTab] = useState<"edit" | "password">("edit");
+  const { resetPassword, isSubmitting: isResettingPassword } = usePasswordReset({
+    onSuccess: () => setActiveTab("edit")
+  });
 
   // Reset tab when modal opens/closes
   useEffect(() => {
@@ -41,7 +43,7 @@ const EditClientModal = ({
   }, [open]);
   
   const handleDialogClose = (open: boolean) => {
-    if (!isSubmitting && open === false) {
+    if (!(isSubmitting || isResettingPassword) && open === false) {
       onOpenChange(open);
     }
   };
@@ -63,17 +65,8 @@ const EditClientModal = ({
   };
 
   const handlePasswordReset = async (password: string) => {
-    if (!client || !onResetPassword) return;
-    
-    try {
-      const success = await onResetPassword(client.id, password);
-      
-      if (success) {
-        setActiveTab("edit");
-      }
-    } catch (error) {
-      console.error("Error resetting password:", error);
-    }
+    if (!client) return;
+    await resetPassword(client.id, password);
   };
 
   return (
@@ -89,7 +82,7 @@ const EditClientModal = ({
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "edit" | "password")}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="edit">Dados do Cliente</TabsTrigger>
-            <TabsTrigger value="password" disabled={!onResetPassword}>
+            <TabsTrigger value="password">
               Resetar Senha
             </TabsTrigger>
           </TabsList>
@@ -107,7 +100,7 @@ const EditClientModal = ({
 
           <TabsContent value="password">
             <PasswordResetTab 
-              isSubmitting={isSubmitting}
+              isSubmitting={isResettingPassword}
               onSubmit={handlePasswordReset}
               onBack={() => setActiveTab("edit")}
             />
