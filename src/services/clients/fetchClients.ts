@@ -16,7 +16,7 @@ export const fetchClients = async (): Promise<Client[]> => {
       return [];
     }
     
-    return data || [];
+    return data as Client[];
   } catch (error) {
     console.error("Unexpected error fetching clients:", error);
     toast.error("Erro ao buscar clientes");
@@ -38,7 +38,7 @@ export const fetchClientById = async (id: string): Promise<Client | null> => {
       return null;
     }
     
-    return data;
+    return data as Client;
   } catch (error) {
     console.error("Unexpected error fetching client:", error);
     toast.error("Erro ao buscar dados do cliente");

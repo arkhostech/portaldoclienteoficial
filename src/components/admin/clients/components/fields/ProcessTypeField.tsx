@@ -14,11 +14,10 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { ClientFormData } from "@/services/clients/types";
 import { processTypes, processStatusOptions } from "../../schemas/clientSchema";
 
 interface ProcessTypeFieldProps {
-  form: UseFormReturn<ClientFormData>;
+  form: UseFormReturn<any>;
 }
 
 export const ProcessTypeField = ({ form }: ProcessTypeFieldProps) => {

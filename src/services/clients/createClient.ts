@@ -23,7 +23,7 @@ export const createClient = async (clientData: ClientFormData): Promise<Client |
     }
     
     toast.success("Cliente criado com sucesso");
-    return data;
+    return data as Client;
   } catch (error) {
     console.error("Unexpected error creating client:", error);
     toast.error("Erro ao criar cliente");

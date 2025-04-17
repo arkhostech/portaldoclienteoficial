@@ -7,8 +7,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
 import { BasicInfoFields } from "../BasicInfoFields";
-import { ClientFormData } from "@/services/clients/types";
-import { clientFormSchema } from "../../schemas/clientSchema";
+import { ClientFormData, ProcessStatus } from "@/services/clients/types";
 
 // Remove the password fields from the schema for edit mode
 const editClientSchema = z.object({
@@ -16,9 +15,11 @@ const editClientSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
   phone: z.string().optional(),
   address: z.string().optional(),
-  status: z.string(),
+  status: z.enum(["documentacao", "em_andamento", "concluido"]),
   process_type: z.string().optional()
 });
+
+type EditFormData = z.infer<typeof editClientSchema>;
 
 type EditClientTabProps = {
   client: ClientFormData;
@@ -28,7 +29,7 @@ type EditClientTabProps = {
 };
 
 export const EditClientTab = ({ client, isSubmitting, onSubmit, onCancel }: EditClientTabProps) => {
-  const form = useForm<ClientFormData>({
+  const form = useForm<EditFormData>({
     resolver: zodResolver(editClientSchema),
     defaultValues: {
       full_name: client.full_name,
@@ -40,8 +41,8 @@ export const EditClientTab = ({ client, isSubmitting, onSubmit, onCancel }: Edit
     }
   });
 
-  const handleSubmit = async (data: ClientFormData) => {
-    await onSubmit(data);
+  const handleSubmit = async (data: EditFormData) => {
+    await onSubmit(data as ClientFormData);
   };
 
   return (

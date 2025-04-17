@@ -36,8 +36,10 @@ export function ClientDocumentsHeader({
           <div className="text-sm text-muted-foreground mt-1">
             <span className="font-medium">Email:</span> {client.email} | 
             <span className="font-medium ml-2">Processo:</span> {client.process_type || "Não definido"} |
-            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${client.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
-              {client.status === "active" ? "Ativo" : "Inativo"}
+            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${client.status === "concluido" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
+              {client.status === "documentacao" ? "Documentação" : 
+               client.status === "em_andamento" ? "Em Andamento" : 
+               client.status === "concluido" ? "Concluído" : "Status Desconhecido"}
             </span>
           </div>
         )}

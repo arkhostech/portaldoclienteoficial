@@ -48,7 +48,7 @@ const ProcessList = ({ clients }: ProcessListProps) => {
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
-                {client.status === "active" ? (
+                {client.status === "concluido" ? (
                   <CircleCheck className="h-4 w-4 text-green-500" />
                 ) : (
                   <CircleX className="h-4 w-4 text-red-500" />

@@ -1,12 +1,12 @@
 
 import { UseFormReturn } from "react-hook-form";
-import { ClientFormData } from "../schemas/clientSchema";
+import { ClientFormData } from "@/services/clients/types";
 import { PersonalInfoFields } from "./fields/PersonalInfoFields";
 import { ContactInfoFields } from "./fields/ContactInfoFields";
 import { ProcessTypeField } from "./fields/ProcessTypeField";
 
 interface BasicInfoFieldsProps {
-  form: UseFormReturn<ClientFormData>;
+  form: UseFormReturn<any>;
 }
 
 export const BasicInfoFields = ({ form }: BasicInfoFieldsProps) => {

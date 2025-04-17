@@ -24,7 +24,7 @@ export const updateClient = async (id: string, clientData: ClientFormData): Prom
     }
     
     toast.success("Cliente atualizado com sucesso");
-    return data;
+    return data as Client;
   } catch (error) {
     console.error("Unexpected error updating client:", error);
     toast.error("Erro ao atualizar cliente");
