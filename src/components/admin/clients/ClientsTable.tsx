@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { 
   Table, 
@@ -56,19 +57,19 @@ const ClientsTable = ({
       case "documentacao":
         return { 
           label: "Documentação", 
-          color: "bg-[#E7C164] text-white", 
+          color: "bg-[#006494] text-white", 
           icon: <FileText className="h-3 w-3 mr-1" /> 
         };
       case "em_andamento":
         return { 
           label: "Em Andamento", 
-          color: "bg-[#ffe9b4] text-orange-700", 
+          color: "bg-[#F5D547] text-black", 
           icon: <Clock className="h-3 w-3 mr-1" /> 
         };
       case "concluido":
         return { 
           label: "Concluído", 
-          color: "bg-green-100 text-green-700", 
+          color: "bg-[#5B8C5A] text-white", 
           icon: <CheckCircle className="h-3 w-3 mr-1" /> 
         };
       default:
@@ -119,7 +120,7 @@ const ClientsTable = ({
               <TableCell>{client.phone || "-"}</TableCell>
               <TableCell>{client.process_type || "-"}</TableCell>
               <TableCell>
-                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${statusDetails.color}`}>
+                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusDetails.color}`}>
                   {statusDetails.icon}
                   {statusDetails.label}
                 </div>

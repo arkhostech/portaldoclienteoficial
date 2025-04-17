@@ -16,6 +16,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_test: boolean | null
           phone: string | null
           process_type: string | null
           status: string
@@ -27,6 +28,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          is_test?: boolean | null
           phone?: string | null
           process_type?: string | null
           status?: string
@@ -38,6 +40,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          is_test?: boolean | null
           phone?: string | null
           process_type?: string | null
           status?: string
