@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 
@@ -67,6 +67,19 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
     fetchPayments();
   }, [user]);
 
+  // Get the current month's payments
+  const getCurrentMonthPayments = () => {
+    if (!selectedDate) return [];
+    
+    const start = startOfMonth(selectedDate);
+    const end = endOfMonth(selectedDate);
+    
+    return payments.filter(payment => {
+      const paymentDate = new Date(payment.due_date);
+      return paymentDate >= start && paymentDate <= end;
+    }).sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+  };
+
   if (isLoading) {
     return (
       <Card className="h-full">
@@ -85,6 +98,8 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
     );
   }
 
+  const monthPayments = getCurrentMonthPayments();
+
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
@@ -96,19 +111,46 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-center w-full">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="rounded-md border max-w-full"
-            modifiers={{
-              payment: (date) => dayHasPayment(date),
-            }}
-            modifiersStyles={{
-              payment: { fontWeight: 'bold', color: '#0ea5e9', textDecoration: 'underline' }
-            }}
-          />
+        <div className="flex flex-col md:flex-row">
+          <div className="md:w-1/2">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="rounded-md border max-w-full"
+              modifiers={{
+                payment: (date) => dayHasPayment(date),
+              }}
+              modifiersStyles={{
+                payment: { fontWeight: 'bold', color: '#0ea5e9', textDecoration: 'underline' }
+              }}
+            />
+          </div>
+
+          <div className="md:w-1/2 md:pl-6 mt-4 md:mt-0 border-l-0 md:border-l">
+            <h3 className="font-medium text-sm mb-3">Próximos Pagamentos ({format(selectedDate || new Date(), 'MMMM yyyy')})</h3>
+            <div className="space-y-2 max-h-[240px] overflow-y-auto">
+              {monthPayments.length > 0 ? (
+                monthPayments.map(payment => (
+                  <div key={payment.id} className="flex items-center justify-between p-2 rounded-md border bg-background hover:bg-muted/50 transition-colors">
+                    <div>
+                      <p className="font-medium">{payment.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(payment.due_date), 'dd/MM/yyyy')}
+                      </p>
+                    </div>
+                    <div className="font-semibold text-sm">
+                      R$ {payment.amount}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground py-2">
+                  Nenhum pagamento agendado para este mês.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
