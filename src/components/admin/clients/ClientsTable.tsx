@@ -62,7 +62,7 @@ const ClientsTable = ({
       case "em_andamento":
         return { 
           label: "Em Andamento", 
-          color: "bg-[#EAD295] text-orange-700", 
+          color: "bg-[#ffe9b4] text-orange-700", 
           icon: <Clock className="h-3 w-3 mr-1" /> 
         };
       case "concluido":
