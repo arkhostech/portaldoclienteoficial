@@ -101,14 +101,17 @@ const Dashboard = () => {
           />
         </div>
         
-        {/* Documents Card - Full Width */}
-        <div>
-          <DocumentsCard documents={documents} />
-        </div>
-        
-        {/* Payment Calendar - Full Width */}
-        <div>
-          <PaymentCalendar showFullCalendar={true} />
+        {/* Documents and Calendar Cards - Side by Side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Documents Card */}
+          <div>
+            <DocumentsCard documents={documents} />
+          </div>
+          
+          {/* Payment Calendar */}
+          <div>
+            <PaymentCalendar showFullCalendar={true} />
+          </div>
         </div>
       </div>
     </MainLayout>
