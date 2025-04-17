@@ -25,7 +25,6 @@ const Clients = () => {
     handleCreateClient, 
     handleUpdateClient,
     handleDeleteClient,
-    handleResetPassword, 
     selectClient, 
     loadClients
   } = useClients();
@@ -127,7 +126,6 @@ const Clients = () => {
         open={openEditDialog}
         onOpenChange={setOpenEditDialog}
         onSubmit={handleUpdateClient}
-        onResetPassword={handleResetPassword}
         isSubmitting={isSubmitting}
       />
 
