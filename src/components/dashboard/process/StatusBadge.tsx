@@ -10,7 +10,7 @@ const StatusBadge = ({ status }: StatusBadgeProps) => {
     <span className={cn(
       "text-xs py-1 px-3 rounded-full inline-block whitespace-nowrap",
       status === "complete" && "bg-white/20 text-white",
-      status === "current" && "bg-[#e5c542] text-white",
+      status === "current" && "bg-[#d4a84f] text-white",
       status === "upcoming" && "bg-gray-200 text-gray-500"
     )}>
       {status === "complete" ? "Completed" : 

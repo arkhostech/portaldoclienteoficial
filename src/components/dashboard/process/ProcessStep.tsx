@@ -17,7 +17,7 @@ const ProcessStep = ({ id, label, step, status }: ProcessStepProps) => {
       className={cn(
         "flex-1 rounded-lg p-2 transition-all flex flex-col justify-between",
         status === "complete" && "bg-[#006494] text-white",
-        status === "current" && "bg-[#F5D547] text-white border-2 border-[#e5c542]",
+        status === "current" && "bg-[#e8c064] text-white border-2 border-[#d4a84f]",
         status === "upcoming" && "bg-gray-100 text-gray-500",
       )}
       style={{
