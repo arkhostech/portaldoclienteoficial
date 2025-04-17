@@ -2,7 +2,7 @@
 import { useDrag } from "react-dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Client } from "@/services/clients/types";
-import { ItemTypes } from "./ItemTypes";
+import { ItemTypes, ClientDragItem } from "./ItemTypes";
 import { format } from "date-fns";
 
 interface ClientCardProps {
@@ -12,7 +12,10 @@ interface ClientCardProps {
 const ClientCard = ({ client }: ClientCardProps) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ItemTypes.CLIENT_CARD,
-    item: { id: client.id },
+    item: { 
+      id: client.id,
+      currentStatus: client.status 
+    } as ClientDragItem,
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),

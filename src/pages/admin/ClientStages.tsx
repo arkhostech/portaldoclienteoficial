@@ -82,11 +82,15 @@ const ClientStages = () => {
     }
     
     try {
-      // Update the client with the new status
-      const success = await handleUpdateClient(clientId, {
-        ...client,
+      // Create a minimal update object with only the necessary fields
+      const updateData = {
         status: newStatus
-      });
+      };
+      
+      console.log(`Updating client with data:`, updateData);
+      
+      // Update the client with the new status
+      const success = await handleUpdateClient(clientId, updateData);
       
       if (success) {
         console.log(`Successfully updated client ${clientId} to status ${newStatus}`);

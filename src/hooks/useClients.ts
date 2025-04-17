@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { 
@@ -19,12 +18,10 @@ export const useClients = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load clients on component mount
   useEffect(() => {
     loadClients();
   }, []);
 
-  // Function to load clients
   const loadClients = async () => {
     setIsLoading(true);
     try {
@@ -37,14 +34,12 @@ export const useClients = () => {
     }
   };
 
-  // Create a new client
   const handleCreateClient = async (data: ClientFormData | ClientWithAuthFormData) => {
     setIsSubmitting(true);
     
     try {
       let result;
       
-      // Check if the data contains a password field
       if ('password' in data) {
         result = await createClientWithAuth(data);
       } else {
@@ -52,7 +47,6 @@ export const useClients = () => {
       }
       
       if (result) {
-        // Add new client to state
         setClients(prevClients => [result, ...prevClients]);
         return true;
       }
@@ -62,22 +56,27 @@ export const useClients = () => {
       toast.error("Erro ao criar cliente");
       return false;
     } finally {
-      // Delay state update to prevent UI issues
       setTimeout(() => {
         setIsSubmitting(false);
       }, 300);
     }
   };
 
-  // Update an existing client
-  const handleUpdateClient = async (id: string, data: ClientFormData) => {
+  const handleUpdateClient = async (id: string, data: Partial<ClientFormData>) => {
     setIsSubmitting(true);
     
     try {
+      console.log(`In handleUpdateClient - Updating client ${id} with data:`, data);
+      
+      if (Object.keys(data).length === 0) {
+        console.error("Attempting to update with empty data");
+        toast.error("Erro ao atualizar cliente: dados vazios");
+        return false;
+      }
+      
       const result = await updateClient(id, data);
       
       if (result) {
-        // Update client in the state
         setClients(prevClients => 
           prevClients.map(c => c.id === result.id ? result : c)
         );
@@ -89,14 +88,12 @@ export const useClients = () => {
       toast.error("Erro ao atualizar cliente");
       return false;
     } finally {
-      // Delay state update to prevent UI issues
       setTimeout(() => {
         setIsSubmitting(false);
       }, 300);
     }
   };
 
-  // Reset client password
   const handleResetPassword = async (id: string, password: string) => {
     setIsSubmitting(true);
     
@@ -108,14 +105,12 @@ export const useClients = () => {
       toast.error("Erro ao redefinir senha do cliente");
       return false;
     } finally {
-      // Delay state update to prevent UI issues
       setTimeout(() => {
         setIsSubmitting(false);
       }, 300);
     }
   };
 
-  // Delete a client
   const handleDeleteClient = async (id: string) => {
     setIsSubmitting(true);
     
@@ -123,7 +118,6 @@ export const useClients = () => {
       const success = await deleteClient(id);
       
       if (success) {
-        // Remove client from state
         setClients(prevClients => prevClients.filter(c => c.id !== id));
         return true;
       }
@@ -133,14 +127,12 @@ export const useClients = () => {
       toast.error("Erro ao excluir cliente");
       return false;
     } finally {
-      // Delay state update to prevent UI issues
       setTimeout(() => {
         setIsSubmitting(false);
       }, 300);
     }
   };
 
-  // Select a client for editing or deletion
   const selectClient = useCallback((client: Client | null) => {
     setSelectedClient(client);
   }, []);
