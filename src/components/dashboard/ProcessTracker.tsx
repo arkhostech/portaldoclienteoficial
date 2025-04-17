@@ -35,8 +35,8 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
             key={step.id}
             className={cn(
               "flex-1 rounded-lg p-2 transition-all flex flex-col justify-between",
-              status === "complete" && "bg-blue-600 text-white",
-              status === "current" && "bg-[#FEC6A1] border-2 border-orange-400",
+              status === "complete" && "bg-[#E7C164] text-white", // Updated color for completed status
+              status === "current" && "bg-[#EAD295] border-2 border-orange-400", // Updated color for in-progress status
               status === "upcoming" && "bg-gray-100 text-gray-500",
             )}
             style={{
@@ -56,7 +56,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
                 >
                   <Check className={cn(
                     "w-4 h-4",
-                    status === "complete" && "text-blue-600",
+                    status === "complete" && "text-[#E7C164]",
                     status === "current" && "text-white",
                     status === "upcoming" && "text-gray-400"
                   )} />

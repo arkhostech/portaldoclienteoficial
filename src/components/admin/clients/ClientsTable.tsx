@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { 
   Table, 
@@ -57,13 +56,13 @@ const ClientsTable = ({
       case "documentacao":
         return { 
           label: "Documentação", 
-          color: "bg-blue-100 text-blue-700", 
+          color: "bg-[#E7C164] text-white", 
           icon: <FileText className="h-3 w-3 mr-1" /> 
         };
       case "em_andamento":
         return { 
           label: "Em Andamento", 
-          color: "bg-amber-100 text-amber-700", 
+          color: "bg-[#EAD295] text-orange-700", 
           icon: <Clock className="h-3 w-3 mr-1" /> 
         };
       case "concluido":
