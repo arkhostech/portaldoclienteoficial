@@ -9,7 +9,8 @@ import {
   CreditCard,
   Settings,
   FolderOpen,
-  BookOpen
+  BookOpen,
+  LayoutPanelTop
 } from 'lucide-react';
 
 export interface NavItem {
@@ -47,6 +48,11 @@ export const useSidebarNavigation = () => {
       title: 'Pagamentos', 
       icon: <CreditCard className="h-5 w-5" />, 
       href: '/admin/payments' 
+    },
+    { 
+      title: 'Estágios Clientes', 
+      icon: <LayoutPanelTop className="h-5 w-5" />, 
+      href: '/admin/client-stages' 
     },
     { 
       title: 'Configurações', 

@@ -25,6 +25,16 @@ export const updateClient = async (id: string, clientData: Partial<ClientFormDat
       return null;
     }
     
+    // Verify the status is one of the valid values if it's being updated
+    if (cleanData.status && 
+        !["documentacao", "em_andamento", "concluido", null].includes(cleanData.status)) {
+      console.error("Invalid status value:", cleanData.status);
+      toast.error("Valor de status inválido");
+      return null;
+    }
+    
+    console.log("Calling Supabase with:", { id, data: cleanData });
+    
     const { data, error } = await supabase
       .from('clients')
       .update(cleanData)
@@ -44,7 +54,7 @@ export const updateClient = async (id: string, clientData: Partial<ClientFormDat
     }
     
     console.log("Client successfully updated:", data);
-    toast.success("Cliente atualizado com sucesso");
+    toast.success("Status do cliente atualizado com sucesso");
     return data as Client;
   } catch (error) {
     console.error("Unexpected error updating client:", error);
