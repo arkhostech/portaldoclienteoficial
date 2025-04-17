@@ -36,7 +36,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
             className={cn(
               "flex-1 rounded-lg p-2 transition-all flex flex-col justify-between",
               status === "complete" && "bg-[#E7C164] text-white",
-              status === "current" && "bg-[#ffe9b4] border-2 border-[#E7C164]", // Updated colors
+              status === "current" && "bg-[#ffe9b4] border-2 border-[#E7C164]",
               status === "upcoming" && "bg-gray-100 text-gray-500",
             )}
             style={{
