@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +11,6 @@ import {
   DocumentsCard,
   PaymentCalendar
 } from "@/components/dashboard";
-import { PaymentSummary } from "@/components/dashboard/PaymentSummary";
 
 const Dashboard = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -106,17 +106,9 @@ const Dashboard = () => {
           <DocumentsCard documents={documents} />
         </div>
         
-        {/* Calendar and Payment Summary - Side by Side */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Calendar Card - Left */}
-          <div>
-            <PaymentCalendar showFullCalendar={true} />
-          </div>
-          
-          {/* Payment Summary Card - Right */}
-          <div>
-            <PaymentSummary />
-          </div>
+        {/* Unified Payment Calendar Card - Full Width */}
+        <div>
+          <PaymentCalendar showFullCalendar={true} />
         </div>
       </div>
     </MainLayout>

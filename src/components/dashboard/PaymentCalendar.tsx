@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
+import { Separator } from "@/components/ui/separator";
 
 interface ScheduledPayment {
   id: string;
@@ -67,6 +68,18 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
     fetchPayments();
   }, [user]);
 
+  // Get payments for the selected date
+  const selectedDatePayments = selectedDate 
+    ? payments.filter(payment => 
+        format(new Date(payment.due_date), "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd"))
+    : [];
+
+  // Calculate total amount for the selected date
+  const totalAmount = selectedDatePayments.reduce((sum, payment) => {
+    const amount = parseFloat(payment.amount.replace(/[^\d,.-]/g, '').replace(',', '.'));
+    return isNaN(amount) ? sum : sum + amount;
+  }, 0);
+
   if (isLoading) {
     return (
       <Card className="h-full">
@@ -96,49 +109,62 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-center">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="rounded-md border w-full"
-            modifiers={{
-              payment: (date) => dayHasPayment(date),
-            }}
-            modifiersStyles={{
-              payment: { fontWeight: 'bold', color: '#0ea5e9', textDecoration: 'underline' }
-            }}
-          />
-        </div>
-        
-        {/* Display selected day's payments */}
-        {selectedDate && (
-          <div className="mt-4">
-            <h3 className="text-sm font-medium mb-2">
-              Pagamentos para {format(selectedDate, "dd/MM/yyyy")}:
-            </h3>
-            
-            {payments
-              .filter(payment => format(new Date(payment.due_date), "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd"))
-              .map(payment => (
-                <div key={payment.id} className="p-2 bg-blue-50 rounded-md mb-2">
-                  <div className="flex justify-between">
-                    <span className="font-medium">{payment.title}</span>
-                    <span className="text-green-600">R$ {payment.amount}</span>
-                  </div>
-                  {payment.description && (
-                    <p className="text-xs text-gray-600 mt-1">{payment.description}</p>
-                  )}
-                </div>
-              ))}
-            
-            {payments.filter(payment => 
-              format(new Date(payment.due_date), "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
-            ).length === 0 && (
-              <p className="text-sm text-gray-500">Nenhum pagamento agendado para esta data.</p>
-            )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Calendar Section */}
+          <div>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="rounded-md border w-full"
+              modifiers={{
+                payment: (date) => dayHasPayment(date),
+              }}
+              modifiersStyles={{
+                payment: { fontWeight: 'bold', color: '#0ea5e9', textDecoration: 'underline' }
+              }}
+            />
           </div>
-        )}
+          
+          {/* Payment Summary Section */}
+          <div className="flex flex-col border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4">
+            <div className="flex items-center mb-3">
+              <DollarSign className="h-4 w-4 mr-2 text-primary" />
+              <h3 className="text-sm font-medium">
+                Pagamentos para {selectedDate ? format(selectedDate, "dd/MM/yyyy") : ""}:
+              </h3>
+            </div>
+            
+            <div className="space-y-2 overflow-y-auto max-h-[220px]">
+              {selectedDatePayments.length > 0 ? (
+                <>
+                  {/* List of payments for the selected date */}
+                  {selectedDatePayments.map(payment => (
+                    <div key={payment.id} className="p-2 bg-blue-50 rounded-md mb-2">
+                      <div className="flex justify-between">
+                        <span className="font-medium">{payment.title}</span>
+                        <span className="text-green-600">R$ {payment.amount}</span>
+                      </div>
+                      {payment.description && (
+                        <p className="text-xs text-gray-600 mt-1">{payment.description}</p>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Total */}
+                  <div className="mt-3 pt-2 border-t border-gray-200">
+                    <div className="flex justify-between font-medium">
+                      <span>Total:</span>
+                      <span className="text-green-600">R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-gray-500">Nenhum pagamento agendado para esta data.</p>
+              )}
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
