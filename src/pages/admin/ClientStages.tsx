@@ -43,10 +43,13 @@ const ClientStages = () => {
       };
 
       clients.forEach(client => {
-        if (client.status) {
+        if (client.status && (client.status === "documentacao" || 
+                              client.status === "em_andamento" || 
+                              client.status === "concluido")) {
+          // Only push to grouped if the status is one of our defined columns
           grouped[client.status as ProcessStatus].push(client);
         } else {
-          // Default to documentation if no status
+          // Default to documentation if no status or invalid status
           grouped.documentacao.push({
             ...client,
             status: "documentacao" 
@@ -82,7 +85,7 @@ const ClientStages = () => {
         const updatedGroups = { ...prev };
         
         // Remove from previous group
-        if (client.status) {
+        if (client.status && updatedGroups[client.status as ProcessStatus]) {
           updatedGroups[client.status as ProcessStatus] = updatedGroups[client.status as ProcessStatus].filter(
             c => c.id !== clientId
           );
