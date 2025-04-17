@@ -80,6 +80,19 @@ export default {
 					purple: "#8C52FF",
 					yellow: "#EAC066",
 					gray: "#111111"
+				},
+				// Adding custom colors for the stage columns
+				blue: {
+					25: "#f0f7ff",
+					50: "#e6f0ff",
+				},
+				amber: {
+					25: "#fffbeb",
+					50: "#fff8e6",
+				},
+				green: {
+					25: "#f0fdf4",
+					50: "#e6faef",
 				}
 			},
 			borderRadius: {
