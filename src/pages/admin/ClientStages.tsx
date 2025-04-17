@@ -63,44 +63,62 @@ const ClientStages = () => {
 
   // Handle dropping a card into a new column
   const handleDrop = async (clientId: string, newStatus: ProcessStatus) => {
+    console.log(`Attempting to update client ${clientId} to status ${newStatus}`);
+    
+    // Find the client in our local state
     const client = clients.find(c => c.id === clientId);
     
     if (!client) {
+      console.error(`Client not found with ID: ${clientId}`);
       toast.error("Cliente não encontrado");
       return;
     }
     
+    console.log(`Found client: ${client.full_name} with current status: ${client.status}`);
+    
     if (client.status === newStatus) {
+      console.log("No status change needed");
       return; // No change needed
     }
     
-    const success = await handleUpdateClient(clientId, {
-      ...client,
-      status: newStatus
-    });
-    
-    if (success) {
-      // Update grouped clients locally for immediate UI update
-      setGroupedClients(prev => {
-        const updatedGroups = { ...prev };
-        
-        // Remove from previous group
-        if (client.status && updatedGroups[client.status as ProcessStatus]) {
-          updatedGroups[client.status as ProcessStatus] = updatedGroups[client.status as ProcessStatus].filter(
-            c => c.id !== clientId
-          );
-        }
-        
-        // Add to new group with updated status
-        updatedGroups[newStatus] = [
-          ...updatedGroups[newStatus],
-          { ...client, status: newStatus }
-        ];
-        
-        return updatedGroups;
+    try {
+      // Update the client with the new status
+      const success = await handleUpdateClient(clientId, {
+        ...client,
+        status: newStatus
       });
       
-      toast.success(`Status do cliente atualizado para ${processStatusOptions.find(opt => opt.value === newStatus)?.label}`);
+      if (success) {
+        console.log(`Successfully updated client ${clientId} to status ${newStatus}`);
+        
+        // Update grouped clients locally for immediate UI update
+        setGroupedClients(prev => {
+          const updatedGroups = { ...prev };
+          
+          // Remove from previous group
+          if (client.status && updatedGroups[client.status as ProcessStatus]) {
+            updatedGroups[client.status as ProcessStatus] = updatedGroups[client.status as ProcessStatus].filter(
+              c => c.id !== clientId
+            );
+          }
+          
+          // Add to new group with updated status
+          updatedGroups[newStatus] = [
+            ...updatedGroups[newStatus],
+            { ...client, status: newStatus }
+          ];
+          
+          return updatedGroups;
+        });
+        
+        toast.success(`Status do cliente atualizado para ${processStatusOptions.find(opt => opt.value === newStatus)?.label}`);
+      } else {
+        console.error(`Failed to update client ${clientId}`);
+        toast.error("Falha ao atualizar o status do cliente");
+      }
+    } catch (error) {
+      console.error("Error in handleDrop:", error);
+      toast.error("Erro ao atualizar status do cliente");
     }
   };
 
