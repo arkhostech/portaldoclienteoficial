@@ -55,7 +55,7 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
         return;
       }
     }
-  }, [user, loading, navigate, isAdmin]);
+  }, [user, loading, navigate, isAdmin, location.pathname]);
 
   if (loading) {
     console.log("MainLayout: Showing loading skeleton");
@@ -93,7 +93,7 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
         isOpen={isMobileMenuOpen} 
         setIsOpen={setIsMobileMenuOpen} 
       />
-      <div className="flex-1 flex flex-col transition-all duration-300 sm:ml-20 lg:ml-64">
+      <div className="flex-1 flex flex-col transition-all duration-300 sm:ml-16 lg:ml-16">
         <Header 
           title={title} 
           toggleSidebar={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/auth";
 import { 
   LayoutDashboard, 
@@ -9,7 +9,10 @@ import {
   Settings,
   FolderOpen,
   BookOpen,
-  LogOut
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Menu
 } from 'lucide-react';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import SidebarMobile from './SidebarMobile';
@@ -23,11 +26,16 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const { isAdmin, signOut } = useAuth();
   const { navItems, currentPath } = useSidebarNavigation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
   
   const handleSignOut = () => {
     if (signOut) {
       signOut();
     }
+  };
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
   };
 
   return (
@@ -46,6 +54,8 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         currentPath={currentPath}
         isAdmin={isAdmin}
         handleSignOut={handleSignOut}
+        isCollapsed={isCollapsed}
+        toggleCollapse={toggleCollapse}
       />
     </>
   );
