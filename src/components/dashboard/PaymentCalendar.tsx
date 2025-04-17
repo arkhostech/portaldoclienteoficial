@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -120,7 +121,7 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
                 payment: { 
                   fontWeight: 'bold', 
                   color: '#000', 
-                  backgroundColor: '#F97316', 
+                  backgroundColor: 'hsl(var(--primary))', 
                   borderRadius: '50%' 
                 }
               }}
