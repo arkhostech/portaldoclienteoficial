@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { CalendarDays, CircleDollarSign } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
@@ -75,7 +74,7 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <CalendarDays className="h-5 w-5 mr-2 text-primary" />
-              <CardTitle className="text-base">Calendário</CardTitle>
+              <CardTitle className="text-base">Calendário de Pagamentos</CardTitle>
             </div>
           </div>
         </CardHeader>
@@ -86,54 +85,6 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
     );
   }
 
-  // If not showing the full calendar, show the compact summary
-  if (!showFullCalendar) {
-    return (
-      <Card className="h-full">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <CalendarDays className="h-5 w-5 mr-2 text-primary" />
-              <CardTitle className="text-base">Calendário</CardTitle>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-2 pt-0">
-          <div className="space-y-3">
-            {/* Payment Summary section */}
-            <div className="flex flex-col">
-              <div className="flex items-center mb-2">
-                <CircleDollarSign className="h-5 w-5 mr-2 text-primary" />
-                <h3 className="font-semibold text-sm">Resumo de Pagamentos</h3>
-              </div>
-              
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-xs text-muted-foreground">Próximo:</span>
-                    <span className="font-medium text-sm">15/06/2025</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-muted-foreground">Valor:</span>
-                    <span className="font-medium text-sm text-green-600">R$ 1.500,00</span>
-                  </div>
-                </div>
-                
-                <div className="pt-2 border-t">
-                  <div className="flex justify-between">
-                    <span className="text-xs font-medium">Total aberto:</span>
-                    <span className="font-semibold text-sm">R$ 4.500,00</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Full calendar view
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -160,7 +111,7 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
           />
         </div>
         
-        {/* Optional: Display selected day's payments */}
+        {/* Display selected day's payments */}
         {selectedDate && (
           <div className="mt-4">
             <h3 className="text-sm font-medium mb-2">

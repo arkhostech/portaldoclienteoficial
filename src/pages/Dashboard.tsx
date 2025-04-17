@@ -91,42 +91,35 @@ const Dashboard = () => {
       <WelcomeSection clientName={clientInfo?.full_name} />
       
       <div className="grid grid-cols-1 gap-4 mt-6">
-        {/* Process Info and Calendar Section */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          <div className="md:col-span-9">
-            <ProcessInfoCard 
-              processType={clientInfo?.process_type} 
-              status={clientInfo?.status}
-              startDate={clientInfo?.process_start_date}
-              responsibleAgent={clientInfo?.responsible_agent}
-              area={clientInfo?.service_area || "Imigração"}
-            />
-          </div>
-          
-          {/* Calendar Card with integrated payment summary */}
-          <div className="md:col-span-3">
-            <PaymentCalendar />
-          </div>
+        {/* Process Info Card - Full Width */}
+        <div>
+          <ProcessInfoCard 
+            processType={clientInfo?.process_type} 
+            status={clientInfo?.status}
+            startDate={clientInfo?.process_start_date}
+            responsibleAgent={clientInfo?.responsible_agent}
+            area={clientInfo?.service_area || "Imigração"}
+          />
         </div>
         
-        {/* Documents and Payment Summary Section - New Layout */}
+        {/* Documents and Calendar Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Left Column - Documents Card (50% width) and Payment Summary below it */}
+          {/* Left Column - Documents Card and Payment Calendar below it */}
           <div className="flex flex-col gap-4">
-            {/* Documents Card - Reduced to 50% width */}
+            {/* Documents Card - Left column, 50% width */}
             <div>
               <DocumentsCard documents={documents} />
             </div>
             
-            {/* Payment Summary Card - Below Documents */}
+            {/* Calendar Card - Below Documents Card */}
             <div>
-              <PaymentSummary />
+              <PaymentCalendar showFullCalendar={true} />
             </div>
           </div>
           
-          {/* Right Column - New Calendar Card */}
+          {/* Right Column - Payment Summary Card */}
           <div>
-            <PaymentCalendar showFullCalendar={true} />
+            <PaymentSummary />
           </div>
         </div>
       </div>
