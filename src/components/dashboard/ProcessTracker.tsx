@@ -69,7 +69,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
               <h3 className={cn(
                 "font-medium w-full whitespace-nowrap",
                 status === "complete" && "text-white",
-                status === "current" && "text-orange-700",
+                status === "current" && "text-[#b39044]", // Changed text color here
                 status === "upcoming" && "text-gray-600"
               )}>
                 {step.label}
