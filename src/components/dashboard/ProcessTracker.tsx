@@ -50,7 +50,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
                   className={cn(
                     "w-6 h-6 rounded-full flex items-center justify-center",
                     status === "complete" && "bg-white",
-                    status === "current" && "bg-orange-500 text-white",
+                    status === "current" && "bg-[#b39044] text-white",
                     status === "upcoming" && "border border-gray-400"
                   )}
                 >
@@ -69,7 +69,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
               <h3 className={cn(
                 "font-medium w-full whitespace-nowrap",
                 status === "complete" && "text-white",
-                status === "current" && "text-[#b39044]", // Changed text color here
+                status === "current" && "text-[#b39044]",
                 status === "upcoming" && "text-gray-600"
               )}>
                 {step.label}
@@ -79,7 +79,7 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
                 <span className={cn(
                   "text-xs py-1 px-3 rounded-full inline-block whitespace-nowrap",
                   status === "complete" && "bg-white/20 text-white",
-                  status === "current" && "bg-orange-200 text-orange-700",
+                  status === "current" && "bg-[#FEC6A1] text-[#b39044]",
                   status === "upcoming" && "bg-gray-200 text-gray-500"
                 )}>
                   {status === "complete" ? "Completed" : 
