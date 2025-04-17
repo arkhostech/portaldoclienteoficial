@@ -14,7 +14,7 @@ const StepIndicator = ({ status, step }: StepIndicatorProps) => {
         className={cn(
           "w-6 h-6 rounded-full flex items-center justify-center",
           status === "complete" && "bg-white",
-          status === "current" && "bg-[#b39044] text-white",
+          status === "current" && "bg-[#F5D547] border border-white text-white",
           status === "upcoming" && "border border-gray-400"
         )}
       >

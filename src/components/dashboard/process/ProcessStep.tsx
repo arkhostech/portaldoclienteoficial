@@ -17,7 +17,7 @@ const ProcessStep = ({ id, label, step, status }: ProcessStepProps) => {
       className={cn(
         "flex-1 rounded-lg p-2 transition-all flex flex-col justify-between",
         status === "complete" && "bg-[#006494] text-white",
-        status === "current" && "bg-[#F5D547] text-black border-2 border-[#e5c542]",
+        status === "current" && "bg-[#F5D547] text-white border-2 border-[#e5c542]",
         status === "upcoming" && "bg-gray-100 text-gray-500",
       )}
       style={{
@@ -31,7 +31,7 @@ const ProcessStep = ({ id, label, step, status }: ProcessStepProps) => {
         <h3 className={cn(
           "font-medium w-full whitespace-nowrap",
           status === "complete" && "text-white",
-          status === "current" && "text-[#b39044]",
+          status === "current" && "text-white font-bold",
           status === "upcoming" && "text-gray-600"
         )}>
           {label}
