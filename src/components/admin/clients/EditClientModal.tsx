@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -33,24 +32,7 @@ import {
 import { Loader2, Eye, EyeOff, Key } from "lucide-react";
 import { Client, ClientFormData } from "@/services/clientService";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// Process types for immigration
-const processTypes = [
-  "EB-1",
-  "EB-2",
-  "EB-3",
-  "EB-5",
-  "H-1B",
-  "L-1",
-  "O-1",
-  "Tourist Visa",
-  "Student Visa",
-  "Family Immigration",
-  "Asylum",
-  "Naturalization",
-  "Green Card",
-  "Other"
-];
+import { processStatusOptions, processTypes } from "./schemas/clientSchema";
 
 const clientFormSchema = z.object({
   full_name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
@@ -121,22 +103,17 @@ const EditClientModal = ({
         process_type: client.process_type || ""
       });
     }
-    // Reset form when the dialog opens with new client data
   }, [client, form]);
   
   const handleSubmit = async (data: ClientFormData) => {
     if (!client) return;
     
     try {
-      // Disable closing the dialog during submission
       const success = await onSubmit(client.id, data);
       
       if (success) {
-        // Only close the dialog if the submission was successful
-        // Use a slight delay to ensure state updates have propagated
         setTimeout(() => {
           onOpenChange(false);
-          // Reset form after successful submission and dialog close
           form.reset();
         }, 300);
       }
@@ -152,10 +129,7 @@ const EditClientModal = ({
       const success = await onResetPassword(client.id, data.password);
       
       if (success) {
-        // Reset password form and notify user
         passwordForm.reset();
-        
-        // Display success message or switch back to edit tab
         setActiveTab("edit");
       }
     } catch (error) {
@@ -164,11 +138,9 @@ const EditClientModal = ({
   };
 
   const handleDialogClose = (open: boolean) => {
-    // Prevent closing the dialog during form submission
     if (!isSubmitting && open === false) {
       onOpenChange(open);
       if (!open) {
-        // Reset forms when dialog is closed
         setTimeout(() => {
           form.reset();
           passwordForm.reset();
@@ -288,7 +260,7 @@ const EditClientModal = ({
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel>Status do Processo</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -296,8 +268,11 @@ const EditClientModal = ({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="active">Ativo</SelectItem>
-                          <SelectItem value="inactive">Inativo</SelectItem>
+                          {processStatusOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

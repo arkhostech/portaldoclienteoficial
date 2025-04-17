@@ -7,7 +7,7 @@ export const clientFormSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
   phone: z.string().optional(),
   address: z.string().optional(),
-  status: z.string().default("active"),
+  status: z.string().default("documentacao"),
   process_type: z.string().min(1, { message: "Tipo de processo é obrigatório" }),
   password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
   confirmPassword: z.string().min(6, { message: "Confirme a senha" })
@@ -17,6 +17,13 @@ export const clientFormSchema = z.object({
 });
 
 export type ClientFormData = z.infer<typeof clientFormSchema>;
+
+// Status options for client process
+export const processStatusOptions = [
+  { value: "documentacao", label: "Documentação" },
+  { value: "em_andamento", label: "Em Andamento" },
+  { value: "concluido", label: "Concluído" }
+];
 
 // Common process types for immigration
 export const processTypes = [

@@ -6,7 +6,7 @@ import ProcessTracker from "./ProcessTracker";
 
 interface ProcessInfoCardProps {
   processType?: string;
-  status?: string;
+  status?: "documentacao" | "em_andamento" | "concluido";
   startDate?: string;
   responsibleAgent?: string;
   lastUpdate?: string;
@@ -72,7 +72,7 @@ const ProcessInfoCard = ({
                   <span className="text-sm text-muted-foreground mb-1">Status</span>
                   <div className="w-full overflow-x-auto pb-1">
                     <ProcessTracker 
-                      currentStatus={status as "documentacao" | "em_andamento" | "concluido"} 
+                      currentStatus={status} 
                       className="sm:flex-row" 
                     />
                   </div>
