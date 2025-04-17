@@ -106,7 +106,7 @@ const Dashboard = () => {
           <DocumentsCard documents={documents} />
         </div>
         
-        {/* Unified Payment Calendar Card - Full Width */}
+        {/* Payment Calendar - Full Width */}
         <div>
           <PaymentCalendar showFullCalendar={true} />
         </div>
