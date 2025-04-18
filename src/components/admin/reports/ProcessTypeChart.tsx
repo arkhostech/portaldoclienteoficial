@@ -7,18 +7,26 @@ import { BarChart3 } from "lucide-react";
 const processosPorTipoData = [
   { name: "EB-1", value: 35 },
   { name: "EB-2", value: 25 },
-  { name: "Turista", value: 20 },
+  { name: "EB-3", value: 20 },
+  { name: "Turista", value: 15 },
   { name: "Not Assigned", value: 10 },
   { name: "Estudante", value: 10 },
+  { name: "EB-5", value: 5 },
+  { name: "L-1", value: 5 },
+  { name: "Asilo", value: 5 },
 ];
 
 // Custom colors for each process type
 const COLORS = {
   "EB-1": "#006494",
   "EB-2": "#5B8C5A",
+  "EB-3": "#7FC29B",
   "Turista": "#F5D547",
   "Not Assigned": "#E86A33",
   "Estudante": "#3F88C5",
+  "EB-5": "#9B87F5",
+  "L-1": "#45B7D1",
+  "Asilo": "#FFA91F",
   // Fallback colors for any additional categories
   "Other": "#8884d8",
 };
@@ -51,7 +59,7 @@ const ProcessTypeChart = () => {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center">
           <BarChart3 className="mr-2 h-5 w-5 text-brand-600" />
-          Processos por Tipo
+          Distribuição por Tipo de Processo
         </CardTitle>
       </CardHeader>
       <CardContent>
