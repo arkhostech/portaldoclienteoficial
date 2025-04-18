@@ -1,6 +1,7 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { 
   BarChart,
   Bar,
@@ -8,9 +9,11 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  PieChart,
+  Pie,
   Cell
 } from "recharts";
-import { ChartPie } from "lucide-react";
+import { ChartPie, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Colors for process type chart
@@ -36,6 +39,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const VisualizationSection = () => {
+  const [showLegend, setShowLegend] = useState(false);
   const [processTypeData, setProcessTypeData] = useState<{ name: string; value: number, total: number }[]>([]);
   const [processStatusData, setProcessStatusData] = useState<{ name: string; value: number, total: number }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -110,10 +114,21 @@ const VisualizationSection = () => {
         {/* Process Type Distribution */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center">
-              <ChartPie className="mr-2 h-5 w-5 text-primary" />
-              Distribuição por Tipo de Processo
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center">
+                <ChartPie className="mr-2 h-5 w-5 text-primary" />
+                Distribuição por Tipo de Processo
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowLegend(!showLegend)}
+                className="flex items-center gap-2"
+              >
+                <Palette className="h-4 w-4" />
+                {showLegend ? 'Ocultar Legenda' : 'Ver Legenda'}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -126,39 +141,41 @@ const VisualizationSection = () => {
                   <p className="text-muted-foreground">Sem dados para exibir</p>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={processTypeData}
-                    layout="vertical"
-                    margin={{
-                      top: 5,
-                      right: 30,
-                      bottom: 5,
-                      left: 100,
-                    }}
-                  >
-                    <XAxis type="number" />
-                    <YAxis 
-                      type="category" 
-                      dataKey="name" 
-                      width={90}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar 
-                      dataKey="value" 
-                      barSize={20}
-                      radius={[0, 4, 4, 0]}
-                    >
+                <div className="relative h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={processTypeData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                      >
+                        {processTypeData.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}`}
+                            fill={PROCESS_TYPE_COLORS[index % PROCESS_TYPE_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {showLegend && (
+                    <div className="absolute top-0 right-0 bg-white/90 p-2 rounded-md shadow-sm border">
                       {processTypeData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`}
-                          fill={PROCESS_TYPE_COLORS[index % PROCESS_TYPE_COLORS.length]}
-                        />
+                        <div key={entry.name} className="flex items-center gap-2 text-sm mb-1">
+                          <div
+                            className="w-3 h-3 rounded-sm"
+                            style={{ backgroundColor: PROCESS_TYPE_COLORS[index % PROCESS_TYPE_COLORS.length] }}
+                          />
+                          <span>{entry.name}</span>
+                        </div>
                       ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </CardContent>
