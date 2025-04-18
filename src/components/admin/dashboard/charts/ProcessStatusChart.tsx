@@ -1,6 +1,7 @@
-
 import { FileText, ArrowsUpFromLine, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartLoadingState } from './shared/ChartLoadingState';
+import { ChartEmptyState } from './shared/ChartEmptyState';
 
 interface ProcessStatusChartProps {
   data: { name: string; value: number; total: number }[];
@@ -50,13 +51,9 @@ export const ProcessStatusChart = ({ data, isLoading }: ProcessStatusChartProps)
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex items-center justify-center h-24">
-            <p className="text-muted-foreground">Carregando dados...</p>
-          </div>
+          <ChartLoadingState />
         ) : data.length === 0 ? (
-          <div className="flex items-center justify-center h-24">
-            <p className="text-muted-foreground">Sem dados para exibir</p>
-          </div>
+          <ChartEmptyState />
         ) : (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-4">
@@ -95,4 +92,3 @@ export const ProcessStatusChart = ({ data, isLoading }: ProcessStatusChartProps)
     </Card>
   );
 };
-

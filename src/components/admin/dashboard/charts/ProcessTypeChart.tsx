@@ -1,10 +1,11 @@
-
 import { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChartPie, Palette } from "lucide-react";
 import { CustomTooltip } from "./CustomTooltip";
+import { ChartLoadingState } from './shared/ChartLoadingState';
+import { ChartEmptyState } from './shared/ChartEmptyState';
 
 const PROCESS_TYPE_COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
@@ -38,13 +39,9 @@ export const ProcessTypeChart = ({ data, isLoading }: ProcessTypeChartProps) => 
       <CardContent>
         <div className="h-64">
           {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground">Carregando dados...</p>
-            </div>
+            <ChartLoadingState />
           ) : data.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground">Sem dados para exibir</p>
-            </div>
+            <ChartEmptyState />
           ) : (
             <div className="relative h-full">
               <ResponsiveContainer width="100%" height="100%">
