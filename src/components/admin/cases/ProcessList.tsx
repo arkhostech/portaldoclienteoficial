@@ -58,7 +58,7 @@ const ProcessList = ({ clients }: ProcessListProps) => {
         <TableRow>
           <TableHead className="w-[300px]">Cliente</TableHead>
           <TableHead>Email</TableHead>
-          <TableHead className="w-[100px]">Status</TableHead>
+          <TableHead className="w-[150px]">Status</TableHead>
           <TableHead className="w-[150px]">Data Criação</TableHead>
           <TableHead className="w-[100px] text-right">Ações</TableHead>
         </TableRow>
