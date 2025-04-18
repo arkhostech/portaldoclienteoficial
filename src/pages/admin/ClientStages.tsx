@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -23,14 +22,12 @@ const ClientStages = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedClient, setDraggedClient] = useState<Client | null>(null);
 
-  // Redirect if not admin
   useEffect(() => {
     if (!isAdmin) {
       navigate('/dashboard');
     }
   }, [isAdmin, navigate]);
 
-  // Load clients
   useEffect(() => {
     const loadClients = async () => {
       setIsLoading(true);
@@ -56,13 +53,11 @@ const ClientStages = () => {
   const handleDrop = async (clientId: string, newStatus: StageColumnType) => {
     console.log(`Drop handler: Moving client ${clientId} to ${newStatus}`);
     
-    // For the 'sem_estagio' column, set status to null
     const statusToUpdate = newStatus === 'sem_estagio' ? null : newStatus;
     
     try {
       const result = await updateClient(clientId, { status: statusToUpdate });
       if (result) {
-        // Update the local state
         setClients((prevClients) => 
           prevClients.map((c) => (c.id === clientId ? { ...c, status: statusToUpdate } : c))
         );
@@ -72,7 +67,6 @@ const ClientStages = () => {
     }
   };
 
-  // Filter clients based on search term
   const filteredClients = clients.filter(
     (client) =>
       client.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,7 +75,6 @@ const ClientStages = () => {
       (client.process_type && client.process_type.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Group clients by status
   const documentacaoClients = filteredClients.filter(
     (client) => client.status === 'documentacao'
   );
@@ -90,9 +83,6 @@ const ClientStages = () => {
   );
   const concluidoClients = filteredClients.filter(
     (client) => client.status === 'concluido'
-  );
-  const semEstagioClients = filteredClients.filter(
-    (client) => !client.status
   );
 
   return (
@@ -123,7 +113,7 @@ const ClientStages = () => {
         </div>
 
         <DndProvider backend={HTML5Backend}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StageColumn
               title="Documentação"
               type="documentacao"
@@ -142,13 +132,6 @@ const ClientStages = () => {
               title="Concluído"
               type="concluido"
               clients={concluidoClients}
-              onDragStart={handleDragStart}
-              onDrop={handleDrop}
-            />
-            <StageColumn
-              title="Sem Estágio"
-              type="sem_estagio"
-              clients={semEstagioClients}
               onDragStart={handleDragStart}
               onDrop={handleDrop}
             />
