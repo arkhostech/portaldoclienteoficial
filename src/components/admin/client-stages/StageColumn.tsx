@@ -71,7 +71,7 @@ const StageColumn = ({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="overflow-y-auto max-h-[calc(100vh-200px)]">
+      <CardContent className="overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-hidden">
         {clients.length > 0 ? (
           clients.map((client) => (
             <ClientCard 
