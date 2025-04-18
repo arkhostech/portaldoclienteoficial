@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
@@ -51,8 +50,8 @@ export const ProcessTypeChart = ({ data, isLoading }: ProcessTypeChartProps) => 
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={110} // Reduced from 130
-                  innerRadius={50}  // Reduced from 60
+                  outerRadius={120} // Increased from 110
+                  innerRadius={55}  // Increased from 50
                 >
                   {data.map((entry, index) => (
                     <Cell 
