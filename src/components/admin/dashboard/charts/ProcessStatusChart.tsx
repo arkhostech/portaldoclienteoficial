@@ -1,3 +1,4 @@
+
 import { FileText, ArrowsUpFromLine, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -11,18 +12,21 @@ const STATUS_CONFIG = {
     color: '#006494',
     icon: FileText,
     bgClass: 'bg-[#006494]',
+    textColorClass: 'text-white',
     dbValue: 'documentacao'
   },
   'Em Andamento': {
     color: '#e8c064',
     icon: ArrowsUpFromLine,
     bgClass: 'bg-[#e8c064]',
+    textColorClass: 'text-black',
     dbValue: 'em_andamento'
   },
   'Concluído': {
     color: '#5B8C5A',
     icon: CheckCircle,
     bgClass: 'bg-[#5B8C5A]',
+    textColorClass: 'text-white',
     dbValue: 'concluido'
   }
 };
@@ -60,17 +64,15 @@ export const ProcessStatusChart = ({ data, isLoading }: ProcessStatusChartProps)
                 return (
                   <div
                     key={statusKey}
-                    className={`${config.bgClass} rounded-xl p-6 shadow-md text-white`}
+                    className={`${config.bgClass} ${config.textColorClass} rounded-xl p-6 shadow-md flex flex-col items-center justify-center text-center`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Icon className="h-6 w-6 flex-shrink-0" />
-                        <span className="font-bold whitespace-nowrap">{statusKey}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold">{count}</div>
-                        <div className="text-sm opacity-90">clients</div>
-                      </div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <Icon className="h-8 w-8 flex-shrink-0" />
+                      <span className="font-bold text-lg whitespace-nowrap">{statusKey}</span>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-4xl font-bold mb-1">{count}</div>
+                      <div className="text-sm opacity-80 uppercase tracking-wider">clientes</div>
                     </div>
                   </div>
                 );
