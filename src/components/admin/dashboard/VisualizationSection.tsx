@@ -2,23 +2,42 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip as RechartsTooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
   ResponsiveContainer,
-  Legend
+  Cell
 } from "recharts";
 import { ChartPie } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Colors for charts
+// Colors for process type chart
 const PROCESS_TYPE_COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
-const PROCESS_STATUS_COLORS = ["#82ca9d", "#8884d8", "#ffc658", "#ff8042"];
+// Colors for status chart
+const PROCESS_STATUS_COLORS = {
+  "Em Análise": "#006494",
+  "Em Andamento": "#F5D547",
+  "Concluído": "#5B8C5A"
+};
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-2 border border-gray-200 shadow-md rounded-md">
+        <p className="font-medium">{payload[0].payload.name}</p>
+        <p>Quantidade: {payload[0].value}</p>
+        <p>Percentual: {`${((payload[0].value / payload[0].payload.total) * 100).toFixed(0)}%`}</p>
+      </div>
+    );
+  }
+  return null;
+};
 
 const VisualizationSection = () => {
-  const [processTypeData, setProcessTypeData] = useState<{ name: string; value: number }[]>([]);
-  const [processStatusData, setProcessStatusData] = useState<{ name: string; value: number }[]>([]);
+  const [processTypeData, setProcessTypeData] = useState<{ name: string; value: number, total: number }[]>([]);
+  const [processStatusData, setProcessStatusData] = useState<{ name: string; value: number, total: number }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -32,17 +51,20 @@ const VisualizationSection = () => {
         
         if (clientsError) throw clientsError;
         
-        // Count process types
+        // Count process types and calculate total
         const processTypeCounts: Record<string, number> = {};
         clients?.forEach(client => {
-          const processType = client.process_type || "Not Assigned";
+          const processType = client.process_type || "Não Atribuído";
           processTypeCounts[processType] = (processTypeCounts[processType] || 0) + 1;
         });
         
+        const total = Object.values(processTypeCounts).reduce((acc, curr) => acc + curr, 0);
+        
         // Format data for chart
         const formattedProcessTypeData = Object.entries(processTypeCounts)
-          .map(([name, value]) => ({ name, value }))
-          .filter(item => item.value > 0);
+          .map(([name, value]) => ({ name, value, total }))
+          .filter(item => item.value > 0)
+          .sort((a, b) => b.value - a.value);
         
         setProcessTypeData(formattedProcessTypeData);
         
@@ -53,17 +75,20 @@ const VisualizationSection = () => {
         
         if (statusError) throw statusError;
         
-        // Count statuses
+        // Count statuses and calculate total
         const statusCounts: Record<string, number> = {};
         statusClients?.forEach(client => {
-          const status = client.status || "Unknown";
+          const status = client.status || "Em Análise";
           statusCounts[status] = (statusCounts[status] || 0) + 1;
         });
         
+        const statusTotal = Object.values(statusCounts).reduce((acc, curr) => acc + curr, 0);
+        
         // Format data for chart
         const formattedStatusData = Object.entries(statusCounts)
-          .map(([name, value]) => ({ name, value }))
-          .filter(item => item.value > 0);
+          .map(([name, value]) => ({ name, value, total: statusTotal }))
+          .filter(item => item.value > 0)
+          .sort((a, b) => b.value - a.value);
         
         setProcessStatusData(formattedStatusData);
         
@@ -102,25 +127,37 @@ const VisualizationSection = () => {
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={processTypeData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      paddingAngle={2}
-                      dataKey="value"
-                      label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  <BarChart
+                    data={processTypeData}
+                    layout="vertical"
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      bottom: 5,
+                      left: 100,
+                    }}
+                  >
+                    <XAxis type="number" />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name" 
+                      width={90}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar 
+                      dataKey="value" 
+                      barSize={20}
+                      radius={[0, 4, 4, 0]}
                     >
                       {processTypeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={PROCESS_TYPE_COLORS[index % PROCESS_TYPE_COLORS.length]} />
+                        <Cell 
+                          key={`cell-${index}`}
+                          fill={PROCESS_TYPE_COLORS[index % PROCESS_TYPE_COLORS.length]}
+                        />
                       ))}
-                    </Pie>
-                    <RechartsTooltip formatter={(value) => [`${value}`, 'Quantidade']} />
-                    <Legend />
-                  </PieChart>
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               )}
             </div>
@@ -147,25 +184,37 @@ const VisualizationSection = () => {
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={processStatusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      paddingAngle={2}
-                      dataKey="value"
-                      label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  <BarChart
+                    data={processStatusData}
+                    layout="vertical"
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      bottom: 5,
+                      left: 100,
+                    }}
+                  >
+                    <XAxis type="number" />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name"
+                      width={90}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar 
+                      dataKey="value" 
+                      barSize={20}
+                      radius={[0, 4, 4, 0]}
                     >
-                      {processStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={PROCESS_STATUS_COLORS[index % PROCESS_STATUS_COLORS.length]} />
+                      {processStatusData.map((entry) => (
+                        <Cell 
+                          key={`cell-${entry.name}`}
+                          fill={PROCESS_STATUS_COLORS[entry.name as keyof typeof PROCESS_STATUS_COLORS] || "#8884d8"}
+                        />
                       ))}
-                    </Pie>
-                    <RechartsTooltip formatter={(value) => [`${value}`, 'Quantidade']} />
-                    <Legend />
-                  </PieChart>
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               )}
             </div>
