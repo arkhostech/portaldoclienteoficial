@@ -1,13 +1,11 @@
 
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 
 // Import refactored components
 import ReportHeader from "@/components/admin/reports/ReportHeader";
 import SummaryCards from "@/components/admin/reports/SummaryCards";
-import MonthlyChart from "@/components/admin/reports/MonthlyChart";
 import ProcessTypeChart from "@/components/admin/reports/ProcessTypeChart";
 import ProcessStatusChart from "@/components/admin/reports/ProcessStatusChart";
 import LawyerPerformanceTable from "@/components/admin/reports/LawyerPerformanceTable";
@@ -15,7 +13,6 @@ import LawyerPerformanceTable from "@/components/admin/reports/LawyerPerformance
 const Reports = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("mensal");
 
   // Redirect non-admin users
   if (!isAdmin) {

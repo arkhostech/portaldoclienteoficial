@@ -20,6 +20,7 @@ import AdminPayments from "./pages/admin/Payments";
 import Cases from "./pages/admin/Cases";
 import ClientStages from "./pages/admin/ClientStages";
 import ClientDocuments from "./pages/admin/ClientDocuments";
+import Reports from "./pages/admin/Reports";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/admin/payments" element={<AdminPayments />} />
               <Route path="/admin/cases" element={<Cases />} />
               <Route path="/admin/client-stages" element={<ClientStages />} />
+              <Route path="/admin/reports" element={<Reports />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/payments" element={<Payments />} />
               <Route path="/knowledge" element={<Knowledge />} />

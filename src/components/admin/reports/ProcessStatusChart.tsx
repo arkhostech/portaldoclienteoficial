@@ -7,16 +7,14 @@ import { BarChart3 } from "lucide-react";
 const processStatusData = [
   { status: "documentacao", label: "Documentação", value: 30 },
   { status: "em_andamento", label: "Em Andamento", value: 45 },
-  { status: "concluido", label: "Concluído", value: 25 },
-  { status: "active", label: "Active", value: 10 }
+  { status: "concluido", label: "Concluído", value: 25 }
 ];
 
 // Status colors
 const STATUS_COLORS = {
   documentacao: "#006494",
   em_andamento: "#F5D547",
-  concluido: "#5B8C5A",
-  active: "#FFA91F"
+  concluido: "#5B8C5A"
 };
 
 // Format numbers as percentages
@@ -102,9 +100,7 @@ const ProcessStatusChart = () => {
                   stackId="status"
                   fill={STATUS_COLORS[status.status as keyof typeof STATUS_COLORS]}
                   label={renderCustomLabel}
-                >
-                  {/* No additional cells needed for stacked bar segments */}
-                </Bar>
+                />
               ))}
             </BarChart>
           </ResponsiveContainer>
