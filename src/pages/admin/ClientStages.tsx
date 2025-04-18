@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -58,9 +59,21 @@ const ClientStages = () => {
     try {
       const result = await updateClient(clientId, { status: statusToUpdate });
       if (result) {
-        setClients((prevClients) => 
-          prevClients.map((c) => (c.id === clientId ? { ...c, status: statusToUpdate } : c))
-        );
+        // Move the client to the top of the new column
+        setClients((prevClients) => {
+          // Remove the client from the array
+          const updatedClient = prevClients.find(c => c.id === clientId);
+          const filteredClients = prevClients.filter(c => c.id !== clientId);
+          
+          if (updatedClient) {
+            // Place the client at the beginning of the array with updated status
+            return [
+              { ...updatedClient, status: statusToUpdate },
+              ...filteredClients
+            ];
+          }
+          return prevClients;
+        });
       }
     } catch (error) {
       console.error('Error updating client status:', error);
