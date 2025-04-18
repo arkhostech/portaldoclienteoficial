@@ -1,4 +1,3 @@
-
 import { FileText, ArrowsUpFromLine, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -8,14 +7,14 @@ interface ProcessStatusChartProps {
 }
 
 const STATUS_CONFIG = {
-  'Documentação': {
+  'Doc': {
     color: '#006494',
     icon: FileText,
     bgClass: 'bg-[#006494]',
     textColorClass: 'text-white',
     dbValue: 'documentacao'
   },
-  'Em Andamento': {
+  'Em andam': {
     color: '#e8c064',
     icon: ArrowsUpFromLine,
     bgClass: 'bg-[#e8c064]',
