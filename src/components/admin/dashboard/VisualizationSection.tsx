@@ -2,15 +2,11 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Tooltip,
+  ResponsiveContainer
 } from "recharts";
 import { ChartPie, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -149,7 +145,8 @@ const VisualizationSection = () => {
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        outerRadius={80}
+                        outerRadius={110}
+                        innerRadius={50}
                       >
                         {processTypeData.map((entry, index) => (
                           <Cell 
