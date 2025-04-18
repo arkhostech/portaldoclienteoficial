@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -9,6 +8,7 @@ import ReportHeader from "@/components/admin/reports/ReportHeader";
 import SummaryCards from "@/components/admin/reports/SummaryCards";
 import MonthlyChart from "@/components/admin/reports/MonthlyChart";
 import ProcessTypeChart from "@/components/admin/reports/ProcessTypeChart";
+import ProcessStatusChart from "@/components/admin/reports/ProcessStatusChart";
 import LawyerPerformanceTable from "@/components/admin/reports/LawyerPerformanceTable";
 
 const Reports = () => {
@@ -29,8 +29,8 @@ const Reports = () => {
         <SummaryCards />
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <MonthlyChart />
           <ProcessTypeChart />
+          <ProcessStatusChart />
         </div>
 
         <LawyerPerformanceTable />
