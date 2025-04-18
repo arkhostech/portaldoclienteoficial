@@ -38,37 +38,20 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-// Custom label for bar segments
-const renderCustomLabel = (props: any) => {
-  const { x, y, width, value, height } = props;
-  const percentage = formatAsPercentage(value);
-  
-  // Only show label if segment is wide enough
-  if (width < 50) return null;
-
-  return (
-    <text
-      x={x + width/2}
-      y={y + height/2}
-      fill="white"
-      textAnchor="middle"
-      dominantBaseline="central"
-      className="text-xs font-medium"
-    >
-      {percentage}
-    </text>
-  );
-};
-
 const ProcessStatusChart = () => {
+  // Calculate total for percentage
+  const total = processStatusData.reduce((acc, item) => acc + item.value, 0);
+  
   // Transform data for stacked bar chart
-  const transformedData = [{
-    name: "Status",
-    ...processStatusData.reduce((acc, item) => ({
-      ...acc,
-      [item.status]: item.value
-    }), {})
-  }];
+  const chartData = [
+    {
+      name: "Status",
+      ...processStatusData.reduce((acc, item) => ({
+        ...acc,
+        [item.status]: item.value
+      }), {})
+    }
+  ];
 
   return (
     <Card>
@@ -79,17 +62,13 @@ const ProcessStatusChart = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-32 md:h-24">
+        <div className="h-24">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={transformedData}
+              data={chartData}
               layout="vertical"
-              margin={{
-                top: 5,
-                right: 30,
-                bottom: 5,
-                left: 30
-              }}
+              margin={{ top: 5, right: 30, left: 30, bottom: 5 }}
+              barSize={40}
             >
               <XAxis type="number" hide />
               <Tooltip content={<CustomTooltip />} />
@@ -99,7 +78,30 @@ const ProcessStatusChart = () => {
                   dataKey={status.status}
                   stackId="status"
                   fill={STATUS_COLORS[status.status as keyof typeof STATUS_COLORS]}
-                  label={renderCustomLabel}
+                  label={{
+                    position: 'inside',
+                    content: (props) => {
+                      const { x, y, width, value, height } = props;
+                      const percentage = ((value / total) * 100).toFixed(0);
+                      
+                      // Only show label if segment is wide enough
+                      if (width < 30) return null;
+                      
+                      return (
+                        <text
+                          x={x + width / 2}
+                          y={y + height / 2}
+                          fill="#FFFFFF"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          className="font-medium"
+                          fontSize="10"
+                        >
+                          {`${percentage}%`}
+                        </text>
+                      );
+                    }
+                  }}
                 />
               ))}
             </BarChart>
