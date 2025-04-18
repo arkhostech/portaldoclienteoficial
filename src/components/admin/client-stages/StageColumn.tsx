@@ -33,8 +33,6 @@ const StageColumn = ({
         return <Clock className="h-4 w-4 mr-1" />;
       case 'concluido':
         return <CheckCircle className="h-4 w-4 mr-1" />;
-      case 'sem_estagio':
-        return <HelpCircle className="h-4 w-4 mr-1" />;
       default:
         return null;
     }
@@ -48,8 +46,19 @@ const StageColumn = ({
         return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'concluido':
         return 'bg-green-100 text-green-800 border-green-300';
-      case 'sem_estagio':
-        return 'bg-gray-100 text-gray-800 border-gray-300';
+      default:
+        return '';
+    }
+  };
+
+  const getBackgroundColor = () => {
+    switch (type) {
+      case 'documentacao':
+        return 'bg-blue-25'; // Soft blue from Tailwind config
+      case 'em_andamento':
+        return 'bg-amber-25'; // Soft yellow from Tailwind config
+      case 'concluido':
+        return 'bg-green-25'; // Soft green from Tailwind config
       default:
         return '';
     }
@@ -57,7 +66,7 @@ const StageColumn = ({
 
   return (
     <Card 
-      className={`h-full ${isOver ? 'bg-muted/30' : ''}`}
+      className={`h-full ${isOver ? 'bg-muted/30' : ''} ${getBackgroundColor()}`}
       ref={drop}
     >
       <CardHeader className="pb-2">
@@ -91,3 +100,4 @@ const StageColumn = ({
 };
 
 export default StageColumn;
+
