@@ -82,15 +82,23 @@ const ProcessStatusChart = () => {
                     position: 'inside',
                     content: (props) => {
                       const { x, y, width, value, height } = props;
-                      const percentage = ((value / total) * 100).toFixed(0);
+                      // Ensure value is a number before performing arithmetic
+                      const numericValue = typeof value === 'number' ? value : 0;
+                      const percentage = ((numericValue / total) * 100).toFixed(0);
                       
-                      // Only show label if segment is wide enough
-                      if (width < 30) return null;
+                      // Ensure width is a number before comparison
+                      const numericWidth = typeof width === 'number' ? width : 0;
+                      if (numericWidth < 30) return null;
+                      
+                      // Ensure x, y, width, and height are numbers before arithmetic
+                      const numericX = typeof x === 'number' ? x : 0;
+                      const numericY = typeof y === 'number' ? y : 0;
+                      const numericHeight = typeof height === 'number' ? height : 0;
                       
                       return (
                         <text
-                          x={x + width / 2}
-                          y={y + height / 2}
+                          x={numericX + numericWidth / 2}
+                          y={numericY + numericHeight / 2}
                           fill="#FFFFFF"
                           textAnchor="middle"
                           dominantBaseline="central"
