@@ -55,8 +55,8 @@ export const ProcessTypeChart = ({ data, isLoading }: ProcessTypeChartProps) => 
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={110}
-                    innerRadius={50}
+                    outerRadius={130}
+                    innerRadius={60}
                   >
                     {data.map((entry, index) => (
                       <Cell 
