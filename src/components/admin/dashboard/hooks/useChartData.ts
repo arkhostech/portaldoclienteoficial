@@ -11,18 +11,25 @@ export const useChartData = () => {
     const fetchChartData = async () => {
       setIsLoading(true);
       try {
-        // Fetch clients for process type distribution
+        // Fetch clients for process type distribution with the join to process_types
         const { data: clients, error: clientsError } = await supabase
           .from("clients")
-          .select("process_type");
+          .select(`
+            id,
+            process_type_id,
+            process_types (
+              id,
+              name
+            )
+          `);
         
         if (clientsError) throw clientsError;
         
         // Count process types and calculate total
         const processTypeCounts: Record<string, number> = {};
         clients?.forEach(client => {
-          const processType = client.process_type || "Não Atribuído";
-          processTypeCounts[processType] = (processTypeCounts[processType] || 0) + 1;
+          const processTypeName = client.process_types?.name || "Não Atribuído";
+          processTypeCounts[processTypeName] = (processTypeCounts[processTypeName] || 0) + 1;
         });
         
         const total = Object.values(processTypeCounts).reduce((acc, curr) => acc + curr, 0);

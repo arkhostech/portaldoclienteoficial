@@ -48,11 +48,11 @@ const AdminDashboardSummary = () => {
           client => new Date(client.created_at) > oneWeekAgo
         ) || [];
         
-        // Fetch active processes (using clients with process_type as a proxy)
+        // Fetch active processes (using clients with process_type_id as a proxy)
         const { data: processes, error: processesError } = await supabase
           .from("clients")
-          .select("id, process_type, status")
-          .not("process_type", "is", null);
+          .select("id, process_type_id, status")
+          .not("process_type_id", "is", null);
         
         if (processesError) throw processesError;
         

@@ -63,7 +63,14 @@ const RecentActivitySection = () => {
         // Fetch new clients
         const { data: clientsData, error: clientsError } = await supabase
           .from("clients")
-          .select("id, full_name, email, process_type, created_at")
+          .select(`
+            id, 
+            full_name, 
+            email, 
+            process_type_id, 
+            process_types(name),
+            created_at
+          `)
           .order('created_at', { ascending: false })
           .limit(5);
         
@@ -73,7 +80,7 @@ const RecentActivitySection = () => {
           id: client.id,
           name: client.full_name,
           email: client.email,
-          process_type: client.process_type,
+          process_type: client.process_types?.name || null,
           date: client.created_at,
         })) || [];
         

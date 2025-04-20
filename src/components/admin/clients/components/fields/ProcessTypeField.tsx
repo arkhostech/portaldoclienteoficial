@@ -14,13 +14,16 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { processTypes, processStatusOptions } from "../../schemas/clientSchema";
+import { processStatusOptions } from "../../schemas/clientSchema";
+import { useProcessTypes } from "@/hooks/useProcessTypes";
 
 interface ProcessTypeFieldProps {
   form: UseFormReturn<any>;
 }
 
 export const ProcessTypeField = ({ form }: ProcessTypeFieldProps) => {
+  const { processTypes, isLoading } = useProcessTypes();
+
   return (
     <>
       <FormField
@@ -37,8 +40,8 @@ export const ProcessTypeField = ({ form }: ProcessTypeFieldProps) => {
               </FormControl>
               <SelectContent>
                 {processTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
+                  <SelectItem key={type.id} value={type.name}>
+                    {type.name}
                   </SelectItem>
                 ))}
               </SelectContent>

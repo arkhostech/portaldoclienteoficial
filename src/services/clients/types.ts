@@ -1,3 +1,4 @@
+
 export interface Client {
   id: string;
   full_name: string;
@@ -6,6 +7,7 @@ export interface Client {
   address: string | null;
   status: ProcessStatus;
   process_type_id: string | null;
+  process_type?: string | null; // Virtual property to store process type name
   created_at: string;
   updated_at: string;
 }

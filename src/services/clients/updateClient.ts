@@ -33,13 +33,50 @@ export const updateClient = async (id: string, clientData: Partial<ClientFormDat
       return null;
     }
     
-    console.log("Calling Supabase with:", { id, data: cleanData });
+    // If process_type is provided, we need to look up the process_type_id
+    let updateData = { ...cleanData };
+    
+    if (cleanData.process_type) {
+      // This might be either a process_type name or id - check if it's a UUID
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanData.process_type);
+      
+      if (!isUUID) {
+        // It's a name, so we need to get the ID
+        const { data: processType, error: processTypeError } = await supabase
+          .from('process_types')
+          .select('id')
+          .eq('name', cleanData.process_type)
+          .single();
+          
+        if (processTypeError || !processType) {
+          console.error("Process type not found:", cleanData.process_type);
+          toast.error("Tipo de processo não encontrado");
+          return null;
+        }
+        
+        // Replace process_type with process_type_id in the update data
+        delete updateData.process_type;
+        updateData.process_type_id = processType.id;
+      } else {
+        // It's already a UUID, use it directly as the process_type_id
+        delete updateData.process_type;
+        updateData.process_type_id = cleanData.process_type;
+      }
+    }
+    
+    console.log("Calling Supabase with:", { id, data: updateData });
     
     const { data, error } = await supabase
       .from('clients')
-      .update(cleanData)
+      .update(updateData)
       .eq('id', id)
-      .select()
+      .select(`
+        *,
+        process_types (
+          id,
+          name
+        )
+      `)
       .single();
     
     if (error) {
@@ -53,9 +90,15 @@ export const updateClient = async (id: string, clientData: Partial<ClientFormDat
       return null;
     }
     
-    console.log("Client successfully updated:", data);
-    toast.success("Status do cliente atualizado com sucesso");
-    return data as Client;
+    // Add virtual process_type property
+    const updatedClient = {
+      ...data,
+      process_type: data.process_types?.name || null
+    };
+    
+    console.log("Client successfully updated:", updatedClient);
+    toast.success("Cliente atualizado com sucesso");
+    return updatedClient as Client;
   } catch (error) {
     console.error("Unexpected error updating client:", error);
     toast.error("Erro ao atualizar cliente");

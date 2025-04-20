@@ -7,13 +7,48 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
   try {
     console.log("Creating client with auth using edge function");
     
+    // Process the process_type field to get the process_type_id
+    let processTypeId = null;
+    
+    if (clientFormData.process_type) {
+      // Check if the process_type is an ID or a name
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clientFormData.process_type);
+      
+      if (isUUID) {
+        // It's already an ID, use it directly
+        processTypeId = clientFormData.process_type;
+      } else {
+        // It's a name, so we need to get the ID
+        const { data: processType, error: processTypeError } = await supabase
+          .from('process_types')
+          .select('id')
+          .eq('name', clientFormData.process_type)
+          .single();
+          
+        if (processTypeError || !processType) {
+          console.error("Process type not found:", clientFormData.process_type);
+          toast.error("Tipo de processo não encontrado");
+          return null;
+        }
+        
+        processTypeId = processType.id;
+      }
+    }
+    
+    // Create a modified payload with process_type_id instead of process_type
+    const payload = {
+      ...clientFormData,
+      process_type_id: processTypeId,
+      process_type_name: clientFormData.process_type // Keep the name for reference in the edge function
+    };
+    
     // Call the edge function to create the client with authentication
     const { data, error } = await supabase.functions.invoke<{
       data: Client;
       message: string;
       error?: string;
     }>("create-client-with-auth", {
-      body: clientFormData,
+      body: payload,
     });
     
     // Handle edge function errors

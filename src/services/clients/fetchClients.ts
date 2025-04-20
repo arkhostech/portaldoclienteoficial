@@ -7,7 +7,13 @@ export const fetchClients = async (): Promise<Client[]> => {
   try {
     const { data, error } = await supabase
       .from('clients')
-      .select('*')
+      .select(`
+        *,
+        process_types (
+          id,
+          name
+        )
+      `)
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -16,7 +22,13 @@ export const fetchClients = async (): Promise<Client[]> => {
       return [];
     }
     
-    return data as Client[];
+    // Map the joined data to add a virtual process_type property
+    const clientsWithProcessType = data.map(client => ({
+      ...client,
+      process_type: client.process_types?.name || null
+    }));
+    
+    return clientsWithProcessType as Client[];
   } catch (error) {
     console.error("Unexpected error fetching clients:", error);
     toast.error("Erro ao buscar clientes");
@@ -28,7 +40,13 @@ export const fetchClientById = async (id: string): Promise<Client | null> => {
   try {
     const { data, error } = await supabase
       .from('clients')
-      .select('*')
+      .select(`
+        *,
+        process_types (
+          id,
+          name
+        )
+      `)
       .eq('id', id)
       .single();
     
@@ -38,7 +56,13 @@ export const fetchClientById = async (id: string): Promise<Client | null> => {
       return null;
     }
     
-    return data as Client;
+    // Add virtual process_type property
+    const clientWithProcessType = {
+      ...data,
+      process_type: data.process_types?.name || null
+    };
+    
+    return clientWithProcessType as Client;
   } catch (error) {
     console.error("Unexpected error fetching client:", error);
     toast.error("Erro ao buscar dados do cliente");

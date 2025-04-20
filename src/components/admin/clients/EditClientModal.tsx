@@ -69,6 +69,12 @@ const EditClientModal = ({
     await resetPassword(client.id, password);
   };
 
+  // Map client data to ClientFormData that includes process_type 
+  const clientFormData = client ? {
+    ...client,
+    process_type: client.process_type || ""
+  } : null;
+
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
@@ -88,9 +94,9 @@ const EditClientModal = ({
           </TabsList>
 
           <TabsContent value="edit">
-            {client && (
+            {clientFormData && (
               <EditClientTab 
-                client={client}
+                client={clientFormData}
                 isSubmitting={isSubmitting}
                 onSubmit={handleSubmit}
                 onCancel={() => handleDialogClose(false)}

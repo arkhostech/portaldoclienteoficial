@@ -25,7 +25,7 @@ import {
   Clock,
   CheckCircle
 } from "lucide-react";
-import { Client } from "@/services/clientService";
+import { Client } from "@/services/clients/types";
 import { processStatusOptions } from "./schemas/clientSchema";
 
 interface ClientsTableProps {
