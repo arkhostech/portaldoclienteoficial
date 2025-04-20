@@ -1,6 +1,4 @@
-
 import { useState } from "react";
-import { toast } from "sonner";
 import { Plus, Edit, Trash2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useProcessTypes } from "@/hooks/useProcessTypes";
+import { toast } from "sonner";
 
 interface ProcessType {
   id: string;
@@ -27,40 +27,21 @@ interface ProcessType {
 }
 
 const ProcessTypesTab = () => {
-  const [processTypes, setProcessTypes] = useState<ProcessType[]>([
-    { id: "1", name: "EB-3" },
-    { id: "2", name: "Asilo" },
-    { id: "3", name: "Visto de Estudante" },
-    { id: "4", name: "Green Card" },
-    { id: "5", name: "Cidadania" },
-  ]);
-
+  const { processTypes, isLoading, isSubmitting, addProcessType, updateProcessType, deleteProcessType } = useProcessTypes();
   const [newProcessType, setNewProcessType] = useState("");
-  const [isAddingProcess, setIsAddingProcess] = useState(false);
   const [editingProcess, setEditingProcess] = useState<ProcessType | null>(null);
   const [editValue, setEditValue] = useState("");
-  
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [processToDelete, setProcessToDelete] = useState<ProcessType | null>(null);
-  
+
   const handleAddProcess = () => {
     if (!newProcessType.trim()) {
       toast.error("Nome do processo não pode estar vazio");
       return;
     }
 
-    setIsAddingProcess(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const newId = (Math.max(...processTypes.map(p => parseInt(p.id)), 0) + 1).toString();
-      const newProcess = { id: newId, name: newProcessType.trim() };
-      
-      setProcessTypes([...processTypes, newProcess]);
-      setNewProcessType("");
-      setIsAddingProcess(false);
-      toast.success("Processo adicionado com sucesso");
-    }, 500);
+    addProcessType(newProcessType.trim());
+    setNewProcessType("");
   };
 
   const startEditing = (process: ProcessType) => {
@@ -80,17 +61,8 @@ const ProcessTypesTab = () => {
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setProcessTypes(
-        processTypes.map(p =>
-          p.id === editingProcess.id ? { ...p, name: editValue.trim() } : p
-        )
-      );
-      
-      setEditingProcess(null);
-      toast.success("Processo atualizado com sucesso");
-    }, 500);
+    updateProcessType({ id: editingProcess.id, name: editValue.trim() });
+    setEditingProcess(null);
   };
 
   const openDeleteDialog = (process: ProcessType) => {
@@ -100,14 +72,9 @@ const ProcessTypesTab = () => {
 
   const confirmDelete = () => {
     if (!processToDelete) return;
-
-    // Simulate API call
-    setTimeout(() => {
-      setProcessTypes(processTypes.filter(p => p.id !== processToDelete.id));
-      setDeleteConfirmOpen(false);
-      setProcessToDelete(null);
-      toast.success("Processo excluído com sucesso");
-    }, 500);
+    deleteProcessType(processToDelete.id);
+    setDeleteConfirmOpen(false);
+    setProcessToDelete(null);
   };
 
   return (
@@ -126,7 +93,7 @@ const ProcessTypesTab = () => {
             />
             <Button
               onClick={handleAddProcess}
-              disabled={isAddingProcess || !newProcessType.trim()}
+              disabled={isSubmitting || !newProcessType.trim()}
             >
               <Plus className="h-4 w-4 mr-1" />
               Adicionar

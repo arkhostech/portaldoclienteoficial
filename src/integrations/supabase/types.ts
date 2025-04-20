@@ -18,7 +18,7 @@ export type Database = {
           id: string
           is_test: boolean | null
           phone: string | null
-          process_type: string | null
+          process_type_id: string | null
           status: string
           updated_at: string
         }
@@ -30,7 +30,7 @@ export type Database = {
           id?: string
           is_test?: boolean | null
           phone?: string | null
-          process_type?: string | null
+          process_type_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -42,11 +42,19 @@ export type Database = {
           id?: string
           is_test?: boolean | null
           phone?: string | null
-          process_type?: string | null
+          process_type_id?: string | null
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_process_type_id_fkey"
+            columns: ["process_type_id"]
+            isOneToOne: false
+            referencedRelation: "process_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -108,6 +116,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      process_types: {
+        Row: {
+          id: string
+          name: string
+        }
+        Insert: {
+          id?: string
+          name: string
+        }
+        Update: {
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

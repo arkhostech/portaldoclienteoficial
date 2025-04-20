@@ -1,4 +1,3 @@
-
 export interface Client {
   id: string;
   full_name: string;
@@ -6,7 +5,7 @@ export interface Client {
   phone: string | null;
   address: string | null;
   status: ProcessStatus;
-  process_type: string | null;
+  process_type_id: string | null;
   created_at: string;
   updated_at: string;
 }
