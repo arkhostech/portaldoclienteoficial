@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -54,7 +53,7 @@ const ProcessInfoCard = ({
                       <div className="flex items-center mt-1">
                         <Avatar className="h-8 w-8 mr-2">
                           <AvatarImage 
-                            src="/lovable-uploads/d2fc1e07-1881-4ff2-a860-5dfae4df31e5.png" 
+                            src="/images/avatar.png" 
                             alt="Legacy Imigra" 
                             className="h-full w-full object-cover object-center"
                           />

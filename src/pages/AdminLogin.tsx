@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -83,7 +82,7 @@ const AdminLogin = () => {
         <div className="relative z-10 space-y-6">
           <div className="flex justify-center mb-8">
             <img 
-              src="/lovable-uploads/f5a3246c-a214-45b7-aa04-6049dbbeb4f8.png" 
+              src="/images/logo.png" 
               alt="Logo da empresa" 
               className="h-48 w-auto"
             />

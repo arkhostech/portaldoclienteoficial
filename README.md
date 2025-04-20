@@ -1,67 +1,116 @@
+# Client Portal – Kortex Labs
 
-# Client Hub Access
+A modern web application for managing client access, documents, and legal processes. Built with performance and user experience in mind, this portal provides a secure and intuitive interface for clients and administrators.
 
-## Project info
+## Features
 
-A web application for managing client access, documents, and processes.
+- Secure client authentication and authorization
+- Document management and sharing
+- Process tracking and status updates
+- Real-time notifications
+- Responsive design for all devices
+- Dark/Light mode support
 
-## How can I edit this code?
+## Tech Stack
 
-**Use your preferred IDE**
+- **Frontend Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **State Management**: React Query
+- **Authentication**: Supabase
+- **Form Handling**: React Hook Form with Zod validation
+- **UI Components**: Radix UI primitives
+- **Icons**: Lucide React
+- **Date Handling**: date-fns
+- **Charts**: Recharts
 
-If you want to work locally using your own IDE, you can clone this repo and push changes.
+## Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
 
-Follow these steps:
+- Node.js (LTS version recommended)
+- npm (comes with Node.js)
+- [nvm](https://github.com/nvm-sh/nvm) (optional, for Node.js version management)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Installation
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/kortexlabs/client-portal.git
+   cd client-portal
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open [http://localhost:8080](http://localhost:8080) in your browser.
+
+## Development
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run lint` - Run ESLint
+- `npm run preview` - Preview production build locally
+
+## Deployment
+
+This application can be deployed to various platforms:
+
+### Vercel
+
+1. Push your code to a Git repository
+2. Import the project in Vercel
+3. Configure environment variables
+4. Deploy
+
+### Netlify
+
+1. Push your code to a Git repository
+2. Create a new site in Netlify
+3. Configure build settings:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+4. Deploy
+
+### Custom Domain
+
+To use a custom domain:
+
+1. Add your domain in your hosting provider's dashboard
+2. Configure DNS settings:
+   - Add an A record pointing to your hosting provider's IP
+   - Add a CNAME record for www subdomain
+3. Enable SSL/HTTPS (usually automatic with modern hosting providers)
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-**Edit a file directly in GitHub**
+## Contributing
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-**Use GitHub Codespaces**
+## License
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+This project is proprietary software owned by Kortex Labs. All rights reserved.
 
-## What technologies are used for this project?
+---
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-You can deploy this project using any platform that supports static site hosting, such as:
-- Vercel
-- Netlify
-- GitHub Pages
-- AWS Amplify
-
-## Can I connect a custom domain to my project?
-
-Yes, you can connect a custom domain by configuring the DNS settings with your domain provider and setting up the domain in your chosen hosting platform.
+Developed by Kortex Labs – kortexlabs@gmail.com
 
