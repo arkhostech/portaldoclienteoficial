@@ -7,14 +7,13 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
 import { BasicInfoFields } from "../BasicInfoFields";
-import { ClientFormData, ProcessStatus } from "@/services/clients/types";
+import { ClientFormData } from "@/services/clients/types";
 
 // Remove the password fields from the schema for edit mode
 const editClientSchema = z.object({
   full_name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   email: z.string().email({ message: "Email inválido" }),
   phone: z.string().optional(),
-  address: z.string().optional(),
   status: z.enum(["documentacao", "em_andamento", "concluido"]),
   process_type: z.string().optional()
 });
@@ -35,7 +34,6 @@ export const EditClientTab = ({ client, isSubmitting, onSubmit, onCancel }: Edit
       full_name: client.full_name,
       email: client.email,
       phone: client.phone || "",
-      address: client.address || "",
       status: client.status,
       process_type: client.process_type || ""
     }

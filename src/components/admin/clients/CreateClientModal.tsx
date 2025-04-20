@@ -37,8 +37,7 @@ const CreateClientModal = ({
       full_name: "",
       email: "",
       phone: "",
-      address: "",
-      status: "documentacao", // Fixed: Changed from "active" to "documentacao"
+      status: "documentacao",
       process_type: "",
       password: "",
       confirmPassword: ""

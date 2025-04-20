@@ -22,3 +22,5 @@ export interface ClientFormData {
 export interface ClientWithAuthFormData extends ClientFormData {
   password: string;
 }
+
+export type ProcessStatus = "documentacao" | "em_andamento" | "concluido";
