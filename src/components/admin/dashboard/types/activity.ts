@@ -11,6 +11,6 @@ export interface Client {
   id: string;
   name: string;
   email: string;
-  process_type: string | null;
+  process_type_id: string | null;
   date: string;
 }

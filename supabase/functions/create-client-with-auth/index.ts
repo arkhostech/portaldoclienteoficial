@@ -15,6 +15,7 @@ interface ClientFormData {
   address?: string;
   status: string;
   process_type?: string;
+  process_type_id?: string;
 }
 
 serve(async (req) => {
@@ -83,7 +84,7 @@ serve(async (req) => {
         phone: formData.phone || null,
         address: formData.address || null,
         status: formData.status || "active",
-        process_type: formData.process_type || null
+        process_type_id: formData.process_type_id || null
       },
     ]).select().single();
 
@@ -93,7 +94,7 @@ serve(async (req) => {
       await supabaseAdmin.auth.admin.deleteUser(userData.user.id);
 
       return new Response(
-        JSON.stringify({ error: "Failed to create client record" }),
+        JSON.stringify({ error: "Failed to create client record: " + clientError.message }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 500,

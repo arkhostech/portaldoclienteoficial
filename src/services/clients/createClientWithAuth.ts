@@ -39,7 +39,6 @@ export const createClientWithAuth = async (clientFormData: ClientWithAuthFormDat
     const payload = {
       ...clientFormData,
       process_type_id: processTypeId,
-      process_type_name: clientFormData.process_type // Keep the name for reference in the edge function
     };
     
     // Call the edge function to create the client with authentication
