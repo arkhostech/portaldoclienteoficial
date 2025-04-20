@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 import { ProcessStatus } from "@/services/clients/types";
 
@@ -6,7 +5,9 @@ import { ProcessStatus } from "@/services/clients/types";
 export const clientFormSchema = z.object({
   full_name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   email: z.string().email({ message: "Email inválido" }),
-  phone: z.string().optional(),
+  phone: z.string()
+    .regex(/^\d{10}$/, { message: "Telefone deve ter 10 dígitos" })
+    .optional(),
   status: z.enum(["documentacao", "em_andamento", "concluido"]).default("documentacao"),
   process_type: z.string().min(1, { message: "Tipo de processo é obrigatório" }),
   password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),

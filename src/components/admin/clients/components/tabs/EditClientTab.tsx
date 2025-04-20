@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,11 +8,12 @@ import { Loader2 } from "lucide-react";
 import { BasicInfoFields } from "../BasicInfoFields";
 import { ClientFormData } from "@/services/clients/types";
 
-// Remove the password fields from the schema for edit mode
 const editClientSchema = z.object({
   full_name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   email: z.string().email({ message: "Email inválido" }),
-  phone: z.string().optional(),
+  phone: z.string()
+    .regex(/^\d{10}$/, { message: "Telefone deve ter 10 dígitos" })
+    .optional(),
   status: z.enum(["documentacao", "em_andamento", "concluido"]),
   process_type: z.string().optional()
 });
