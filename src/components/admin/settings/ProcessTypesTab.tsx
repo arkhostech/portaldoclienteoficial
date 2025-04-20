@@ -27,6 +27,10 @@ const ProcessTypesTab = () => {
     setProcessToDelete(null);
   };
 
+  const handleUpdateProcessType = (id: string, name: string) => {
+    updateProcessType({ id, name });
+  };
+
   return (
     <div className="space-y-6">
       <ProcessTypeForm 
@@ -36,7 +40,7 @@ const ProcessTypesTab = () => {
 
       <ProcessTypeTable
         processTypes={processTypes}
-        onEdit={updateProcessType}
+        onEdit={handleUpdateProcessType}
         onDelete={handleDelete}
         isSubmitting={isSubmitting}
       />
