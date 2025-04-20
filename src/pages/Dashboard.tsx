@@ -26,22 +26,48 @@ const Dashboard = () => {
       try {
         console.log("Fetching client data for user ID:", user.id);
         
+        // Primeiro tentamos pela tabela clients que é a tabela principal
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
-          .select('*')
+          .select('*, process_types(name)')
           .eq('id', user.id)
-          .single();
+          .maybeSingle(); // Usamos maybeSingle em vez de single para evitar erro quando não há resultado
         
-        if (clientError) {
+        if (clientError && clientError.code !== 'PGRST116') {
           console.error("Error fetching client info:", clientError);
-          if (clientError.code === 'PGRST116') {
-            toast.error("Não foi possível acessar os dados do cliente");
-          } else {
-            toast.error("Erro ao carregar informações do cliente");
+          toast.error("Erro ao carregar informações do cliente");
+        } 
+        
+        // Se não encontramos na tabela clients, buscamos na tabela profiles
+        // para ter pelo menos as informações básicas do usuário
+        if (!clientData) {
+          console.log("Client not found in clients table, checking profiles");
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (profileError) {
+            console.error("Error fetching profile info:", profileError);
+          } else if (profileData) {
+            console.log("Profile info found:", profileData);
+            // Criamos um objeto com informações básicas do perfil
+            // e status de documentação por padrão
+            setClientInfo({
+              ...profileData,
+              status: "documentacao",
+              process_type: "Não definido"
+            });
           }
-        } else if (clientData) {
+        } else {
           console.log("Client info found:", clientData);
-          setClientInfo(clientData);
+          // Formatar o objeto clientInfo com o nome do tipo de processo
+          const formattedClientInfo = {
+            ...clientData,
+            process_type: clientData.process_types?.name || "Não definido"
+          };
+          setClientInfo(formattedClientInfo);
         }
         
         const { data: documentsData, error: documentsError } = await supabase
@@ -53,7 +79,7 @@ const Dashboard = () => {
         if (documentsError) {
           console.error("Error fetching documents:", documentsError);
           if (documentsError.code === 'PGRST116') {
-            toast.error("Não foi possível acessar seus documentos");
+            console.log("No documents found for this client");
           } else {
             toast.error("Erro ao carregar documentos");
           }
