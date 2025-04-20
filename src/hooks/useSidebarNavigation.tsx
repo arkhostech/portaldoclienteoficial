@@ -9,7 +9,6 @@ import {
   CreditCard,
   Settings,
   FolderOpen,
-  BookOpen,
   LayoutPanelTop
 } from 'lucide-react';
 
@@ -76,11 +75,6 @@ export const useSidebarNavigation = () => {
       title: 'Pagamentos', 
       icon: <CreditCard className="h-5 w-5" />, 
       href: '/payments' 
-    },
-    { 
-      title: 'Base de Conhecimento', 
-      icon: <BookOpen className="h-5 w-5" />, 
-      href: '/knowledge' 
     }
   ];
 

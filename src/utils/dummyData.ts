@@ -48,18 +48,9 @@ export interface Task {
   completed: boolean;
 }
 
-export interface KnowledgeArticle {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  url: string;
-}
-
 // Empty mock data arrays - we're replacing usage with real database data
 export const caseStatuses: CaseStatus[] = [];
 export const documents: Document[] = [];
 export const messages: Message[] = [];
 export const payments: Payment[] = [];
 export const tasks: Task[] = [];
-export const knowledgeArticles: KnowledgeArticle[] = [];
