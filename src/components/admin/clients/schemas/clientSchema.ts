@@ -7,7 +7,6 @@ export const clientFormSchema = z.object({
   full_name: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
   email: z.string().email({ message: "Email inválido" }),
   phone: z.string().optional(),
-  address: z.string().optional(),
   status: z.enum(["documentacao", "em_andamento", "concluido"]).default("documentacao"),
   process_type: z.string().min(1, { message: "Tipo de processo é obrigatório" }),
   password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
@@ -28,18 +27,7 @@ export const processStatusOptions = [
 
 // Common process types for immigration
 export const processTypes = [
-  "EB-1",
-  "EB-2",
-  "EB-3",
-  "EB-5",
-  "H-1B",
-  "L-1",
-  "O-1",
-  "Tourist Visa",
-  "Student Visa",
-  "Family Immigration",
-  "Asylum",
-  "Naturalization",
-  "Green Card",
-  "Other"
+  "EB-1", "EB-2", "EB-3", "EB-5", "H-1B", "L-1", "O-1",
+  "Tourist Visa", "Student Visa", "Family Immigration", 
+  "Asylum", "Naturalization", "Green Card", "Other"
 ] as const;

@@ -4,7 +4,6 @@ export interface Client {
   full_name: string;
   email: string;
   phone: string | null;
-  address: string | null;
   status: ProcessStatus;
   process_type_id: string | null;
   process_type?: string | null; // Virtual property to store process type name
@@ -16,7 +15,6 @@ export interface ClientFormData {
   full_name: string;
   email: string;
   phone?: string;
-  address?: string;
   status: ProcessStatus;
   process_type: string;
 }
@@ -24,5 +22,3 @@ export interface ClientFormData {
 export interface ClientWithAuthFormData extends ClientFormData {
   password: string;
 }
-
-export type ProcessStatus = "documentacao" | "em_andamento" | "concluido";

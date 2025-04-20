@@ -5,9 +5,13 @@ import { Client, ClientFormData } from "./types";
 
 export const createClient = async (clientData: ClientFormData): Promise<Client | null> => {
   try {
-    // Create a new object without process_type
-    let insertData: any = { ...clientData };
-    delete insertData.process_type;
+    // Create a new object without address
+    let insertData: any = { 
+      full_name: clientData.full_name,
+      email: clientData.email,
+      phone: clientData.phone,
+      status: clientData.status
+    };
     
     if (clientData.process_type) {
       // Check if the process_type is an ID or a name

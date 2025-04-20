@@ -12,7 +12,6 @@ interface ClientFormData {
   email: string;
   password: string;
   phone?: string;
-  address?: string;
   status: string;
   process_type?: string;
   process_type_id?: string;
@@ -82,7 +81,6 @@ serve(async (req) => {
         full_name: formData.full_name,
         email: formData.email,
         phone: formData.phone || null,
-        address: formData.address || null,
         status: formData.status || "active",
         process_type_id: formData.process_type_id || null
       },
