@@ -1,5 +1,4 @@
-
-import { Control } from "react-hook-form";
+import { Control, useFormContext } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -29,6 +28,8 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
   const [showWarning, setShowWarning] = useState(false);
   const [parcelValue, setParcelValue] = useState<string>("");
 
+  const { setValue } = useFormContext();
+
   const handleInstallmentsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const count = parseInt(event.target.value, 10);
     if (count > 24) {
@@ -39,7 +40,6 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
   };
 
   useEffect(() => {
-    // Preenche automaticamente valor da parcela se parcelas > 0, valor total e entrada existem, e entrada < valor total
     const isValid =
       values &&
       values.enable_installments &&
@@ -52,24 +52,20 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
     if (isValid) {
       const faltante = parseFloat(values.total_amount as string) - parseFloat(values.amount as string);
       const valorParcela = faltante / Number(values.installments_count);
-      // Ajusta 2 casas decimais
       setParcelValue(valorParcela.toFixed(2));
     } else {
       setParcelValue("");
     }
   }, [values.enable_installments, values.installments_count, values.amount, values.total_amount]);
 
-  // Força atualizar o campo installment_amount do react-hook-form
   useEffect(() => {
     if (parcelValue !== "") {
-      control.setValue && control.setValue("installment_amount", parcelValue);
+      setValue && setValue("installment_amount", parcelValue);
     }
-    // eslint-disable-next-line
-  }, [parcelValue]);
+  }, [parcelValue, setValue]);
 
   return (
     <>
-      {/* Enable Installments Toggle */}
       <FormField
         control={control}
         name="enable_installments"
@@ -89,12 +85,10 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
         )}
       />
 
-      {/* Show installment fields only if enabled */}
       {values.enable_installments && (
         <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
           <h4 className="text-sm font-semibold">Detalhes do Parcelamento</h4>
 
-          {/* Number of Installments */}
           <FormField
             control={control}
             name="installments_count"
@@ -120,7 +114,6 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
             )}
           />
 
-          {/* Warning for excessive installments */}
           {showWarning && (
             <Alert variant="warning" className="bg-yellow-50 text-yellow-800 border-yellow-200">
               <AlertDescription>
@@ -129,7 +122,6 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
             </Alert>
           )}
           
-          {/* Warning for zero installments */}
           {values.enable_installments && values.installments_count === 0 && (
             <Alert variant="warning" className="bg-yellow-50 text-yellow-800 border-yellow-200">
               <AlertDescription>
@@ -138,7 +130,6 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
             </Alert>
           )}
 
-          {/* Installment Frequency */}
           <FormField
             control={control}
             name="installment_frequency"
@@ -177,7 +168,6 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
             )}
           />
 
-          {/* Installment Amount */}
           <FormField
             control={control}
             name="installment_amount"
@@ -201,7 +191,6 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
             )}
           />
 
-          {/* First Installment Date */}
           <FormField
             control={control}
             name="first_installment_date"
@@ -250,4 +239,3 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
     </>
   );
 }
-

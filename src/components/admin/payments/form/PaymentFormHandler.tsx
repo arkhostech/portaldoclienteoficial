@@ -22,8 +22,8 @@ export const usePaymentFormHandler = ({ onSuccess, initialData }: UsePaymentForm
         ? data.amount
         : `$${data.amount}`;
 
-      // Convert Date to ISO string for Supabase
-      const formattedDueDate = data.due_date.toISOString();
+      // Ensure dates are properly formatted to prevent timezone issues
+      const formattedDueDate = formatDateToISOString(data.due_date);
 
       // Initial/entry payment data
       const entryPayment = {
@@ -85,11 +85,14 @@ export const usePaymentFormHandler = ({ onSuccess, initialData }: UsePaymentForm
                 break;
             }
 
+            // Format due date with the fixed function
+            const installmentDueDate = formatDateToISOString(dueDate);
+
             installments.push({
               client_id: data.client_id,
               title: `${data.title} - Parcela ${i + 1}/${data.installments_count}`,
               amount: installmentAmount,
-              due_date: dueDate.toISOString(),
+              due_date: installmentDueDate,
               description: data.description || null,
               paid_status: 'pending',
             });
@@ -120,6 +123,14 @@ export const usePaymentFormHandler = ({ onSuccess, initialData }: UsePaymentForm
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  // Helper function to format date correctly to prevent timezone issues
+  function formatDateToISOString(date: Date): string {
+    // Create a new Date object to avoid mutating the original
+    const newDate = new Date(date);
+    // Format as YYYY-MM-DD to avoid timezone issues
+    return `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`;
   }
 
   return {
