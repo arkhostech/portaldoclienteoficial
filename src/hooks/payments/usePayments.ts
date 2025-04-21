@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -12,6 +13,7 @@ interface ScheduledPayment {
   description: string | null;
   created_at: string;
   client_name?: string;
+  paid_status: string;
 }
 
 export function usePayments(clients: Client[]) {

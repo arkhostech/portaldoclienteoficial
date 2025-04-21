@@ -1,9 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 
 interface EditInstallmentModalProps {
   open: boolean;
@@ -22,7 +22,7 @@ export function EditInstallmentModal({ open, onClose, payment, onSave }: EditIns
 
   // Atualiza o form ao reabrir para editar outro pagamento
   // Esse efeito garante que os valores iniciais estejam corretos sempre que abrir
-  React.useEffect(() => {
+  useEffect(() => {
     setAmount(payment?.amount || "");
     setDueDate(payment?.due_date || "");
   }, [payment]);
