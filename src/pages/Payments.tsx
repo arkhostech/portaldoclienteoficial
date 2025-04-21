@@ -5,22 +5,7 @@ import PaymentsClientCards from "@/components/payments/PaymentsClientCards";
 import PaymentsTableClient from "@/components/payments/PaymentsTableClient";
 import PaymentMethodsCards from "@/components/payments/PaymentMethodsCards";
 import { useClientPayments } from "@/hooks/useClientPayments";
-
-// Funções utilitárias para formatação
-const formatCurrency = (amount: string | number) => {
-  let numAmount =
-    typeof amount === "string"
-      ? parseFloat(amount.replace(/[$R\s]/g, ""))
-      : amount;
-  if (isNaN(numAmount)) numAmount = 0;
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(numAmount);
-};
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("pt-BR");
-};
+import { formatCurrency, formatDate } from "@/components/payments/paymentsUtils";
 
 const Payments = () => {
   const {
