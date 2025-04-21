@@ -10,10 +10,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { payments } from "@/utils/dummyData";
-import { CreditCard, DollarSign, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { CreditCard, DollarSign, Download } from "lucide-react";
+import { useClientPayments } from "@/hooks/useClientPayments";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const statusStyles = {
   paid: "bg-green-100 text-green-800 border-green-200",
@@ -21,24 +22,70 @@ const statusStyles = {
   overdue: "bg-red-100 text-red-800 border-red-200",
 };
 
-const Payments = () => {
-  // Calculate totals
-  const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
-  const paidAmount = payments
-    .filter((payment) => payment.status === "paid")
-    .reduce((sum, payment) => sum + payment.amount, 0);
-  const paymentProgress = Math.round((paidAmount / totalAmount) * 100);
+const statusLabels = {
+  paid: "Pago",
+  pending: "Pendente",
+  overdue: "Atrasado",
+};
 
-  const formatCurrency = (amount: number) => {
+const Payments = () => {
+  const { payments, isLoading, totalAmount, paidAmount, paymentProgress } = useClientPayments();
+
+  const formatCurrency = (amount: string | number) => {
+    let numAmount = typeof amount === 'string' 
+      ? parseFloat(amount.replace(/[$R\s]/g, '')) 
+      : amount;
+      
+    if (isNaN(numAmount)) numAmount = 0;
+      
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
-    }).format(amount);
+    }).format(numAmount);
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("pt-BR");
   };
+
+  if (isLoading) {
+    return (
+      <MainLayout title="Pagamentos">
+        <div className="space-y-6">
+          {/* Summary cards loading state */}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-4 w-32" />
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center">
+                    <Skeleton className="h-6 w-20 mr-2" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Payment details loading state */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-10 w-32" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout title="Pagamentos">
@@ -94,52 +141,58 @@ const Payments = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Histórico de Pagamentos</CardTitle>
-            <Button>
-              <CreditCard className="mr-2 h-4 w-4" />
-              Fazer Pagamento
-            </Button>
+            {payments.filter(p => p.status === "pending" || p.status === "overdue").length > 0 && (
+              <Button>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Fazer Pagamento
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell className="font-medium">{payment.description}</TableCell>
-                    <TableCell>{formatDate(payment.date)}</TableCell>
-                    <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={statusStyles[payment.status] || ""}
-                      >
-                        {payment.status === "paid" && "Pago"}
-                        {payment.status === "pending" && "Pendente"}
-                        {payment.status === "overdue" && "Atrasado"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {payment.status === "paid" ? (
-                        <Button variant="outline" size="sm">
-                          <Download className="mr-2 h-3 w-3" />
-                          Recibo
-                        </Button>
-                      ) : (
-                        <Button size="sm">Pagar</Button>
-                      )}
-                    </TableCell>
+            {payments.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Nenhum pagamento encontrado.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Vencimento</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {payments.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell className="font-medium">{payment.title}</TableCell>
+                      <TableCell>{formatDate(payment.due_date)}</TableCell>
+                      <TableCell>{formatCurrency(payment.amount)}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={statusStyles[payment.status] || ""}
+                        >
+                          {statusLabels[payment.status]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {payment.status === "paid" ? (
+                          <Button variant="outline" size="sm">
+                            <Download className="mr-2 h-3 w-3" />
+                            Recibo
+                          </Button>
+                        ) : (
+                          <Button size="sm">Pagar</Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 
