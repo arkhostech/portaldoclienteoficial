@@ -9,10 +9,10 @@ export const formatCurrency = (amount: string | number) => {
       ? parseFloat(amount.replace(/[$R\s]/g, ""))
       : amount;
   if (isNaN(numAmount)) numAmount = 0;
-  return new Intl.NumberFormat("pt-BR", {
+  return numAmount.toLocaleString("en-US", {
     style: "currency",
-    currency: "BRL",
-  }).format(numAmount);
+    currency: "USD",
+  });
 };
 
 export const formatDate = (dateString: string) => {
