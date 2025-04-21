@@ -31,15 +31,12 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
 
   const { setValue } = useFormContext();
 
-  // NOVO: usar useWatch para obter valores atualizados sempre
   const total_amount = useWatch({ name: "total_amount", control });
   const amount = useWatch({ name: "amount", control });
   const installments_count = useWatch({ name: "installments_count", control });
   const enable_installments = useWatch({ name: "enable_installments", control });
 
-  // Cálculo automático do valor da parcela
   useEffect(() => {
-    // Grantir que campos estão preenchidos e parcela faz sentido
     if (
       enable_installments &&
       installments_count > 0 &&
@@ -52,7 +49,6 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
       setParcelValue(valorParcela.toFixed(2));
       setValue && setValue("installment_amount", valorParcela.toFixed(2));
     } else if (parseFloat(amount) === parseFloat(total_amount)) {
-      // Se igual, zerar o valor ou impedir parcelamento
       setParcelValue("");
       setValue && setValue("installment_amount", "");
       if (enable_installments) {
@@ -93,9 +89,8 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
         )}
       />
 
-      {/* Adicionar mensagem se valor de entrada == valor total */}
       {(parseFloat(amount) === parseFloat(total_amount)) && (
-        <Alert variant="info" className="bg-blue-50 text-blue-800 border-blue-200 mt-2">
+        <Alert variant="default" className="bg-blue-50 text-blue-800 border-blue-200 mt-2">
           <AlertDescription>
             O cliente irá pagar o valor total à vista. O parcelamento está desabilitado.
           </AlertDescription>
