@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,32 +35,53 @@ const PaymentCalendar = ({ showFullCalendar = false }: PaymentCalendarProps) => 
     return paymentDaysMap[format(date, "yyyy-MM-dd")] || false;
   };
   
-  useEffect(() => {
-    const fetchPayments = async () => {
-      if (!user) return;
-      
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("scheduled_payments")
-          .select("*")
-          .eq("client_id", user.id)
-          .order("due_date", { ascending: true });
-        
-        if (error) {
-          console.error("Error fetching payments:", error);
-          return;
-        }
-        
-        setPayments(data || []);
-      } catch (error) {
+  const fetchPayments = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("scheduled_payments")
+        .select("*")
+        .eq("client_id", user.id)
+        .order("due_date", { ascending: true });
+
+      if (error) {
         console.error("Error fetching payments:", error);
-      } finally {
-        setIsLoading(false);
+        return;
       }
-    };
-    
+
+      setPayments(data || []);
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchPayments();
+
+    if (!user) return;
+
+    const channel = supabase
+      .channel("client-payments-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "scheduled_payments",
+          filter: `client_id=eq.${user.id}`,
+        },
+        (payload) => {
+          fetchPayments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const getCurrentMonthPayments = () => {

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,8 +21,9 @@ export const usePaymentFormHandler = ({ onSuccess, initialData }: UsePaymentForm
         ? data.amount
         : `$${data.amount}`;
 
-      // Ensure dates are properly formatted to prevent timezone issues
-      const formattedDueDate = formatDateToISOString(data.due_date);
+      // Usar o due_date respeitando fuso horário
+      // Corrigir para forçar meio-dia (UTC) e evitar regressão de fuso
+      const formattedDueDate = formatDateToISOStringAtNoonUTC(data.due_date);
 
       // Initial/entry payment data
       const entryPayment = {
@@ -59,7 +59,12 @@ export const usePaymentFormHandler = ({ onSuccess, initialData }: UsePaymentForm
         if (entryError) throw entryError;
 
         // Handle installments if enabled
-        if (data.enable_installments && data.installments_count && data.installments_count > 0) {
+        if (
+          data.enable_installments &&
+          data.installments_count &&
+          data.installments_count > 0 &&
+          parseFloat(data.amount) !== parseFloat(data.total_amount)
+        ) {
           // Format installment amount
           const installmentAmount = data.installment_amount?.startsWith("$")
             ? data.installment_amount
@@ -85,8 +90,8 @@ export const usePaymentFormHandler = ({ onSuccess, initialData }: UsePaymentForm
                 break;
             }
 
-            // Format due date with the fixed function
-            const installmentDueDate = formatDateToISOString(dueDate);
+            // NOVO: Forçar sempre meio-dia UTC na data da parcela
+            const installmentDueDate = formatDateToISOStringAtNoonUTC(dueDate);
 
             installments.push({
               client_id: data.client_id,
@@ -125,12 +130,11 @@ export const usePaymentFormHandler = ({ onSuccess, initialData }: UsePaymentForm
     }
   }
 
-  // Helper function to format date correctly to prevent timezone issues
-  function formatDateToISOString(date: Date): string {
-    // Create a new Date object to avoid mutating the original
-    const newDate = new Date(date);
-    // Format as YYYY-MM-DD to avoid timezone issues
-    return `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`;
+  // Helper para garantir data sempre no mesmo horário (meio-dia UTC)
+  function formatDateToISOStringAtNoonUTC(date: Date): string {
+    const d = new Date(date);
+    d.setUTCHours(12, 0, 0, 0);
+    return d.toISOString().split("T")[0];
   }
 
   return {
