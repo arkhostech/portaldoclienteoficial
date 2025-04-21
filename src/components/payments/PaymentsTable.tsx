@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -9,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { CreditCard, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClientPayment } from "@/hooks/useClientPayments";
+import { useState } from "react";
+import PaymentContactDialog from "./PaymentContactDialog";
 
 type Status = "paid" | "pending" | "overdue";
 const statusStyles: Record<Status, string> = {
@@ -30,6 +31,8 @@ interface Props {
 }
 
 export default function PaymentsTable({ isLoading, payments, formatCurrency, formatDate }: Props) {
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+
   if (isLoading) {
     return (
       <Card>
@@ -52,7 +55,7 @@ export default function PaymentsTable({ isLoading, payments, formatCurrency, for
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Histórico de Pagamentos</CardTitle>
         {payments.some(p => p.status === "pending" || p.status === "overdue") && (
-          <Button>
+          <Button onClick={() => setContactDialogOpen(true)}>
             <CreditCard className="mr-2 h-4 w-4" />
             Fazer Pagamento
           </Button>
@@ -95,7 +98,9 @@ export default function PaymentsTable({ isLoading, payments, formatCurrency, for
                         Recibo
                       </Button>
                     ) : (
-                      <Button size="sm">Pagar</Button>
+                      <Button size="sm" onClick={() => setContactDialogOpen(true)}>
+                        Pagar
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>
@@ -104,6 +109,10 @@ export default function PaymentsTable({ isLoading, payments, formatCurrency, for
           </Table>
         )}
       </CardContent>
+      <PaymentContactDialog
+        open={contactDialogOpen}
+        onOpenChange={setContactDialogOpen}
+      />
     </Card>
   );
 }
