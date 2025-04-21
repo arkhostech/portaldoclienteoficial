@@ -14,7 +14,7 @@ export const useClientDocuments = (clientId: string) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Changed from isUploading to isSubmitting
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -37,22 +37,21 @@ export const useClientDocuments = (clientId: string) => {
     setIsLoading(false);
   };
 
+  // Mudança principal: se title não vier, use file.name
   const handleUploadDocument = async (data: { title?: string; description?: string; client_id?: string; file?: File; }): Promise<boolean> => {
     if (!data.file) {
       toast.error("Nenhum arquivo selecionado");
       return false;
     }
-    
     setIsSubmitting(true);
     try {
+      const title = data.title && data.title.trim() !== "" ? data.title : data.file.name;
       const documentData = {
-        title: data.title || data.file.name,
+        title,
         description: data.description,
         client_id: clientId
       };
-      
       const newDocument = await uploadDocument(data.file, documentData);
-      
       if (newDocument) {
         setDocuments(prev => [newDocument, ...prev]);
         setOpenUploadDialog(false);
@@ -66,11 +65,9 @@ export const useClientDocuments = (clientId: string) => {
 
   const handleUpdateDocument = async (data: { title: string; description?: string }): Promise<boolean> => {
     if (!selectedDocument) return false;
-    
     setIsUpdating(true);
     try {
       const updatedDocument = await updateDocument(selectedDocument.id, data);
-      
       if (updatedDocument) {
         setDocuments(prev => 
           prev.map(doc => doc.id === updatedDocument.id ? updatedDocument : doc)
@@ -86,14 +83,12 @@ export const useClientDocuments = (clientId: string) => {
 
   const handleDeleteDocument = async (): Promise<boolean> => {
     if (!selectedDocument) return false;
-    
     setIsDeleting(true);
     try {
       const success = await deleteDocument(
         selectedDocument.id, 
         selectedDocument.file_path
       );
-      
       if (success) {
         setDocuments(prev => prev.filter(doc => doc.id !== selectedDocument.id));
         setOpenDeleteDialog(false);
@@ -110,14 +105,10 @@ export const useClientDocuments = (clientId: string) => {
       toast.error("Nenhum arquivo disponível para download");
       return;
     }
-    
     const toastId = toast.loading("Preparando download...");
-    
     try {
       const url = await getDocumentDownloadUrl(document.file_path);
-      
       toast.dismiss(toastId);
-      
       if (url) {
         toast.success("Download iniciado");
         window.open(url, '_blank');
@@ -139,25 +130,18 @@ export const useClientDocuments = (clientId: string) => {
   };
 
   return {
-    // State
     documents,
     selectedDocument,
     isLoading,
-    isSubmitting, // Changed from isUploading to isSubmitting
+    isSubmitting,
     isUpdating,
     isDeleting,
-    
-    // Dialog state
     openUploadDialog,
     openEditDialog,
     openDeleteDialog,
-    
-    // Dialog actions
     setOpenUploadDialog,
     setOpenEditDialog,
     setOpenDeleteDialog,
-    
-    // Document operations
     loadDocuments,
     handleUploadDocument,
     handleUpdateDocument,

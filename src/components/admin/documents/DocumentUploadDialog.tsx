@@ -26,38 +26,29 @@ const DocumentUploadDialog = ({
   const processFiles = async (newFiles: File[]) => {
     const imageFiles = newFiles.filter(file => file.type.startsWith('image/'));
     if (imageFiles.length > 0) setIsCompressing(true);
-    
     const processedFiles: FileWithPreview[] = [];
-    
     for (const file of newFiles) {
-      // Process each file
       let processedFile = file;
-      
       if (file.type.startsWith('image/')) {
         try {
           processedFile = await compressImage(file);
         } catch (error) {
           console.error("Error compressing image:", error);
-          processedFile = file; // Use original if compression fails
+          processedFile = file;
         }
       }
-      
-      // Generate preview
       const preview = await createImagePreview(processedFile);
-      
       processedFiles.push(Object.assign(processedFile, {
         id: Math.random().toString(36).substring(2),
         preview
       }));
     }
-    
     setIsCompressing(false);
     return processedFiles;
   };
   
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const processedFiles = await processFiles(acceptedFiles);
-    
     setFiles(prevFiles => [
       ...prevFiles,
       ...processedFiles
@@ -96,11 +87,16 @@ const DocumentUploadDialog = ({
     try {
       let successCount = 0;
       const totalFiles = files.length;
-      
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+
+        // NOVO: usar nome do arquivo como título se o campo de título estiver vazio
+        const titleToUse = (formData.title && formData.title.trim() !== "")
+          ? formData.title
+          : file.name;
+
         const fileData = { 
-          title: totalFiles > 1 ? `${formData.title} (${i + 1})` : formData.title,
+          title: totalFiles > 1 ? `${titleToUse}` : titleToUse,
           description: formData.description,
           client_id: formData.client_id,
           file

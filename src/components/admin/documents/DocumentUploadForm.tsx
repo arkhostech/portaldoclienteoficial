@@ -32,17 +32,24 @@ const DocumentUploadForm: React.FC<DocumentFormProps> = ({
     }
   }, [preSelectedClientId, form]);
 
+  // Tornar o campo de título opcional para o upload em massa. Como a lógica de submissão irá atribuir o nome do arquivo se não estiver preenchido, isto é suficiente.
   return (
     <FormProvider {...form}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit((data) => {
+            // Deixe o campo título vazio se o usuário não preencher (será processado na lógica do upload)
+            const cleanData = { ...data, title: data.title?.trim() || "" };
+            onSubmit(cleanData);
+          })}
+          className="space-y-4"
+        >
           <ClientSelect 
             clients={clients} 
             disabled={!!preSelectedClientId}
           />
 
-          <DocumentMetadataFields />
-          
+          <DocumentMetadataFields />          
           <FormActions 
             isSubmitting={isSubmitting} 
             onCancel={onCancel}
