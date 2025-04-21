@@ -1,8 +1,9 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, CheckSquare, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Accordion, 
   AccordionContent, 
@@ -18,6 +19,7 @@ interface ScheduledPayment {
   due_date: string;
   description: string | null;
   created_at: string;
+  paid_status?: string;
   client_name?: string;
 }
 
@@ -37,6 +39,7 @@ interface PaymentsAccordionProps {
   onDelete: (paymentId: string) => void;
   highlightMatch: (text: string, term: string) => React.ReactNode;
   onValueChange: (value: string[]) => void;
+  onTogglePaidStatus: (id: string, paid: boolean) => void;
 }
 
 export function PaymentsAccordion({
@@ -48,7 +51,8 @@ export function PaymentsAccordion({
   onEdit,
   onDelete,
   highlightMatch,
-  onValueChange
+  onValueChange,
+  onTogglePaidStatus
 }: PaymentsAccordionProps) {
   const getClientName = (clientId: string): string => {
     const client = clients.find(c => c.id === clientId);
@@ -72,10 +76,8 @@ export function PaymentsAccordion({
             )
           : clientPayments;
 
-        // Skip if no payments match the search (but include if client name matches)
         const clientName = getClientName(clientId).toLowerCase();
         const clientMatchesSearch = clientName.includes(searchTerm.toLowerCase());
-        
         if (searchTerm && filteredPayments.length === 0 && !clientMatchesSearch) {
           return null;
         }
@@ -108,6 +110,7 @@ export function PaymentsAccordion({
                       <th className="text-left py-3 px-4">Título</th>
                       <th className="text-left py-3 px-4">Valor</th>
                       <th className="text-left py-3 px-4">Vencimento</th>
+                      <th className="text-left py-3 px-4">Pago?</th>
                       <th className="text-left py-3 px-4">Ações</th>
                     </tr>
                   </thead>
@@ -126,6 +129,14 @@ export function PaymentsAccordion({
                         </td>
                         <td className="py-3 px-4">
                           {format(new Date(payment.due_date), "dd/MM/yyyy")}
+                        </td>
+                        <td className="py-3 px-4">
+                          <Checkbox
+                            checked={payment.paid_status === "paid"}
+                            onCheckedChange={(checked) =>
+                              onTogglePaidStatus(payment.id, Boolean(checked))
+                            }
+                          />
                         </td>
                         <td className="py-2 px-4">
                           <div className="flex space-x-2">

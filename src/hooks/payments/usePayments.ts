@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,7 +20,6 @@ export function usePayments(clients: Client[]) {
   const [groupedPayments, setGroupedPayments] = useState<Record<string, ScheduledPayment[]>>({});
   const [sortedClientIds, setSortedClientIds] = useState<string[]>([]);
 
-  // Fetch all payments
   const fetchPayments = async () => {
     setIsLoading(true);
     try {
@@ -32,21 +30,19 @@ export function usePayments(clients: Client[]) {
 
       if (error) throw error;
 
-      // Add client names to payments for display
       const paymentsWithClientNames = await Promise.all(
         (data || []).map(async (payment) => {
           const client = clients.find((c) => c.id === payment.client_id);
           return {
             ...payment,
             client_name: client?.full_name || "Cliente Desconhecido",
-            due_date: payment.due_date, // Ensure due_date is included
+            due_date: payment.due_date,
           };
         })
       );
 
       setPayments(paymentsWithClientNames);
       
-      // Group payments by client
       const grouped = paymentsWithClientNames.reduce<Record<string, ScheduledPayment[]>>((acc, payment) => {
         if (!acc[payment.client_id]) {
           acc[payment.client_id] = [];
@@ -57,7 +53,6 @@ export function usePayments(clients: Client[]) {
       
       setGroupedPayments(grouped);
       
-      // Sort client IDs by client name
       const sortedIds = Object.keys(grouped).sort((a, b) => {
         const clientA = clients.find(c => c.id === a);
         const clientB = clients.find(c => c.id === b);
@@ -73,7 +68,6 @@ export function usePayments(clients: Client[]) {
     }
   };
 
-  // Handle payment deletion
   const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir este pagamento?")) {
       try {
@@ -92,7 +86,25 @@ export function usePayments(clients: Client[]) {
     }
   };
 
-  // Load payments when clients are available
+  const togglePaidStatus = async (id: string, paid: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("scheduled_payments")
+        .update({ paid_status: paid ? "paid" : "pending" })
+        .eq("id", id);
+      if (error) throw error;
+      toast.success(
+        paid
+          ? "Marcado como pago!"
+          : "Pagamento marcado como pendente."
+      );
+      fetchPayments();
+    } catch (error) {
+      console.error("Error updating paid status:", error);
+      toast.error("Erro ao atualizar status de pagamento");
+    }
+  };
+
   useEffect(() => {
     if (clients.length > 0) {
       fetchPayments();
@@ -106,6 +118,7 @@ export function usePayments(clients: Client[]) {
     sortedClientIds,
     handleDelete,
     fetchPayments,
+    togglePaidStatus,
   };
 }
 

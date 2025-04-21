@@ -164,6 +164,7 @@ export type Database = {
           description: string | null
           due_date: string
           id: string
+          paid_status: string
           title: string
         }
         Insert: {
@@ -173,6 +174,7 @@ export type Database = {
           description?: string | null
           due_date: string
           id?: string
+          paid_status?: string
           title: string
         }
         Update: {
@@ -182,6 +184,7 @@ export type Database = {
           description?: string | null
           due_date?: string
           id?: string
+          paid_status?: string
           title?: string
         }
         Relationships: [

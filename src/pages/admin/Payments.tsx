@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -21,7 +22,8 @@ export default function AdminPayments() {
     groupedPayments,
     sortedClientIds,
     handleDelete,
-    fetchPayments
+    fetchPayments,
+    togglePaidStatus, // NOVO!
   } = usePayments(clients);
   
   const {
@@ -71,6 +73,7 @@ export default function AdminPayments() {
               onDelete={handleDelete}
               toggleAllAccordions={toggleAllAccordions}
               setExpandedItems={setExpandedItems}
+              onTogglePaidStatus={togglePaidStatus}
             />
           </CardContent>
         </Card>
@@ -101,6 +104,8 @@ export default function AdminPayments() {
                     amount: editPayment.amount,
                     due_date: new Date(editPayment.due_date),
                     description: editPayment.description || undefined,
+                    // Faltou o paid_status para garantir edição individual!
+                    is_paid: editPayment.paid_status === "paid",
                   }
                 : undefined
             }

@@ -14,6 +14,7 @@ interface PaymentsListProps {
   onEdit: (payment: ScheduledPayment) => void;
   onDelete: (paymentId: string) => void;
   onValueChange: (value: string[]) => void;
+  onTogglePaidStatus: (id: string, paid: boolean) => void;
 }
 
 export function PaymentsList({
@@ -24,7 +25,8 @@ export function PaymentsList({
   searchTerm,
   onEdit,
   onDelete,
-  onValueChange
+  onValueChange,
+  onTogglePaidStatus
 }: PaymentsListProps) {
   if (filteredClientIds.length === 0) {
     return <NoSearchResults />;
@@ -41,6 +43,7 @@ export function PaymentsList({
       onDelete={onDelete}
       highlightMatch={highlightMatch}
       onValueChange={onValueChange}
+      onTogglePaidStatus={onTogglePaidStatus}
     />
   );
 }
