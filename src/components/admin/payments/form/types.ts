@@ -4,7 +4,8 @@ import * as z from "zod";
 export const paymentSchema = z.object({
   client_id: z.string().uuid({ message: "Por favor selecione um cliente" }),
   title: z.string().min(2, { message: "Título deve ter pelo menos 2 caracteres" }),
-  amount: z.string().min(1, { message: "Valor é obrigatório" }),
+  total_amount: z.string().min(1, { message: "Valor total é obrigatório" }),
+  amount: z.string().min(1, { message: "Valor de entrada é obrigatório" }),
   due_date: z.date({ required_error: "Data de vencimento é obrigatória" }),
   description: z.string().optional(),
   // Batch payment fields
@@ -17,5 +18,4 @@ export const paymentSchema = z.object({
 });
 
 export type PaymentFormValues = z.infer<typeof paymentSchema>;
-
 export type InstallmentFrequency = "weekly" | "biweekly" | "monthly";

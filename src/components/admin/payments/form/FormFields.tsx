@@ -12,7 +12,7 @@ import { Client } from "@/services/clients/types";
 import { cn } from "@/lib/utils";
 import { Control } from "react-hook-form";
 
-// Client selector field
+// Campo para selecionar o cliente
 export function ClientSelectField({ 
   control, 
   clients, 
@@ -54,7 +54,7 @@ export function ClientSelectField({
   );
 }
 
-// Payment title field
+// Campo para o título do pagamento
 export function TitleField({ control, disabled }: { control: Control<any>; disabled: boolean }) {
   return (
     <FormField
@@ -73,7 +73,26 @@ export function TitleField({ control, disabled }: { control: Control<any>; disab
   );
 }
 
-// Due date field with calendar popup
+// NOVO: Campo de valor total do contrato
+export function TotalAmountField({ control, disabled }: { control: Control<any>; disabled: boolean }) {
+  return (
+    <FormField
+      control={control}
+      name="total_amount"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Valor Total*</FormLabel>
+          <FormControl>
+            <Input placeholder="Ex: 10000" {...field} disabled={disabled} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+// Campo para a data de vencimento
 export function DueDateField({ control, disabled }: { control: Control<any>; disabled: boolean }) {
   return (
     <FormField
@@ -122,7 +141,7 @@ export function DueDateField({ control, disabled }: { control: Control<any>; dis
   );
 }
 
-// Description field
+// Campo para a descrição
 export function DescriptionField({ control, disabled }: { control: Control<any>; disabled: boolean }) {
   return (
     <FormField
@@ -145,7 +164,7 @@ export function DescriptionField({ control, disabled }: { control: Control<any>;
   );
 }
 
-// Submit button
+// Botão de submit
 export function SubmitButton({ 
   isSubmitting, 
   isEditMode 

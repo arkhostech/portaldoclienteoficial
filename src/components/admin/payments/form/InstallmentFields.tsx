@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InstallmentFrequency } from "./types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface InstallmentFieldsProps {
   control: Control<any>;
@@ -20,11 +20,14 @@ interface InstallmentFieldsProps {
   values: {
     enable_installments?: boolean;
     installments_count?: number;
+    amount?: string;
+    total_amount?: string;
   };
 }
 
 export function InstallmentFields({ control, disabled, values }: InstallmentFieldsProps) {
   const [showWarning, setShowWarning] = useState(false);
+  const [parcelValue, setParcelValue] = useState<string>("");
 
   const handleInstallmentsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const count = parseInt(event.target.value, 10);
@@ -34,6 +37,35 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
       setShowWarning(false);
     }
   };
+
+  useEffect(() => {
+    // Preenche automaticamente valor da parcela se parcelas > 0, valor total e entrada existem, e entrada < valor total
+    const isValid =
+      values &&
+      values.enable_installments &&
+      values.installments_count &&
+      Number(values.installments_count) > 0 &&
+      values.total_amount &&
+      values.amount &&
+      parseFloat(values.total_amount) > parseFloat(values.amount);
+
+    if (isValid) {
+      const faltante = parseFloat(values.total_amount as string) - parseFloat(values.amount as string);
+      const valorParcela = faltante / Number(values.installments_count);
+      // Ajusta 2 casas decimais
+      setParcelValue(valorParcela.toFixed(2));
+    } else {
+      setParcelValue("");
+    }
+  }, [values.enable_installments, values.installments_count, values.amount, values.total_amount]);
+
+  // Força atualizar o campo installment_amount do react-hook-form
+  useEffect(() => {
+    if (parcelValue !== "") {
+      control.setValue && control.setValue("installment_amount", parcelValue);
+    }
+    // eslint-disable-next-line
+  }, [parcelValue]);
 
   return (
     <>
@@ -153,7 +185,16 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
               <FormItem>
                 <FormLabel>Valor da Parcela*</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex: 250.00" {...field} disabled={disabled} />
+                  <Input 
+                    placeholder="Ex: 250.00"
+                    {...field}
+                    value={parcelValue !== "" ? parcelValue : field.value}
+                    onChange={(e) => {
+                      field.onChange(e.target.value);
+                      setParcelValue(e.target.value);
+                    }}
+                    disabled={disabled} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -209,3 +250,4 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
     </>
   );
 }
+
