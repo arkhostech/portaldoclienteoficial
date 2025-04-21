@@ -13,6 +13,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InstallmentFrequency } from "./types";
 import { useState, useEffect } from "react";
 import { useWatch } from "react-hook-form";
+import { useInstallmentCalculation } from "./useInstallmentCalculation";
+import { InstallmentWarning, InstallmentZeroAlert } from "./InstallmentWarning";
+import { InstallmentDisabledAlert } from "./InstallmentDisabledAlert";
 
 interface InstallmentFieldsProps {
   control: Control<any>;
@@ -27,45 +30,25 @@ interface InstallmentFieldsProps {
 
 export function InstallmentFields({ control, disabled, values }: InstallmentFieldsProps) {
   const [showWarning, setShowWarning] = useState(false);
-  const [parcelValue, setParcelValue] = useState<string>("");
 
   const { setValue } = useFormContext();
-
   const total_amount = useWatch({ name: "total_amount", control });
   const amount = useWatch({ name: "amount", control });
   const installments_count = useWatch({ name: "installments_count", control });
   const enable_installments = useWatch({ name: "enable_installments", control });
 
-  useEffect(() => {
-    if (
-      enable_installments &&
-      installments_count > 0 &&
-      total_amount &&
-      amount &&
-      parseFloat(total_amount) > parseFloat(amount)
-    ) {
-      const faltante = parseFloat(total_amount) - parseFloat(amount);
-      const valorParcela = faltante / Number(installments_count);
-      setParcelValue(valorParcela.toFixed(2));
-      setValue && setValue("installment_amount", valorParcela.toFixed(2));
-    } else if (parseFloat(amount) === parseFloat(total_amount)) {
-      setParcelValue("");
-      setValue && setValue("installment_amount", "");
-      if (enable_installments) {
-        setValue && setValue("enable_installments", false);
-      }
-    } else {
-      setParcelValue("");
-    }
-  }, [enable_installments, installments_count, amount, total_amount, setValue]);
+  const { parcelValue, setParcelValue } = useInstallmentCalculation({
+    enable_installments,
+    installments_count,
+    amount,
+    total_amount,
+    setValue
+  });
 
   const handleInstallmentsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const count = parseInt(event.target.value, 10);
-    if (count > 24) {
-      setShowWarning(true);
-    } else {
-      setShowWarning(false);
-    }
+    if (count > 24) setShowWarning(true);
+    else setShowWarning(false);
   };
 
   return (
@@ -89,13 +72,7 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
         )}
       />
 
-      {(parseFloat(amount) === parseFloat(total_amount)) && (
-        <Alert variant="default" className="bg-blue-50 text-blue-800 border-blue-200 mt-2">
-          <AlertDescription>
-            O cliente irá pagar o valor total à vista. O parcelamento está desabilitado.
-          </AlertDescription>
-        </Alert>
-      )}
+      <InstallmentDisabledAlert amount={amount} total_amount={total_amount} />
 
       {values.enable_installments && (
         <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
@@ -109,16 +86,16 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
                 <FormLabel>Número de Parcelas*</FormLabel>
                 <FormControl>
                   <Input 
-                    type="number" 
-                    min="1" 
-                    max="99" 
-                    placeholder="Ex: 12" 
-                    {...field} 
+                    type="number"
+                    min="1"
+                    max="99"
+                    placeholder="Ex: 12"
+                    {...field}
                     onChange={(e) => {
                       handleInstallmentsChange(e);
                       field.onChange(parseInt(e.target.value, 10) || 0);
                     }}
-                    disabled={disabled} 
+                    disabled={disabled}
                   />
                 </FormControl>
                 <FormMessage />
@@ -126,21 +103,8 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
             )}
           />
 
-          {showWarning && (
-            <Alert variant="warning" className="bg-yellow-50 text-yellow-800 border-yellow-200">
-              <AlertDescription>
-                O número de parcelas excede 24 meses. Isso é permitido, mas considere revisar.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {values.enable_installments && values.installments_count === 0 && (
-            <Alert variant="warning" className="bg-yellow-50 text-yellow-800 border-yellow-200">
-              <AlertDescription>
-                Por favor, defina o número de parcelas maior que zero.
-              </AlertDescription>
-            </Alert>
-          )}
+          <InstallmentWarning showWarning={showWarning} />
+          <InstallmentZeroAlert enable_installments={values.enable_installments} installments_count={values.installments_count} />
 
           <FormField
             control={control}
@@ -187,7 +151,7 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
               <FormItem>
                 <FormLabel>Valor da Parcela*</FormLabel>
                 <FormControl>
-                  <Input 
+                  <Input
                     placeholder="Ex: 250.00"
                     {...field}
                     value={parcelValue !== "" ? parcelValue : field.value}
@@ -195,7 +159,7 @@ export function InstallmentFields({ control, disabled, values }: InstallmentFiel
                       field.onChange(e.target.value);
                       setParcelValue(e.target.value);
                     }}
-                    disabled={disabled} 
+                    disabled={disabled}
                   />
                 </FormControl>
                 <FormMessage />
