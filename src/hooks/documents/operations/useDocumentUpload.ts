@@ -20,9 +20,9 @@ export const useDocumentUpload = (
       // Process the file (compression for images)
       const processedFile = await compressImage(data.file);
       
-      // Prepare document data
+      // Use file name as title if no title is provided
       const documentData: DocumentFormData = {
-        title: data.title,
+        title: data.title?.trim() || data.file.name,
         description: data.description,
         client_id: data.client_id
       };
@@ -32,7 +32,6 @@ export const useDocumentUpload = (
       if (result) {
         setDocuments(prevDocs => [result, ...prevDocs]);
         
-        // Use managed timeout
         addTimeout(() => {
           setIsSubmitting(false);
         }, 800);
