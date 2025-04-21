@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -16,7 +15,6 @@ export default function AdminPayments() {
   const [editPayment, setEditPayment] = useState<ScheduledPayment | null>(null);
   const { clients, isLoading: isClientsLoading } = useClients();
   
-  // Use custom hooks
   const {
     payments,
     isLoading,
@@ -35,7 +33,6 @@ export default function AdminPayments() {
     getFilteredClientIds
   } = usePaymentsFilter(sortedClientIds, clients);
 
-  // Handle payment editing
   const handleEdit = (payment: ScheduledPayment) => {
     setEditPayment({
       ...payment,
@@ -80,7 +77,9 @@ export default function AdminPayments() {
       </div>
       
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent 
+          className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
+        >
           <DialogHeader>
             <DialogTitle>
               {editPayment ? "Editar Pagamento" : "Agendar Novo Pagamento"}
