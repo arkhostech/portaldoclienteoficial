@@ -1,5 +1,5 @@
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Client } from "@/services/clients/types";
 import { Form } from "@/components/ui/form";
@@ -9,11 +9,11 @@ import { usePaymentFormHandler } from "./form/PaymentFormHandler";
 import { 
   ClientSelectField, 
   TitleField, 
-  AmountField, 
-  DueDateField, 
   DescriptionField, 
   SubmitButton 
 } from "./form/FormFields";
+import { EntryPaymentFields } from "./form/EntryPaymentFields";
+import { InstallmentFields } from "./form/InstallmentFields";
 
 interface AdminPaymentFormProps {
   clients: Client[];
@@ -32,13 +32,26 @@ export function AdminPaymentForm({ clients, onSuccess, initialData }: AdminPayme
       client_id: "",
       title: "",
       amount: "",
+      due_date: new Date(),
       description: "",
+      is_paid: true,
+      enable_installments: false,
+      installments_count: 0,
+      installment_frequency: "monthly",
+      installment_amount: "",
+      first_installment_date: new Date(),
     },
+  });
+
+  // Watch values for conditional rendering
+  const watchValues = useWatch({
+    control: form.control,
+    name: ["enable_installments", "installments_count"],
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Client Select */}
         <ClientSelectField 
           control={form.control}
@@ -52,16 +65,20 @@ export function AdminPaymentForm({ clients, onSuccess, initialData }: AdminPayme
           disabled={isSubmitting}
         />
 
-        {/* Amount */}
-        <AmountField 
+        {/* Entry Payment Section */}
+        <EntryPaymentFields
           control={form.control}
           disabled={isSubmitting}
         />
 
-        {/* Due Date */}
-        <DueDateField 
+        {/* Installment Fields */}
+        <InstallmentFields 
           control={form.control}
           disabled={isSubmitting}
+          values={{
+            enable_installments: watchValues[0],
+            installments_count: watchValues[1],
+          }}
         />
 
         {/* Description */}

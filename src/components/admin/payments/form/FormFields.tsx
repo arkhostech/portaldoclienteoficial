@@ -73,25 +73,6 @@ export function TitleField({ control, disabled }: { control: Control<any>; disab
   );
 }
 
-// Payment amount field
-export function AmountField({ control, disabled }: { control: Control<any>; disabled: boolean }) {
-  return (
-    <FormField
-      control={control}
-      name="amount"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Valor*</FormLabel>
-          <FormControl>
-            <Input placeholder="Ex: 500.00" {...field} disabled={disabled} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
-}
-
 // Due date field with calendar popup
 export function DueDateField({ control, disabled }: { control: Control<any>; disabled: boolean }) {
   return (
@@ -130,6 +111,7 @@ export function DueDateField({ control, disabled }: { control: Control<any>; dis
                   date < new Date(new Date().setHours(0, 0, 0, 0))
                 }
                 initialFocus
+                className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
           </Popover>
