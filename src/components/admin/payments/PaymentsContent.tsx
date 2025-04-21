@@ -19,6 +19,7 @@ interface PaymentsContentProps {
   toggleAllAccordions: () => void;
   setExpandedItems: (value: string[]) => void;
   onTogglePaidStatus: (id: string, paid: boolean) => void;
+  updatePayment: (id: string, values: { amount: string; due_date: string }) => void;
 }
 
 export function PaymentsContent({
@@ -35,6 +36,7 @@ export function PaymentsContent({
   toggleAllAccordions,
   setExpandedItems,
   onTogglePaidStatus,
+  updatePayment,
 }: PaymentsContentProps) {
   return (
     <ContentContainer isLoading={isLoading} payments={payments}>
@@ -43,7 +45,6 @@ export function PaymentsContent({
         expandedItems={expandedItems}
         sortedClientIds={sortedClientIds}
       />
-      
       <PaymentsList 
         groupedPayments={groupedPayments}
         filteredClientIds={filteredClientIds}
@@ -54,6 +55,7 @@ export function PaymentsContent({
         onDelete={onDelete}
         onValueChange={setExpandedItems}
         onTogglePaidStatus={onTogglePaidStatus}
+        updatePayment={updatePayment}
       />
     </ContentContainer>
   );

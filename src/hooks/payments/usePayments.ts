@@ -105,6 +105,28 @@ export function usePayments(clients: Client[]) {
     }
   };
 
+  const updatePayment = async (
+    id: string,
+    values: { amount: string; due_date: string }
+  ) => {
+    try {
+      const { error } = await supabase
+        .from("scheduled_payments")
+        .update({
+          amount: values.amount,
+          due_date: values.due_date,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success("Parcela atualizada com sucesso.");
+      fetchPayments();
+    } catch (error) {
+      console.error("Erro ao atualizar parcela:", error);
+      toast.error("Erro ao atualizar parcela.");
+    }
+  };
+
   useEffect(() => {
     if (clients.length > 0) {
       fetchPayments();
@@ -119,6 +141,7 @@ export function usePayments(clients: Client[]) {
     handleDelete,
     fetchPayments,
     togglePaidStatus,
+    updatePayment,
   };
 }
 

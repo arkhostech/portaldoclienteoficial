@@ -23,7 +23,8 @@ export default function AdminPayments() {
     sortedClientIds,
     handleDelete,
     fetchPayments,
-    togglePaidStatus, // NOVO!
+    togglePaidStatus,
+    updatePayment,
   } = usePayments(clients);
   
   const {
@@ -74,6 +75,7 @@ export default function AdminPayments() {
               toggleAllAccordions={toggleAllAccordions}
               setExpandedItems={setExpandedItems}
               onTogglePaidStatus={togglePaidStatus}
+              updatePayment={updatePayment}
             />
           </CardContent>
         </Card>
@@ -104,7 +106,6 @@ export default function AdminPayments() {
                     amount: editPayment.amount,
                     due_date: new Date(editPayment.due_date),
                     description: editPayment.description || undefined,
-                    // Faltou o paid_status para garantir edição individual!
                     is_paid: editPayment.paid_status === "paid",
                   }
                 : undefined

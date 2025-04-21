@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { format } from "date-fns";
 import { Edit, Trash2, CheckSquare, Square } from "lucide-react";
@@ -10,6 +9,7 @@ import {
   AccordionItem, 
   AccordionTrigger 
 } from "@/components/ui/accordion";
+import { EditInstallmentModal } from "./EditInstallmentModal";
 
 interface ScheduledPayment {
   id: string;
@@ -40,6 +40,7 @@ interface PaymentsAccordionProps {
   highlightMatch: (text: string, term: string) => React.ReactNode;
   onValueChange: (value: string[]) => void;
   onTogglePaidStatus: (id: string, paid: boolean) => void;
+  updatePayment?: (id: string, values: { amount: string; due_date: string }) => void;
 }
 
 export function PaymentsAccordion({
@@ -52,12 +53,16 @@ export function PaymentsAccordion({
   onDelete,
   highlightMatch,
   onValueChange,
-  onTogglePaidStatus
-}: PaymentsAccordionProps) {
+  onTogglePaidStatus,
+  updatePayment
+}: PaymentsAccordionProps & { updatePayment?: (id: string, values: { amount: string; due_date: string }) => void }) {
   const getClientName = (clientId: string): string => {
     const client = clients.find(c => c.id === clientId);
     return client?.full_name || "Cliente Desconhecido";
   };
+
+  const [editPaymentModalOpen, setEditPaymentModalOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<null | ScheduledPayment>(null);
 
   return (
     <Accordion 
@@ -122,10 +127,23 @@ export function PaymentsAccordion({
                             ? highlightMatch(payment.title, searchTerm)
                             : payment.title}
                         </td>
-                        <td className="py-3 px-4 font-medium">
+                        <td className="py-3 px-4 font-medium flex items-center gap-2">
                           {searchTerm && payment.amount.includes(searchTerm)
                             ? highlightMatch(payment.amount, searchTerm)
                             : payment.amount}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="p-1 h-7 w-7"
+                            onClick={e => {
+                              e.stopPropagation();
+                              setSelectedPayment(payment);
+                              setEditPaymentModalOpen(true);
+                            }}
+                            title="Editar valor/data"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
                         </td>
                         <td className="py-3 px-4">
                           {format(new Date(payment.due_date), "dd/MM/yyyy")}
@@ -171,6 +189,26 @@ export function PaymentsAccordion({
                 </table>
               </div>
             </AccordionContent>
+            <EditInstallmentModal
+              open={editPaymentModalOpen}
+              onClose={() => setEditPaymentModalOpen(false)}
+              payment={
+                selectedPayment
+                  ? {
+                      id: selectedPayment.id,
+                      amount: selectedPayment.amount,
+                      due_date: selectedPayment.due_date,
+                    }
+                  : null
+              }
+              onSave={(id, data) => {
+                if (updatePayment) {
+                  updatePayment(id, data);
+                }
+                setEditPaymentModalOpen(false);
+                setSelectedPayment(null);
+              }}
+            />
           </AccordionItem>
         );
       })}
