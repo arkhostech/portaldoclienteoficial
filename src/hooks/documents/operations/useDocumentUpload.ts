@@ -15,10 +15,12 @@ export const useDocumentUpload = (
     if (!data.client_id || !data.file) return false;
     
     setIsSubmitting(true);
+    console.log("Starting document upload process for file:", data.file.name);
     
     try {
       // Process the file (compression for images)
       const processedFile = await compressImage(data.file);
+      console.log("File processed and ready for upload");
       
       // Use file name as title if no title is provided
       const documentData: DocumentFormData = {
@@ -27,9 +29,11 @@ export const useDocumentUpload = (
         client_id: data.client_id
       };
       
+      console.log("Uploading document with data:", documentData);
       const result = await uploadDocument(data.client_id, processedFile, documentData);
       
       if (result) {
+        console.log("Document uploaded successfully:", result);
         setDocuments(prevDocs => [result, ...prevDocs]);
         
         addTimeout(() => {
@@ -37,6 +41,7 @@ export const useDocumentUpload = (
         }, 800);
         return true;
       } else {
+        console.error("Upload failed - no result returned from uploadDocument");
         addTimeout(() => {
           setIsSubmitting(false);
         }, 800);

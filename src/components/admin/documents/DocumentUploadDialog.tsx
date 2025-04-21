@@ -87,16 +87,12 @@ const DocumentUploadDialog = ({
     try {
       let successCount = 0;
       const totalFiles = files.length;
+      
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-
-        // NOVO: usar nome do arquivo como título se o campo de título estiver vazio
-        const titleToUse = (formData.title && formData.title.trim() !== "")
-          ? formData.title
-          : file.name;
-
+        
         const fileData = { 
-          title: totalFiles > 1 ? `${titleToUse}` : titleToUse,
+          title: "", // Let the upload handler use the filename as title
           description: formData.description,
           client_id: formData.client_id,
           file
@@ -186,13 +182,15 @@ const DocumentUploadDialog = ({
             </div>
           )}
           
-          <DocumentUploadForm 
-            clients={clients}
-            preSelectedClientId={preSelectedClientId}
-            isSubmitting={isSubmitting || isUploading}
-            onCancel={() => handleDialogClose(false)}
-            onSubmit={handleSubmit}
-          />
+          {files.length > 0 ? (
+            <DocumentUploadForm 
+              clients={clients}
+              preSelectedClientId={preSelectedClientId}
+              isSubmitting={isSubmitting || isUploading}
+              onCancel={() => handleDialogClose(false)}
+              onSubmit={handleSubmit}
+            />
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
