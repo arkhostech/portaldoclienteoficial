@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { DocumentFormValues } from "../types/form-types";
 import { FileWithPreview } from "../types";
+import { toast } from "sonner";
 
 export const useUploadProgress = (
   files: FileWithPreview[],
@@ -15,6 +16,13 @@ export const useUploadProgress = (
   const handleSubmit = async (formData: DocumentFormValues) => {
     if (files.length === 0) {
       console.error("No files selected");
+      toast.error("Selecione pelo menos um arquivo para enviar");
+      return;
+    }
+
+    if (!formData.client_id) {
+      console.error("No client selected");
+      toast.error("Selecione um cliente");
       return;
     }
 
@@ -63,6 +71,8 @@ export const useUploadProgress = (
         
         if (success) {
           successCount++;
+        } else {
+          toast.error(`Falha ao enviar: ${file.name}`);
         }
         
         // Update progress to show completion for this file
@@ -73,13 +83,16 @@ export const useUploadProgress = (
       
       if (successCount > 0) {
         // Only close if at least one file was uploaded successfully
+        toast.success(`${successCount} ${successCount > 1 ? 'documentos enviados' : 'documento enviado'} com sucesso`);
         console.log("Closing dialog due to successful upload");
         setTimeout(() => handleDialogClose(false), 500);
       } else {
         console.error("No files were uploaded successfully");
+        toast.error("Nenhum documento foi enviado com sucesso");
       }
     } catch (error) {
       console.error("Error during file upload process:", error);
+      toast.error("Erro durante o processo de upload");
     } finally {
       setIsUploading(false);
     }

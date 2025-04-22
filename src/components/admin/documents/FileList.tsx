@@ -46,9 +46,9 @@ const FileList = ({ files, onRemove }: FileListProps) => {
                   <FileText className="h-4 w-4 text-primary" />
                 )}
                 <div className="flex flex-col">
-                  <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                  <span className="text-sm font-medium truncate max-w-[200px]">{file.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    ({Math.round(file.size / 1024)} KB)
+                    ({(file.size / 1024).toFixed(1)} KB)
                     {file.type.startsWith('image/') && file.preview && " • Comprimida"}
                   </span>
                 </div>

@@ -7,6 +7,7 @@ import { documentFormSchema, DocumentFormValues, DocumentFormProps } from "./typ
 import { ClientSelect } from "./form/ClientSelect";
 import { DocumentMetadataFields } from "./form/DocumentMetadataFields";
 import { FormActions } from "./form/FormActions";
+import { toast } from "sonner";
 
 const DocumentUploadForm: React.FC<DocumentFormProps> = ({ 
   clients, 
@@ -34,6 +35,12 @@ const DocumentUploadForm: React.FC<DocumentFormProps> = ({
   // Function to handle form submission
   const handleFormSubmit = (data: DocumentFormValues) => {
     console.log("Form submitted with data:", data);
+    
+    if (!data.client_id) {
+      toast.error("Selecione um cliente");
+      return;
+    }
+    
     // Make sure we're passing the complete data to the onSubmit callback
     onSubmit(data);
   };
@@ -44,6 +51,7 @@ const DocumentUploadForm: React.FC<DocumentFormProps> = ({
         <form
           onSubmit={form.handleSubmit(handleFormSubmit)}
           className="space-y-4"
+          id="document-upload-form"
         >
           <ClientSelect 
             clients={clients} 

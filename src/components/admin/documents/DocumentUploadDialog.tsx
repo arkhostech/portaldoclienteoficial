@@ -4,6 +4,7 @@ import { DocumentUploadDialogProps } from "./types";
 import { useFileSelection } from "./upload/useFileSelection";
 import { useUploadProgress } from "./upload/useUploadProgress";
 import { UploadDialogContent } from "./upload/UploadDialogContent";
+import { toast } from "sonner";
 
 const DocumentUploadDialog = ({
   open,
@@ -31,6 +32,7 @@ const DocumentUploadDialog = ({
     if (!open) {
       if (isUploading || isSubmitting) {
         console.log("Cannot close dialog: Upload in progress");
+        toast.error("Aguarde o upload terminar antes de fechar");
         return; // Don't close if uploading
       }
       
@@ -48,7 +50,7 @@ const DocumentUploadDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Enviar Documento</DialogTitle>
         </DialogHeader>

@@ -12,7 +12,7 @@ export const ProgressBar = ({ progress }: ProgressBarProps) => {
         <span className="font-medium">Enviando documentos...</span>
         <span className="font-medium">{Math.round(progress)}%</span>
       </div>
-      <Progress value={progress} className="h-3" />
+      <Progress value={progress} className="h-3 bg-secondary" />
     </div>
   );
 };

@@ -43,7 +43,7 @@ export const UploadDialogContent = ({
 }: UploadDialogContentProps) => {
   return (
     <ScrollArea className="max-h-[calc(90vh-120px)]">
-      <div className="space-y-4 pr-4">
+      <div className="space-y-4 pr-4 p-2">
         <input
           ref={fileInputRef}
           type="file"
