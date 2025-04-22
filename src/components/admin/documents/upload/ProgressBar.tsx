@@ -7,12 +7,12 @@ interface ProgressBarProps {
 
 export const ProgressBar = ({ progress }: ProgressBarProps) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 my-4">
       <div className="flex justify-between text-sm">
-        <span>Enviando documentos...</span>
-        <span>{Math.round(progress)}%</span>
+        <span className="font-medium">Enviando documentos...</span>
+        <span className="font-medium">{Math.round(progress)}%</span>
       </div>
-      <Progress value={progress} className="h-2" />
+      <Progress value={progress} className="h-3" />
     </div>
   );
 };

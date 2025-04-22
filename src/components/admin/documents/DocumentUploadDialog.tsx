@@ -24,9 +24,18 @@ const DocumentUploadDialog = ({
     handleFileChange
   } = useFileSelection();
 
+  // Improved dialog close handling
   const handleDialogClose = (open: boolean) => {
-    if (!isUploading && !isSubmitting && open === false) {
-      onOpenChange(open);
+    console.log("Dialog close triggered, open state:", open);
+    
+    if (!open) {
+      if (isUploading || isSubmitting) {
+        console.log("Cannot close dialog: Upload in progress");
+        return; // Don't close if uploading
+      }
+      
+      console.log("Closing dialog and resetting files");
+      onOpenChange(false);
       setFiles([]);
     }
   };

@@ -22,7 +22,7 @@ const FileList = ({ files, onRemove }: FileListProps) => {
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium">Arquivos selecionados ({files.length})</p>
-      <ScrollArea className="max-h-64 pr-1">
+      <ScrollArea className="h-auto max-h-64 pr-1">
         <div className="space-y-2">
           {files.map(file => (
             <div 
@@ -46,7 +46,7 @@ const FileList = ({ files, onRemove }: FileListProps) => {
                   <FileText className="h-4 w-4 text-primary" />
                 )}
                 <div className="flex flex-col">
-                  <span className="text-sm truncate">{file.name}</span>
+                  <span className="text-sm truncate max-w-[200px]">{file.name}</span>
                   <span className="text-xs text-muted-foreground">
                     ({Math.round(file.size / 1024)} KB)
                     {file.type.startsWith('image/') && file.preview && " • Comprimida"}

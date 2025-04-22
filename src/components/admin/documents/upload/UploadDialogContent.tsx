@@ -6,6 +6,7 @@ import DocumentUploadForm from "../DocumentUploadForm";
 import { ProgressBar } from "./ProgressBar";
 import { FileWithPreview } from "../types";
 import { Client } from "@/services/clients/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface UploadDialogContentProps {
   files: FileWithPreview[];
@@ -41,35 +42,37 @@ export const UploadDialogContent = ({
   handleFileChange
 }: UploadDialogContentProps) => {
   return (
-    <div className="space-y-4">
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        onChange={handleFileChange}
-        className="hidden"
-      />
-      
-      <FileDropzone 
-        onDrop={onDrop} 
-        filesCount={files.length} 
-        onBrowse={onBrowseFiles} 
-        isCompressing={isCompressing}
-      />
-      
-      <FileList files={files} onRemove={removeFile} />
-
-      {isUploading && <ProgressBar progress={uploadProgress} />}
-      
-      {files.length > 0 ? (
-        <DocumentUploadForm 
-          clients={clients}
-          preSelectedClientId={preSelectedClientId}
-          isSubmitting={isSubmitting || isUploading}
-          onCancel={() => handleDialogClose(false)}
-          onSubmit={handleSubmit}
+    <ScrollArea className="max-h-[calc(90vh-120px)]">
+      <div className="space-y-4 pr-4">
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          onChange={handleFileChange}
+          className="hidden"
         />
-      ) : null}
-    </div>
+        
+        <FileDropzone 
+          onDrop={onDrop} 
+          filesCount={files.length} 
+          onBrowse={onBrowseFiles} 
+          isCompressing={isCompressing}
+        />
+        
+        <FileList files={files} onRemove={removeFile} />
+
+        {isUploading && <ProgressBar progress={uploadProgress} />}
+        
+        {files.length > 0 ? (
+          <DocumentUploadForm 
+            clients={clients}
+            preSelectedClientId={preSelectedClientId}
+            isSubmitting={isSubmitting || isUploading}
+            onCancel={() => handleDialogClose(false)}
+            onSubmit={handleSubmit}
+          />
+        ) : null}
+      </div>
+    </ScrollArea>
   );
 };

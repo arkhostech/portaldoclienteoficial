@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Document, DocumentFormData, uploadDocument } from "@/services/documents";
 import { useTimeoutManager } from "../utils/useTimeoutManager";
 import { compressImage } from "@/components/admin/documents/DocumentsUtils";
+import { toast } from "sonner";
 
 export const useDocumentUpload = (
   clientId: string | null,
@@ -14,12 +15,20 @@ export const useDocumentUpload = (
   const handleUploadDocument = async (data: DocumentFormData & { file: File }) => {
     if (!data.client_id || !data.file) {
       console.error("Missing required data for upload:", { clientId: data.client_id, fileExists: !!data.file });
+      toast.error("Dados insuficientes para upload");
       return false;
     }
     
     setIsSubmitting(true);
     console.log("Starting document upload process for file:", data.file.name);
-    console.log("Full upload data:", data);
+    console.log("Full upload data:", {
+      clientId: data.client_id,
+      title: data.title || data.file.name,
+      description: data.description,
+      fileName: data.file.name,
+      fileSize: data.file.size,
+      fileType: data.file.type
+    });
     
     try {
       // Process the file (compression for images)
@@ -38,6 +47,7 @@ export const useDocumentUpload = (
       
       if (result) {
         console.log("Document uploaded successfully:", result);
+        toast.success("Documento enviado com sucesso");
         setDocuments(prevDocs => [result, ...prevDocs]);
         
         addTimeout(() => {
@@ -46,6 +56,8 @@ export const useDocumentUpload = (
         return true;
       } else {
         console.error("Upload failed - no result returned from uploadDocument");
+        toast.error("Falha no upload do documento");
+        
         addTimeout(() => {
           setIsSubmitting(false);
         }, 800);
@@ -53,6 +65,7 @@ export const useDocumentUpload = (
       }
     } catch (error) {
       console.error("Error uploading document:", error);
+      toast.error("Erro ao enviar documento");
       
       addTimeout(() => {
         setIsSubmitting(false);
