@@ -1,0 +1,70 @@
+
+import { FileDropzone } from "../FileDropzone";
+import { FileList } from "../FileList";
+import DocumentUploadForm from "../DocumentUploadForm";
+import { ProgressBar } from "./ProgressBar";
+import { FileWithPreview } from "../types";
+import { Client } from "@/services/clients/types";
+
+interface UploadDialogContentProps {
+  files: FileWithPreview[];
+  onDrop: (acceptedFiles: File[]) => void;
+  onBrowseFiles: () => void;
+  isCompressing: boolean;
+  removeFile: (id: string) => void;
+  isUploading: boolean;
+  uploadProgress: number;
+  handleSubmit: (formData: any) => void;
+  clients: Client[];
+  preSelectedClientId?: string;
+  isSubmitting: boolean;
+  handleDialogClose: (open: boolean) => void;
+}
+
+export const UploadDialogContent = ({
+  files,
+  onDrop,
+  onBrowseFiles,
+  isCompressing,
+  removeFile,
+  isUploading,
+  uploadProgress,
+  handleSubmit,
+  clients,
+  preSelectedClientId,
+  isSubmitting,
+  handleDialogClose
+}: UploadDialogContentProps) => {
+  return (
+    <div className="space-y-4">
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        onChange={handleFileChange}
+        className="hidden"
+      />
+      
+      <FileDropzone 
+        onDrop={onDrop} 
+        filesCount={files.length} 
+        onBrowse={onBrowseFiles} 
+        isCompressing={isCompressing}
+      />
+      
+      <FileList files={files} onRemove={removeFile} />
+
+      {isUploading && <ProgressBar progress={uploadProgress} />}
+      
+      {files.length > 0 ? (
+        <DocumentUploadForm 
+          clients={clients}
+          preSelectedClientId={preSelectedClientId}
+          isSubmitting={isSubmitting || isUploading}
+          onCancel={() => handleDialogClose(false)}
+          onSubmit={handleSubmit}
+        />
+      ) : null}
+    </div>
+  );
+};
