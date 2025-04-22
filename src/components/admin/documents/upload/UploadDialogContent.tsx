@@ -1,6 +1,7 @@
 
-import { FileDropzone } from "../FileDropzone";
-import { FileList } from "../FileList";
+import React from "react";
+import FileDropzone from "../FileDropzone";
+import FileList from "../FileList";
 import DocumentUploadForm from "../DocumentUploadForm";
 import { ProgressBar } from "./ProgressBar";
 import { FileWithPreview } from "../types";
@@ -19,6 +20,8 @@ interface UploadDialogContentProps {
   preSelectedClientId?: string;
   isSubmitting: boolean;
   handleDialogClose: (open: boolean) => void;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const UploadDialogContent = ({
@@ -33,7 +36,9 @@ export const UploadDialogContent = ({
   clients,
   preSelectedClientId,
   isSubmitting,
-  handleDialogClose
+  handleDialogClose,
+  fileInputRef,
+  handleFileChange
 }: UploadDialogContentProps) => {
   return (
     <div className="space-y-4">

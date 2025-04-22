@@ -57,6 +57,8 @@ const DocumentUploadDialog = ({
           preSelectedClientId={preSelectedClientId}
           isSubmitting={isSubmitting}
           handleDialogClose={handleDialogClose}
+          fileInputRef={fileInputRef}
+          handleFileChange={handleFileChange}
         />
       </DialogContent>
     </Dialog>
