@@ -19,6 +19,7 @@ export const useDocumentUpload = (
     
     setIsSubmitting(true);
     console.log("Starting document upload process for file:", data.file.name);
+    console.log("Full upload data:", data);
     
     try {
       // Process the file (compression for images)

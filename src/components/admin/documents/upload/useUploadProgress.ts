@@ -13,12 +13,16 @@ export const useUploadProgress = (
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const handleSubmit = async (formData: DocumentFormValues) => {
-    if (files.length === 0) return;
+    if (files.length === 0) {
+      console.error("No files selected");
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress(0);
     
     try {
+      console.log("Starting upload process with form data:", formData);
       let successCount = 0;
       const totalFiles = files.length;
       
@@ -38,6 +42,7 @@ export const useUploadProgress = (
         }, 50);
         
         console.log("Uploading file:", fileData.title);
+        console.log("File data being sent:", fileData);
         const success = await onUpload(fileData);
         console.log("Upload result:", success);
         

@@ -1,15 +1,18 @@
 
+import { Progress } from "@/components/ui/progress";
+
 interface ProgressBarProps {
   progress: number;
 }
 
 export const ProgressBar = ({ progress }: ProgressBarProps) => {
   return (
-    <div className="w-full bg-gray-200 rounded-full h-2.5">
-      <div 
-        className="bg-primary h-2.5 rounded-full" 
-        style={{ width: `${progress}%` }} 
-      />
+    <div className="space-y-2">
+      <div className="flex justify-between text-sm">
+        <span>Enviando documentos...</span>
+        <span>{Math.round(progress)}%</span>
+      </div>
+      <Progress value={progress} className="h-2" />
     </div>
   );
 };

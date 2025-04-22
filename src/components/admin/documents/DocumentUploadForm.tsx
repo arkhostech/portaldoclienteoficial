@@ -31,6 +31,7 @@ const DocumentUploadForm: React.FC<DocumentFormProps> = ({
     }
   }, [preSelectedClientId, form]);
 
+  // Função para lidar com o envio do formulário
   const handleFormSubmit = (data: DocumentFormValues) => {
     console.log("Form submitted with data:", data);
     onSubmit(data);
