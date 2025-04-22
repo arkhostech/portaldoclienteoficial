@@ -25,8 +25,9 @@ export const useUploadProgress = (
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         
+        // Include the file name as title if no title is provided
         const fileData = { 
-          title: "", // Let the upload handler use the filename as title
+          title: file.name, // Always use the filename as title
           description: formData.description,
           client_id: formData.client_id,
           file
@@ -36,7 +37,9 @@ export const useUploadProgress = (
           setUploadProgress(prev => Math.min(prev + 1, (i + 1) / totalFiles * 100 - 5));
         }, 50);
         
+        console.log("Uploading file:", fileData.title);
         const success = await onUpload(fileData);
+        console.log("Upload result:", success);
         
         clearInterval(intervalId);
         
@@ -48,8 +51,13 @@ export const useUploadProgress = (
       }
       
       if (successCount > 0) {
+        console.log("Upload completed successfully");
         handleDialogClose(false);
+      } else {
+        console.error("No files were uploaded successfully");
       }
+    } catch (error) {
+      console.error("Error during file upload:", error);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);

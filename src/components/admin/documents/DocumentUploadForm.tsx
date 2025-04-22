@@ -31,15 +31,16 @@ const DocumentUploadForm: React.FC<DocumentFormProps> = ({
     }
   }, [preSelectedClientId, form]);
 
+  const handleFormSubmit = (data: DocumentFormValues) => {
+    console.log("Form submitted with data:", data);
+    onSubmit(data);
+  };
+
   return (
     <FormProvider {...form}>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit((data) => {
-            // Send empty title - it will be replaced by filename in the upload logic
-            const cleanData = { ...data, title: "" };
-            onSubmit(cleanData);
-          })}
+          onSubmit={form.handleSubmit(handleFormSubmit)}
           className="space-y-4"
         >
           <ClientSelect 

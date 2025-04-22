@@ -12,7 +12,10 @@ export const useDocumentUpload = (
   const { addTimeout } = useTimeoutManager();
 
   const handleUploadDocument = async (data: DocumentFormData & { file: File }) => {
-    if (!data.client_id || !data.file) return false;
+    if (!data.client_id || !data.file) {
+      console.error("Missing required data for upload:", { clientId: data.client_id, fileExists: !!data.file });
+      return false;
+    }
     
     setIsSubmitting(true);
     console.log("Starting document upload process for file:", data.file.name);
@@ -22,9 +25,9 @@ export const useDocumentUpload = (
       const processedFile = await compressImage(data.file);
       console.log("File processed and ready for upload");
       
-      // Use file name as title if no title is provided
+      // Use title from data or file name if title is empty
       const documentData: DocumentFormData = {
-        title: data.title?.trim() || data.file.name,
+        title: data.title || data.file.name,
         description: data.description,
         client_id: data.client_id
       };
