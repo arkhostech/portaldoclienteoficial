@@ -41,6 +41,9 @@ export const UploadDialogContent = ({
   fileInputRef,
   handleFileChange
 }: UploadDialogContentProps) => {
+  // Pick the first file name for form prefill (if exists)
+  const firstSelectedFileName = files.length > 0 ? files[0].name : "";
+
   return (
     <ScrollArea className="max-h-[calc(90vh-120px)]">
       <div className="space-y-4 pr-4 p-2">
@@ -51,25 +54,24 @@ export const UploadDialogContent = ({
           onChange={handleFileChange}
           className="hidden"
         />
-        
-        <FileDropzone 
-          onDrop={onDrop} 
-          filesCount={files.length} 
-          onBrowse={onBrowseFiles} 
+        <FileDropzone
+          onDrop={onDrop}
+          filesCount={files.length}
+          onBrowse={onBrowseFiles}
           isCompressing={isCompressing}
         />
-        
         <FileList files={files} onRemove={removeFile} />
 
         {isUploading && <ProgressBar progress={uploadProgress} />}
-        
+
         {files.length > 0 ? (
-          <DocumentUploadForm 
+          <DocumentUploadForm
             clients={clients}
             preSelectedClientId={preSelectedClientId}
             isSubmitting={isSubmitting || isUploading}
             onCancel={() => handleDialogClose(false)}
             onSubmit={handleSubmit}
+            firstSelectedFileName={firstSelectedFileName}
           />
         ) : null}
       </div>

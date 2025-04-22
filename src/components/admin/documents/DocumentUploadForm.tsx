@@ -9,17 +9,22 @@ import { DocumentMetadataFields } from "./form/DocumentMetadataFields";
 import { FormActions } from "./form/FormActions";
 import { toast } from "sonner";
 
-const DocumentUploadForm: React.FC<DocumentFormProps> = ({ 
-  clients, 
-  preSelectedClientId, 
-  isSubmitting, 
-  onCancel, 
-  onSubmit 
-}: DocumentFormProps) => {
+interface DocumentUploadFormExtendedProps extends DocumentFormProps {
+  firstSelectedFileName?: string;
+}
+
+const DocumentUploadForm: React.FC<DocumentUploadFormExtendedProps> = ({
+  clients,
+  preSelectedClientId,
+  isSubmitting,
+  onCancel,
+  onSubmit,
+  firstSelectedFileName
+}) => {
   const form = useForm<DocumentFormValues>({
     resolver: zodResolver(documentFormSchema),
     defaultValues: {
-      title: "",
+      title: firstSelectedFileName || "",
       description: "",
       client_id: preSelectedClientId || "",
       status: "active"
@@ -30,18 +35,17 @@ const DocumentUploadForm: React.FC<DocumentFormProps> = ({
     if (preSelectedClientId && form.getValues("client_id") !== preSelectedClientId) {
       form.setValue("client_id", preSelectedClientId);
     }
-  }, [preSelectedClientId, form]);
+    // Prefill "title" with first file name if not set already (covers edge case)
+    if (firstSelectedFileName && !form.getValues("title")) {
+      form.setValue("title", firstSelectedFileName);
+    }
+  }, [preSelectedClientId, firstSelectedFileName, form]);
 
-  // Function to handle form submission
   const handleFormSubmit = (data: DocumentFormValues) => {
-    console.log("Form submitted with data:", data);
-    
     if (!data.client_id) {
       toast.error("Selecione um cliente");
       return;
     }
-    
-    // Make sure we're passing the complete data to the onSubmit callback
     onSubmit(data);
   };
 
@@ -53,14 +57,13 @@ const DocumentUploadForm: React.FC<DocumentFormProps> = ({
           className="space-y-4"
           id="document-upload-form"
         >
-          <ClientSelect 
-            clients={clients} 
+          <ClientSelect
+            clients={clients}
             disabled={!!preSelectedClientId}
           />
-
-          <DocumentMetadataFields />          
-          <FormActions 
-            isSubmitting={isSubmitting} 
+          <DocumentMetadataFields defaultTitle={firstSelectedFileName} />
+          <FormActions
+            isSubmitting={isSubmitting}
             onCancel={onCancel}
           />
         </form>
