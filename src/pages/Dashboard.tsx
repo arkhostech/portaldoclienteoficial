@@ -11,7 +11,7 @@ import {
 } from "@/components/dashboard";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Document } from "@/types/document";
+import { Document } from "@/services/documents/types";
 
 const Dashboard = () => {
   const { user } = useAuth();
