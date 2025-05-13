@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/auth";
 import { 
   LayoutDashboard, 
   Users, 
   FileText, 
-  CreditCard,
   Settings,
   FolderOpen,
   BookOpen,

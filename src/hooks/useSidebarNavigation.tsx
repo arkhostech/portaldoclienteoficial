@@ -6,7 +6,6 @@ import {
   LayoutDashboard, 
   Users, 
   FileText, 
-  CreditCard,
   Settings,
   FolderOpen,
   LayoutPanelTop
@@ -44,11 +43,6 @@ export const useSidebarNavigation = () => {
       href: '/admin/cases' 
     },
     { 
-      title: 'Pagamentos', 
-      icon: <CreditCard className="h-5 w-5" />, 
-      href: '/admin/payments' 
-    },
-    { 
       title: 'Estágios Clientes', 
       icon: <LayoutPanelTop className="h-5 w-5" />, 
       href: '/admin/client-stages' 
@@ -70,11 +64,6 @@ export const useSidebarNavigation = () => {
       title: 'Documentos', 
       icon: <FolderOpen className="h-5 w-5" />, 
       href: '/documents' 
-    },
-    { 
-      title: 'Pagamentos', 
-      icon: <CreditCard className="h-5 w-5" />, 
-      href: '/payments' 
     }
   ];
 
