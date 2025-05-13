@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/auth";
 import { useChat } from "@/hooks/useChat";
-import { Send, PaperclipIcon } from "lucide-react";
+import { Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -56,10 +56,11 @@ const Messages = () => {
     }
   }, [user, conversations, isLoading, handleStartConversation]);
 
+  // Fixed: Modified the key press handler to prevent default action first
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+      e.preventDefault(); // Prevent the default enter key behavior first
+      handleSend();       // Then call the send function once
     }
   };
 
