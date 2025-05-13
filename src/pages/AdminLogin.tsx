@@ -16,7 +16,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
-import CreateAdminUser from "@/components/admin/CreateAdminUser";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -25,30 +24,6 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showAdminCreate, setShowAdminCreate] = useState(false);
-
-  // Check if any admin users exist
-  useEffect(() => {
-    const checkForAdmins = async () => {
-      try {
-        const { count, error } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('role', 'admin');
-          
-        if (error) {
-          console.error("Error checking for admins:", error);
-          return;
-        }
-        
-        setShowAdminCreate(count === 0);
-      } catch (err) {
-        console.error("Error in admin check:", err);
-      }
-    };
-    
-    checkForAdmins();
-  }, []);
 
   useEffect(() => {
     // If user is logged in and we're done loading
@@ -132,69 +107,62 @@ const AdminLogin = () => {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-6">
-        {showAdminCreate ? (
-          <div className="w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-6 text-center">Configuração Inicial</h2>
-            <CreateAdminUser />
-          </div>
-        ) : (
-          <Card className="w-full max-w-md">
-            <CardHeader className="space-y-1 text-center">
-              <CardTitle className="text-3xl font-bold">Login de Administrador</CardTitle>
-              <CardDescription>
-                Acesse o painel administrativo do sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {error && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="email"
-                      placeholder="Email"
-                      className="pl-10"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1 text-center">
+            <CardTitle className="text-3xl font-bold">Login de Administrador</CardTitle>
+            <CardDescription>
+              Acesse o painel administrativo do sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    className="pl-10"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
                 </div>
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="password"
-                      placeholder="Senha"
-                      className="pl-10"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <Button 
-                  type="submit" 
-                  className="w-full bg-[#EAC066] hover:bg-[#d9af5c] text-[#111111]"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Verificando..." : "Entrar como Administrador"}
-                </Button>
-              </form>
-            </CardContent>
-            <CardFooter className="flex justify-center border-t p-4">
-              <div className="flex items-center text-xs text-muted-foreground">
-                <ShieldCheck className="mr-2 h-4 w-4" />
-                Conexão segura e encriptada
               </div>
-            </CardFooter>
-          </Card>
-        )}
+              <div className="space-y-2">
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    placeholder="Senha"
+                    className="pl-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full bg-[#EAC066] hover:bg-[#d9af5c] text-[#111111]"
+                disabled={isLoading}
+              >
+                {isLoading ? "Verificando..." : "Entrar como Administrador"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-center border-t p-4">
+            <div className="flex items-center text-xs text-muted-foreground">
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              Conexão segura e encriptada
+            </div>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );
