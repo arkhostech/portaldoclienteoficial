@@ -11,9 +11,11 @@ import AdminLogin from "./pages/AdminLogin";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Documents from "./pages/Documents";
+import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 import Clients from "./pages/admin/Clients";
 import AdminDocuments from "./pages/admin/Documents";
+import AdminMessages from "./pages/admin/Messages";
 import Cases from "./pages/admin/Cases";
 import ClientStages from "./pages/admin/ClientStages";
 import ClientDocuments from "./pages/admin/ClientDocuments";
@@ -38,9 +40,11 @@ const App = () => (
               <Route path="/admin/clients/:clientId/documents" element={<ClientDocuments />} />
               <Route path="/admin/documents" element={<AdminDocuments />} />
               <Route path="/admin/cases" element={<Cases />} />
+              <Route path="/admin/messages" element={<AdminMessages />} />
               <Route path="/admin/client-stages" element={<ClientStages />} />
               <Route path="/admin/settings" element={<Settings />} />
               <Route path="/documents" element={<Documents />} />
+              <Route path="/messages" element={<Messages />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

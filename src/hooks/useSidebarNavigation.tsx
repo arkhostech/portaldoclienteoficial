@@ -8,7 +8,8 @@ import {
   FileText, 
   Settings,
   FolderOpen,
-  LayoutPanelTop
+  LayoutPanelTop,
+  MessageCircle
 } from 'lucide-react';
 
 export interface NavItem {
@@ -43,6 +44,11 @@ export const useSidebarNavigation = () => {
       href: '/admin/cases' 
     },
     { 
+      title: 'Chat com Clientes', 
+      icon: <MessageCircle className="h-5 w-5" />, 
+      href: '/admin/messages' 
+    },
+    { 
       title: 'Estágios Clientes', 
       icon: <LayoutPanelTop className="h-5 w-5" />, 
       href: '/admin/client-stages' 
@@ -64,6 +70,11 @@ export const useSidebarNavigation = () => {
       title: 'Documentos', 
       icon: <FolderOpen className="h-5 w-5" />, 
       href: '/documents' 
+    },
+    { 
+      title: 'Mensagens', 
+      icon: <MessageCircle className="h-5 w-5" />, 
+      href: '/messages' 
     }
   ];
 

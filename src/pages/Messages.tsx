@@ -1,15 +1,30 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { messages } from "@/utils/dummyData";
-import { PaperclipIcon, Send } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
+import { useChat } from "@/hooks/useChat";
+import { Send, PaperclipIcon } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Messages = () => {
+  const { user } = useAuth();
   const [newMessage, setNewMessage] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const {
+    conversations,
+    activeConversation,
+    messages,
+    isLoading,
+    isSending,
+    handleSendMessage,
+    handleStartConversation,
+  } = useChat();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -22,11 +37,29 @@ const Messages = () => {
     });
   };
 
-  const handleSendMessage = () => {
+  const handleSend = () => {
     if (newMessage.trim() !== "") {
-      // In a real app, this would send the message to the backend
-      console.log("Sending message:", newMessage);
+      handleSendMessage(newMessage);
       setNewMessage("");
+    }
+  };
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Start a conversation if the user doesn't have one
+  useEffect(() => {
+    if (user && conversations.length === 0 && !isLoading) {
+      handleStartConversation(user.id);
+    }
+  }, [user, conversations, isLoading, handleStartConversation]);
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
   };
 
@@ -38,48 +71,48 @@ const Messages = () => {
           <p className="text-sm text-muted-foreground">
             Todas as mensagens são arquivadas para referência futura
           </p>
+          <p className="text-sm text-muted-foreground mt-1 font-medium">
+            ⏰ As mensagens serão respondidas dentro do horário comercial
+          </p>
         </div>
 
         {/* Messages list */}
-        <div className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2">
-          {messages.map((msg) => (
-            <Card
-              key={msg.id}
-              className={`max-w-3xl ${
-                msg.sender === "Cliente"
-                  ? "ml-auto bg-brand-50 border-brand-100"
-                  : "mr-auto"
-              }`}
-            >
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                  <span className={`font-medium ${
-                    msg.sender === "Cliente" ? "text-brand-700" : "text-gray-700"
-                  }`}>
-                    {msg.sender}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(msg.timestamp)}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm">{msg.content}</p>
-                {msg.attachments && msg.attachments.length > 0 && (
-                  <div className="mt-3">
-                    {msg.attachments.map((attachment, index) => (
-                      <div
-                        key={index}
-                        className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs mr-2 mt-2"
-                      >
-                        <PaperclipIcon className="h-3 w-3 mr-1" />
-                        {attachment}
-                      </div>
-                    ))}
+        <ScrollArea className="flex-1 mb-4">
+          <div className="space-y-4 pr-2">
+            {messages.map((msg) => (
+              <Card
+                key={msg.id}
+                className={`max-w-3xl ${
+                  msg.sender_type === "client"
+                    ? "ml-auto bg-primary/5 border-primary/10"
+                    : "mr-auto bg-secondary/10"
+                }`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center">
+                      <Avatar className="h-6 w-6 mr-2">
+                        <AvatarFallback>
+                          {msg.sender_type === "admin" ? "A" : "C"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">
+                        {msg.sender_type === "admin" ? "Advogado" : "Você"}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(msg.created_at)}
+                    </span>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <p className="mt-2 text-sm whitespace-pre-wrap break-words">
+                    {msg.content}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
 
         {/* Message input */}
         <div className="sticky bottom-0 bg-white pt-2">
@@ -89,15 +122,17 @@ const Messages = () => {
                 placeholder="Digite sua mensagem..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyPress}
                 className="resize-none"
                 rows={3}
               />
             </div>
             <div className="flex-shrink-0 flex space-x-2">
-              <Button variant="outline" size="icon">
-                <PaperclipIcon className="h-5 w-5" />
-              </Button>
-              <Button onClick={handleSendMessage}>
+              <Button 
+                onClick={handleSend} 
+                disabled={isSending || !newMessage.trim()}
+                className="h-10"
+              >
                 <Send className="h-4 w-4 mr-2" />
                 Enviar
               </Button>
