@@ -15,7 +15,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     autoRefreshToken: true,
     storageKey: 'client-hub-access-auth-storage',
-    detectSessionInUrl: true,
     flowType: 'implicit', // Use implicit flow for better caching
   }
 });
@@ -30,34 +29,42 @@ export const checkUserRoleWithCache = async (userId: string): Promise<'admin' | 
     return userRoleCache.get(userId) as 'admin' | 'client' | null;
   }
   
-  // First check app_metadata from auth user
-  const { data: userData } = await supabase.auth.getUser();
-  const userRole = userData?.user?.app_metadata?.role;
+  try {
+    // First check app_metadata from auth user
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    
+    const userRole = userData?.user?.app_metadata?.role;
+    
+    if (userRole === 'admin' || userRole === 'client') {
+      // Store in cache
+      userRoleCache.set(userId, userRole);
+      return userRole;
+    }
+    
+    // Then check profiles table
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
   
-  if (userRole === 'admin' || userRole === 'client') {
-    // Store in cache
-    userRoleCache.set(userId, userRole);
-    return userRole;
-  }
+    if (error) {
+      console.warn("Could not fetch profile from database:", error);
+      return null;
+    }
   
-  // Then check profiles table
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single();
-
-  if (error) {
-    console.error("Error fetching profile:", error);
+    // Store result in cache
+    if (data?.role) {
+      userRoleCache.set(userId, data.role);
+    }
+  
+    return data?.role || null;
+  } catch (error) {
+    console.error("Error checking user role:", error);
+    // Return null instead of throwing, to prevent blocking auth flow
     return null;
   }
-
-  // Store result in cache
-  if (data?.role) {
-    userRoleCache.set(userId, data.role);
-  }
-
-  return data?.role || null;
 };
 
 // Clear cache entry for a user

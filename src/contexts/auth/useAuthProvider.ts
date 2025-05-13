@@ -20,6 +20,7 @@ export function useAuthProvider(): AuthContextType {
   const checkUserRole = useCallback(async (userId: string): Promise<boolean> => {
     try {
       const userRole = await checkUserRoleWithCache(userId);
+      console.log("User role check result:", userRole);
       return userRole === 'admin';
     } catch (error) {
       console.error("Error checking user role:", error);
@@ -89,30 +90,43 @@ export function useAuthProvider(): AuthContextType {
           // Use immediate state update to prevent loop
           if (newSession.user && !userChecked) {
             userChecked = true;
-            const isUserAdmin = await checkUserRole(newSession.user.id);
-            console.log("User is admin:", isUserAdmin);
-            setIsAdmin(isUserAdmin);
-            
-            // Only handle redirection for new sign-ins, not for refreshed sessions
-            if (event === 'SIGNED_IN') {
-              const currentPath = window.location.pathname;
+            try {
+              const isUserAdmin = await checkUserRole(newSession.user.id);
+              console.log("User is admin:", isUserAdmin);
               
-              if (currentPath === '/admin-login') {
-                if (!isUserAdmin) {
-                  toast.error("Apenas administradores podem acessar este portal.");
-                  navigate('/');
-                } else {
-                  navigate("/admin");
-                }
-              } else if (currentPath === '/') {
-                if (isUserAdmin) {
-                  toast.error("Administradores devem acessar pelo portal administrativo.");
-                  navigate('/admin-login');
-                } else {
-                  navigate("/dashboard");
+              if (mounted) {
+                setIsAdmin(isUserAdmin);
+                setLoading(false);
+              
+                // Only handle redirection for new sign-ins, not for refreshed sessions
+                if (event === 'SIGNED_IN') {
+                  const currentPath = window.location.pathname;
+                  
+                  if (currentPath === '/admin-login') {
+                    if (!isUserAdmin) {
+                      toast.error("Apenas administradores podem acessar este portal.");
+                      navigate('/');
+                    } else {
+                      navigate("/admin");
+                    }
+                  } else if (currentPath === '/') {
+                    if (isUserAdmin) {
+                      toast.error("Administradores devem acessar pelo portal administrativo.");
+                      navigate('/admin-login');
+                    } else {
+                      navigate("/dashboard");
+                    }
+                  }
                 }
               }
+            } catch (error) {
+              console.error("Error in admin check:", error);
+              if (mounted) {
+                setIsAdmin(false);
+                setLoading(false);
+              }
             }
+          } else {
             setLoading(false);
           }
         } else {
@@ -139,35 +153,43 @@ export function useAuthProvider(): AuthContextType {
             setUser(session.user);
             userChecked = true;
             
-            const isUserAdmin = await checkUserRole(session.user.id);
-            console.log("User is admin (from existing session):", isUserAdmin);
-            
-            if (mounted) {
-              setIsAdmin(isUserAdmin);
-              setLoading(false);
+            try {
+              const isUserAdmin = await checkUserRole(session.user.id);
+              console.log("User is admin (from existing session):", isUserAdmin);
               
-              // Only redirect in specific cases to avoid loops
-              const currentPath = window.location.pathname;
-              
-              if (currentPath === '/admin-login') {
-                if (isUserAdmin) {
-                  navigate('/admin');
+              if (mounted) {
+                setIsAdmin(isUserAdmin);
+                setLoading(false);
+                
+                // Only redirect in specific cases to avoid loops
+                const currentPath = window.location.pathname;
+                
+                if (currentPath === '/admin-login') {
+                  if (isUserAdmin) {
+                    navigate('/admin');
+                  }
+                  // If not admin, let them see the login page
+                } else if (currentPath === '/') {
+                  if (!isUserAdmin && session) {
+                    navigate('/dashboard');
+                  }
+                  // If admin, let them see the client login page
+                } else if (isAdminPath(currentPath) && !isUserAdmin) {
+                  // Only redirect if not on admin login page
+                  if (currentPath !== '/admin-login') {
+                    toast.error("Apenas administradores podem acessar este portal.");
+                    navigate('/');
+                  }
+                } else if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
+                  toast.error("Administradores devem acessar pelo portal administrativo.");
+                  navigate('/admin-login');
                 }
-                // If not admin, let them see the login page
-              } else if (currentPath === '/') {
-                if (!isUserAdmin && session) {
-                  navigate('/dashboard');
-                }
-                // If admin, let them see the client login page
-              } else if (isAdminPath(currentPath) && !isUserAdmin) {
-                // Only redirect if not on admin login page
-                if (currentPath !== '/admin-login') {
-                  toast.error("Apenas administradores podem acessar este portal.");
-                  navigate('/');
-                }
-              } else if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
-                toast.error("Administradores devem acessar pelo portal administrativo.");
-                navigate('/admin-login');
+              }
+            } catch (error) {
+              console.error("Error in admin check:", error);
+              if (mounted) {
+                setIsAdmin(false);
+                setLoading(false);
               }
             }
           } else {
