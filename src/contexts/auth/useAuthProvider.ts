@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase, checkUserRoleWithCache, clearUserRoleCache } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ export function useAuthProvider(): AuthContextType {
   const navigate = useNavigate();
   const location = useLocation();
   const [sessionChecked, setSessionChecked] = useState(false);
+  const redirectInProgress = useRef(false);
 
   // Memoized function to check user role - avoids unnecessary database queries
   const checkUserRole = useCallback(async (userId: string): Promise<boolean> => {
@@ -69,6 +70,20 @@ export function useAuthProvider(): AuthContextType {
     }
   };
 
+  // Safe navigation function to prevent multiple redirects
+  const safeNavigate = useCallback((path: string) => {
+    if (redirectInProgress.current) return;
+    
+    redirectInProgress.current = true;
+    console.log(`Redirecting to: ${path}`);
+    navigate(path);
+    
+    // Reset the flag after a delay to allow navigation to complete
+    setTimeout(() => {
+      redirectInProgress.current = false;
+    }, 1000);
+  }, [navigate]);
+
   // Initialize auth state
   useEffect(() => {
     console.log("AuthProvider: Initializing");
@@ -99,10 +114,10 @@ export function useAuthProvider(): AuthContextType {
                 if (currentPath === '/admin-login') {
                   if (!isUserAdmin) {
                     toast.error("Apenas administradores podem acessar este portal.");
-                    navigate('/');
+                    safeNavigate('/');
                     return;
                   } else {
-                    navigate("/admin");
+                    safeNavigate("/admin");
                     return;
                   }
                 } 
@@ -110,10 +125,10 @@ export function useAuthProvider(): AuthContextType {
                 if (currentPath === '/') {
                   if (isUserAdmin) {
                     toast.error("Administradores devem acessar pelo portal administrativo.");
-                    navigate('/admin-login');
+                    safeNavigate('/admin-login');
                     return;
                   } else {
-                    navigate("/dashboard");
+                    safeNavigate("/dashboard");
                     return;
                   }
                 }
@@ -157,13 +172,13 @@ export function useAuthProvider(): AuthContextType {
               // Only redirect on login pages or if trying to access wrong section
               if (currentPath === '/admin-login') {
                 if (isUserAdmin) {
-                  navigate('/admin');
+                  safeNavigate('/admin');
                   return;
                 }
                 // If not admin, let them see the login page
               } else if (currentPath === '/') {
                 if (!isUserAdmin && session) {
-                  navigate('/dashboard');
+                  safeNavigate('/dashboard');
                   return;
                 }
                 // If admin, let them see the client login page
@@ -171,12 +186,12 @@ export function useAuthProvider(): AuthContextType {
                 // Only redirect if not on admin login page
                 if (currentPath !== '/admin-login') {
                   toast.error("Apenas administradores podem acessar este portal.");
-                  navigate('/');
+                  safeNavigate('/');
                   return;
                 }
               } else if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
                 toast.error("Administradores devem acessar pelo portal administrativo.");
-                navigate('/admin-login');
+                safeNavigate('/admin-login');
                 return;
               }
             }
@@ -185,12 +200,12 @@ export function useAuthProvider(): AuthContextType {
             const currentPath = window.location.pathname;
             
             if (isAdminPath(currentPath) && currentPath !== '/admin-login') {
-              navigate('/admin-login');
+              safeNavigate('/admin-login');
               return;
             }
             
             if (isClientPath(currentPath) && currentPath !== '/') {
-              navigate('/');
+              safeNavigate('/');
               return;
             }
             
@@ -211,7 +226,7 @@ export function useAuthProvider(): AuthContextType {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, location.pathname, sessionChecked, checkUserRole]);
+  }, [navigate, location.pathname, sessionChecked, checkUserRole, safeNavigate]);
 
   const value = {
     user,
