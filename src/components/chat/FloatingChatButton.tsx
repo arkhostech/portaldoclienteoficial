@@ -20,17 +20,26 @@ export const FloatingChatButton = () => {
     // Count initial unread messages
     const fetchUnreadCount = async () => {
       try {
+        // First get the user's conversation IDs
+        const { data: conversationsData } = await supabase
+          .from('conversations')
+          .select('id')
+          .eq('client_id', user.id);
+        
+        if (!conversationsData || conversationsData.length === 0) {
+          setUnreadCount(0);
+          return;
+        }
+        
+        // Use the conversation IDs to count unread messages
+        const conversationIds = conversationsData.map(conv => conv.id);
+        
         const { count } = await supabase
           .from('messages')
           .select('id', { count: 'exact' })
           .eq('is_read', false)
           .eq('sender_type', 'admin')
-          .in('conversation_id', 
-            supabase
-              .from('conversations')
-              .select('id')
-              .eq('client_id', user.id)
-          );
+          .in('conversation_id', conversationIds);
         
         setUnreadCount(count || 0);
       } catch (error) {
