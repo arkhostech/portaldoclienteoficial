@@ -29,9 +29,16 @@ export function useRoleVerification(
         if (!mounted) return;
         
         console.log("Role verification complete. Is admin:", isUserAdmin);
-        handleSessionRedirect(isUserAdmin, window.location.pathname, true);
-        setLoading(false);
-        setRoleVerified(true);
+        console.log("Current path during role verification:", window.location.pathname);
+        
+        // Added delay to ensure role is properly set before redirection
+        setTimeout(() => {
+          if (mounted) {
+            handleSessionRedirect(isUserAdmin, window.location.pathname, true);
+            setLoading(false);
+            setRoleVerified(true);
+          }
+        }, 0);
       } catch (error) {
         console.error("Error in role verification:", error);
         if (mounted) {

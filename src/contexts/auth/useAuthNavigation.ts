@@ -54,27 +54,38 @@ export function useAuthNavigation() {
       return;
     }
 
-    // If user is authenticated as admin, ensure they have access to admin paths
-    if (isUserAdmin && isAdminPath(currentPath)) {
-      // Admin is already on an admin path, no need to redirect
-      console.log("Admin user on admin path, no redirect needed");
+    // Admin trying to access client areas - redirect to admin dashboard
+    if (isUserAdmin && isClientPath(currentPath) && currentPath !== '/') {
+      console.log("Admin user trying to access client section, redirecting to admin dashboard");
+      navigate('/admin');
       return;
     }
     
-    // If user is authenticated as client, ensure they have access to client paths
-    if (!isUserAdmin && isClientPath(currentPath)) {
-      // Client is already on a client path, no redirect needed
-      console.log("Client user on client path, no redirect needed");
+    // Client trying to access admin areas - redirect to client dashboard
+    if (!isUserAdmin && isAdminPath(currentPath) && currentPath !== '/admin-login') {
+      console.log("Client user trying to access admin section, redirecting to client dashboard");
+      toast.error("Apenas administradores podem acessar este portal.");
+      navigate('/dashboard');
       return;
     }
-
-    // Handle incorrect path access
-    if (isAdminPath(currentPath) && !isUserAdmin && currentPath !== '/admin-login') {
-      toast.error("Apenas administradores podem acessar este portal.");
-      navigate('/');
-    } else if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
-      toast.error("Administradores devem acessar pelo portal administrativo.");
-      navigate('/admin-login');
+    
+    // Admin is already on admin path or client on client path - no redirect needed
+    if ((isUserAdmin && isAdminPath(currentPath)) || 
+        (!isUserAdmin && isClientPath(currentPath))) {
+      return;
+    }
+    
+    // Handle login page redirects
+    if (currentPath === '/admin-login') {
+      if (isUserAdmin) {
+        navigate('/admin');
+      }
+    } else if (currentPath === '/') {
+      if (!isUserAdmin && hasSession) {
+        navigate('/dashboard');
+      } else if (isUserAdmin) {
+        navigate('/admin');
+      }
     }
   };
 

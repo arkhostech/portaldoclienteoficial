@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,6 @@ import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
-import { supabase } from "@/integrations/supabase/client";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -28,19 +26,17 @@ const AdminLogin = () => {
   useEffect(() => {
     // If user is logged in and we're done loading
     if (!loading && user) {
+      console.log("AdminLogin: User logged in, isAdmin:", isAdmin);
       if (isAdmin) {
         // If admin, go to admin dashboard
         navigate("/admin");
       } else {
-        // If not admin, log them out once and send to client portal
-        // Using setTimeout to avoid potential state update loops
-        setTimeout(() => {
-          toast.error("Apenas administradores podem acessar este portal.");
-          navigate('/');
-        }, 100);
+        // If not admin, notify and redirect to client portal
+        toast.error("Apenas administradores podem acessar este portal.");
+        navigate('/');
       }
     }
-  }, [user, isAdmin, loading, navigate, signOut]);
+  }, [user, isAdmin, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +46,7 @@ const AdminLogin = () => {
     try {
       await signIn(email, password);
     } catch (error: any) {
-      console.error(error);
+      console.error("Login error:", error);
       setError("Credenciais inválidas ou você não tem permissão de administrador.");
     } finally {
       setIsLoading(false);
