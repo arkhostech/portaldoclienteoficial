@@ -1,12 +1,13 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import MainLayout from "@/components/Layout/MainLayout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/auth";
 import { useChat } from "@/hooks/useChat";
-import { Send } from "lucide-react";
+import { Send, PaperclipIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -14,7 +15,7 @@ const Messages = () => {
   const { user } = useAuth();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  
   const {
     conversations,
     activeConversation,
@@ -22,31 +23,8 @@ const Messages = () => {
     isLoading,
     isSending,
     handleSendMessage,
-    handleStartConversation
+    handleStartConversation,
   } = useChat();
-
-  useEffect(() => {
-    // If user exists and there are no conversations yet, start a conversation
-    if (user && !isLoading && conversations.length === 0) {
-      console.log("Starting new conversation for client");
-      handleStartConversation(user.id);
-    }
-  }, [user, conversations, isLoading, handleStartConversation]);
-
-  // Fixed: Modified the key press handler to prevent default action first
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // Prevent the default enter key behavior first
-      handleSend();       // Then call the send function once
-    }
-  };
-
-  const handleSend = () => {
-    if (newMessage.trim() && activeConversation) {
-      handleSendMessage(newMessage);
-      setNewMessage("");
-    }
-  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -59,76 +37,108 @@ const Messages = () => {
     });
   };
 
-  // Scroll to bottom of messages when messages change
+  const handleSend = () => {
+    if (newMessage.trim() !== "") {
+      handleSendMessage(newMessage);
+      setNewMessage("");
+    }
+  };
+
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Start a conversation if the user doesn't have one
+  useEffect(() => {
+    if (user && conversations.length === 0 && !isLoading) {
+      handleStartConversation(user.id);
+    }
+  }, [user, conversations, isLoading, handleStartConversation]);
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
     <MainLayout title="Mensagens">
-      <div className="container mx-auto max-w-4xl">
-        <Card className="overflow-hidden">
-          <div className="bg-secondary/10 p-4 border-b">
-            <h2 className="font-semibold">Chat com o Escritório</h2>
-          </div>
-          
-          <ScrollArea className="h-[calc(70vh-8rem)] p-4">
-            <div className="space-y-4">
-              {isLoading ? (
-                <div className="text-center py-8">Carregando mensagens...</div>
-              ) : messages.length > 0 ? (
-                messages.map((msg) => (
-                  <Card
-                    key={msg.id}
-                    className={`max-w-3xl ${
-                      msg.sender_type === "client"
-                        ? "ml-auto bg-primary/5 border-primary/10"
-                        : "mr-auto bg-secondary/10"
-                    }`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <span className="font-medium">
-                          {msg.sender_type === "client" ? "Você" : "Advogado"}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(msg.created_at)}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm whitespace-pre-wrap">
-                        {msg.content}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    Envie uma mensagem para iniciar a conversa com nossos advogados.
-                  </p>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
+      <div className="flex flex-col h-[calc(100vh-10rem)]">
+        <div className="mb-4">
+          <h2 className="text-xl font-bold">Conversa com Escritório de Advocacia</h2>
+          <p className="text-sm text-muted-foreground">
+            Todas as mensagens são arquivadas para referência futura
+          </p>
+          <p className="text-sm text-muted-foreground mt-1 font-medium">
+            ⏰ As mensagens serão respondidas dentro do horário comercial
+          </p>
+        </div>
 
-          <div className="border-t p-4">
-            <div className="flex space-x-2">
+        {/* Messages list */}
+        <ScrollArea className="flex-1 mb-4">
+          <div className="space-y-4 pr-2">
+            {messages.map((msg) => (
+              <Card
+                key={msg.id}
+                className={`max-w-3xl ${
+                  msg.sender_type === "client"
+                    ? "ml-auto bg-primary/5 border-primary/10"
+                    : "mr-auto bg-secondary/10"
+                }`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center">
+                      <Avatar className="h-6 w-6 mr-2">
+                        <AvatarFallback>
+                          {msg.sender_type === "admin" ? "A" : "C"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">
+                        {msg.sender_type === "admin" ? "Advogado" : "Você"}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(msg.created_at)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm whitespace-pre-wrap break-words">
+                    {msg.content}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+
+        {/* Message input */}
+        <div className="sticky bottom-0 bg-white pt-2">
+          <div className="flex items-end space-x-2">
+            <div className="flex-1">
               <Textarea
-                placeholder="Escreva sua mensagem..."
+                placeholder="Digite sua mensagem..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="flex-1 resize-none"
-                rows={2}
+                className="resize-none"
+                rows={3}
               />
-              <Button onClick={handleSend} disabled={isSending || !newMessage.trim()}>
+            </div>
+            <div className="flex-shrink-0 flex space-x-2">
+              <Button 
+                onClick={handleSend} 
+                disabled={isSending || !newMessage.trim()}
+                className="h-10"
+              >
                 <Send className="h-4 w-4 mr-2" />
                 Enviar
               </Button>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
     </MainLayout>
   );

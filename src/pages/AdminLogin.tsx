@@ -26,17 +26,19 @@ const AdminLogin = () => {
   useEffect(() => {
     // If user is logged in and we're done loading
     if (!loading && user) {
-      console.log("AdminLogin: User logged in, isAdmin:", isAdmin);
       if (isAdmin) {
         // If admin, go to admin dashboard
         navigate("/admin");
       } else {
-        // If not admin, notify and redirect to client portal
-        toast.error("Apenas administradores podem acessar este portal.");
-        navigate('/');
+        // If not admin, log them out once and send to client portal
+        // Using setTimeout to avoid potential state update loops
+        setTimeout(() => {
+          toast.error("Apenas administradores podem acessar este portal.");
+          navigate('/');
+        }, 100);
       }
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, isAdmin, loading, navigate, signOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +48,7 @@ const AdminLogin = () => {
     try {
       await signIn(email, password);
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error(error);
       setError("Credenciais inválidas ou você não tem permissão de administrador.");
     } finally {
       setIsLoading(false);

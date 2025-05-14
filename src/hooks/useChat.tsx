@@ -142,23 +142,16 @@ export const useChat = (clientId?: string) => {
     await loadMessages(conversation.id);
   }, [loadMessages]);
 
-  // Setup realtime subscriptions - Fix: Updated to avoid re-subscribing on every render
+  // Setup realtime subscriptions
   useEffect(() => {
     if (!user) return;
-    
-    // Clean up any existing channels first
-    if (conversationChannel) {
-      supabase.removeChannel(conversationChannel);
-    }
 
     // Subscribe to all conversations if admin
     if (isAdmin) {
       const channel = subscribeToConversations((updatedConversation) => {
         // Update the conversation list
         setConversations(prev => {
-          // Check if the conversation already exists in state
           const index = prev.findIndex(c => c.id === updatedConversation.id);
-          
           if (index >= 0) {
             // Update existing conversation
             const updated = [...prev];
@@ -174,45 +167,33 @@ export const useChat = (clientId?: string) => {
       setConversationChannel(channel);
     }
 
-    // Load initial conversations only once when component mounts
+    // Load initial conversations
     loadConversations();
 
-    // Cleanup function
     return () => {
+      // Cleanup subscription
       if (conversationChannel) {
         supabase.removeChannel(conversationChannel);
       }
     };
-  }, [user?.id, isAdmin]); // Fixed: Only depend on user.id and isAdmin, not the entire user object
+  }, [user, isAdmin, loadConversations]);
 
   // Subscribe to messages for active conversation
   useEffect(() => {
-    // Clean up any existing message channel
-    if (messageChannel) {
-      supabase.removeChannel(messageChannel);
-      setMessageChannel(null);
-    }
-    
     if (!activeConversation) return;
     
     const channel = subscribeToMessages(activeConversation.id, (newMessage) => {
-      // Prevent duplicate messages by checking if we already have it
-      setMessages(prev => {
-        if (prev.some(msg => msg.id === newMessage.id)) {
-          return prev;
-        }
-        return [...prev, newMessage];
-      });
+      setMessages(prev => [...prev, newMessage]);
     });
     
     setMessageChannel(channel);
     
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
+      if (messageChannel) {
+        supabase.removeChannel(messageChannel);
       }
     };
-  }, [activeConversation?.id]); // Fixed: Only depend on activeConversation.id
+  }, [activeConversation]);
 
   return {
     conversations,

@@ -6,7 +6,6 @@ import Header from './Header';
 import { useAuth } from '@/contexts/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FloatingChatButton } from '@/components/chat/FloatingChatButton';
-import { isAdminPath, isClientPath } from '@/contexts/auth/utils';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -19,6 +18,16 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  
+  const isAdminPath = (path: string): boolean => {
+    return path === '/admin-login' || path.startsWith('/admin');
+  };
+
+  const isClientPath = (path: string): boolean => {
+    return path === '/' || path === '/dashboard' || 
+           path === '/documents' || path === '/payments' || 
+           path === '/knowledge' || path === '/messages';
+  };
   
   // Only show floating chat button on client pages (not admin) and not on the messages page itself
   const shouldShowFloatingButton = !isAdmin && !location.pathname.includes('/messages');

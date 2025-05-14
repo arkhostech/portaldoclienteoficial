@@ -3,10 +3,12 @@ import { useState, useRef, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth";
 import { useChat } from "@/hooks/useChat";
 import { Send, User, Phone, Mail, FileText, Clock, AlertCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
@@ -144,8 +146,8 @@ const AdminMessages = () => {
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // Prevent default enter behavior first
-      handleSend(); // Then send the message only once
+      e.preventDefault();
+      handleSend();
     }
   };
 
