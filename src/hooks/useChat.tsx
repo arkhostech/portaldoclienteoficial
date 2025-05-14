@@ -1,199 +1,196 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/auth';
-import { RealtimeChannel } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  fetchConversations, 
-  fetchMessages, 
-  sendMessage, 
-  createConversation,
-  markMessagesAsRead,
-  subscribeToMessages,
-  subscribeToConversations
-} from '@/services/messages';
-import { Conversation, Message } from '@/services/messages/types';
-import { toast } from '@/hooks/use-toast';
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
+import {
+  fetchConversations,
+  fetchMessages,
+  sendMessage,
+  startConversation,
+  markMessagesAsRead
+} from "@/services/messages";
+import { debounce } from "lodash";
 
-export const useChat = (clientId?: string) => {
+interface Message {
+  id: string;
+  conversation_id: string;
+  sender_type: 'admin' | 'client';
+  sender_id: string;
+  content: string;
+  created_at: string;
+}
+
+interface Conversation {
+  id: string;
+  client_id: string;
+  client?: {
+    id: string;
+    full_name: string;
+    email: string;
+    phone?: string;
+    status: string;
+  };
+  process_type?: string;
+}
+
+export const useChat = () => {
   const { user, isAdmin } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [messageChannel, setMessageChannel] = useState<RealtimeChannel | null>(null);
-  const [conversationChannel, setConversationChannel] = useState<RealtimeChannel | null>(null);
 
-  // Load all conversations
+  // Debounced function to mark messages as read
+  const debouncedMarkAsRead = useCallback(
+    debounce((conversationId: string) => {
+      if (conversationId) {
+        markMessagesAsRead(conversationId, isAdmin ? 'client' : 'admin').catch((error) => {
+          console.error("Error marking messages as read:", error);
+        });
+      }
+    }, 500),
+    [isAdmin]
+  );
+
+  // Fetch conversations
   const loadConversations = useCallback(async () => {
     if (!user) return;
     
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const data = await fetchConversations(isAdmin, user.id);
-      setConversations(data);
+      const conversationsData = await fetchConversations(user.id, isAdmin);
+      setConversations(conversationsData);
+      
+      // Auto-select first conversation if none is active
+      if (conversationsData.length > 0 && !activeConversation) {
+        handleSelectConversation(conversationsData[0]);
+      }
     } catch (error) {
-      console.error('Error loading conversations:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar as conversas',
-        variant: 'destructive'
-      });
+      console.error("Error loading conversations:", error);
+      toast.error("Erro ao carregar conversas");
     } finally {
       setIsLoading(false);
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, activeConversation]);
 
-  // Load messages for a specific conversation
+  // Load messages for a conversation
   const loadMessages = useCallback(async (conversationId: string) => {
-    if (!conversationId) return;
-    
     try {
-      setIsLoading(true);
-      const data = await fetchMessages(conversationId);
-      setMessages(data);
+      const messagesData = await fetchMessages(conversationId);
+      setMessages(messagesData);
       
       // Mark messages as read
-      await markMessagesAsRead(conversationId);
+      debouncedMarkAsRead(conversationId);
     } catch (error) {
-      console.error('Error loading messages:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar as mensagens',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
+      console.error("Error loading messages:", error);
+      toast.error("Erro ao carregar mensagens");
     }
-  }, []);
+  }, [debouncedMarkAsRead]);
+
+  // Handle selecting a conversation
+  const handleSelectConversation = useCallback((conversation: Conversation) => {
+    setActiveConversation(conversation);
+    loadMessages(conversation.id);
+  }, [loadMessages]);
 
   // Send a message
   const handleSendMessage = useCallback(async (content: string) => {
-    if (!user || !activeConversation) return;
+    if (!user || !activeConversation || !content.trim()) return;
     
+    setIsSending(true);
     try {
-      setIsSending(true);
       const senderType = isAdmin ? 'admin' : 'client';
+      const newMessage = await sendMessage({
+        conversation_id: activeConversation.id,
+        sender_type: senderType,
+        sender_id: user.id,
+        content: content.trim(),
+      });
       
-      const newMessage = await sendMessage(
-        activeConversation.id,
-        content,
-        user.id,
-        senderType
-      );
-      
-      // Update local messages state to avoid waiting for subscription
+      // Add the new message to the list
       setMessages(prev => [...prev, newMessage]);
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível enviar a mensagem',
-        variant: 'destructive'
-      });
+      console.error("Error sending message:", error);
+      toast.error("Erro ao enviar mensagem");
     } finally {
       setIsSending(false);
     }
   }, [user, activeConversation, isAdmin]);
 
-  // Start a new conversation (especially for clients)
-  const handleStartConversation = useCallback(async (targetClientId: string, processType: string | null = null) => {
+  // Start a new conversation
+  const handleStartConversation = useCallback(async (clientId: string, processType?: string) => {
     if (!user) return;
     
     try {
-      setIsLoading(true);
-      
-      // Check if conversation already exists for this client
-      if (!isAdmin) {
-        const existingConversation = conversations.find(conv => conv.client_id === user.id);
-        if (existingConversation) {
-          setActiveConversation(existingConversation);
-          await loadMessages(existingConversation.id);
-          return;
-        }
-      }
-      
-      // Create new conversation
-      const newConversation = await createConversation(
-        targetClientId, 
-        processType
-      );
-      
-      // Add the new conversation to the list
-      setConversations(prev => [newConversation, ...prev]);
-      setActiveConversation(newConversation);
-      setMessages([]);
+      const conversation = await startConversation(clientId, processType);
+      setConversations(prev => [conversation, ...prev]);
+      setActiveConversation(conversation);
+      return conversation;
     } catch (error) {
-      console.error('Error starting conversation:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível iniciar uma nova conversa',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
+      console.error("Error starting conversation:", error);
+      toast.error("Erro ao iniciar conversa");
+      return null;
     }
-  }, [user, isAdmin, conversations, loadMessages]);
+  }, [user]);
 
-  // Set active conversation and load its messages
-  const handleSelectConversation = useCallback(async (conversation: Conversation) => {
-    setActiveConversation(conversation);
-    await loadMessages(conversation.id);
-  }, [loadMessages]);
-
-  // Setup realtime subscriptions
-  useEffect(() => {
-    if (!user) return;
-
-    // Subscribe to all conversations if admin
-    if (isAdmin) {
-      const channel = subscribeToConversations((updatedConversation) => {
-        // Update the conversation list
-        setConversations(prev => {
-          const index = prev.findIndex(c => c.id === updatedConversation.id);
-          if (index >= 0) {
-            // Update existing conversation
-            const updated = [...prev];
-            updated[index] = { ...updated[index], ...updatedConversation };
-            return updated;
-          } else {
-            // Add new conversation
-            return [updatedConversation, ...prev];
-          }
-        });
-      });
-      
-      setConversationChannel(channel);
-    }
-
-    // Load initial conversations
-    loadConversations();
-
-    return () => {
-      // Cleanup subscription
-      if (conversationChannel) {
-        supabase.removeChannel(conversationChannel);
-      }
-    };
-  }, [user, isAdmin, loadConversations]);
-
-  // Subscribe to messages for active conversation
+  // Subscribe to realtime updates for new messages
   useEffect(() => {
     if (!activeConversation) return;
     
-    const channel = subscribeToMessages(activeConversation.id, (newMessage) => {
-      setMessages(prev => [...prev, newMessage]);
-    });
+    const channel = supabase
+      .channel(`messages-${activeConversation.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${activeConversation.id}`,
+      }, (payload) => {
+        const newMessage = payload.new as Message;
+        
+        // Only add if not from current user to avoid duplicates
+        if (newMessage.sender_id !== user?.id) {
+          setMessages(prev => [...prev, newMessage]);
+          
+          // Mark as read if we're looking at the conversation
+          debouncedMarkAsRead(activeConversation.id);
+        }
+      })
+      .subscribe();
     
-    setMessageChannel(channel);
+    // Load initial messages
+    loadMessages(activeConversation.id);
     
     return () => {
-      if (messageChannel) {
-        supabase.removeChannel(messageChannel);
-      }
+      supabase.removeChannel(channel);
     };
-  }, [activeConversation]);
+  }, [activeConversation, user, loadMessages, debouncedMarkAsRead]);
+
+  // Load conversations on mount
+  useEffect(() => {
+    if (user) {
+      loadConversations();
+    }
+    
+    // Set up subscription for new conversations
+    if (user) {
+      const channel = supabase
+        .channel('new-conversations')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversations',
+          filter: isAdmin ? undefined : `client_id=eq.${user.id}`,
+        }, () => {
+          loadConversations();
+        })
+        .subscribe();
+      
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user, isAdmin, loadConversations]);
 
   return {
     conversations,
@@ -201,10 +198,12 @@ export const useChat = (clientId?: string) => {
     messages,
     isLoading,
     isSending,
-    loadConversations,
-    loadMessages,
     handleSendMessage,
-    handleStartConversation,
     handleSelectConversation,
+    handleStartConversation,
+    loadConversations,
   };
 };
+
+// Para o uso do supabase, adicione esta linha no início do arquivo
+import { supabase } from "@/integrations/supabase/client";

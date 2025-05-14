@@ -1,117 +1,176 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { Message, Conversation } from './types';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-// Fetch all conversations for admin, or a client's conversations for client
-export const fetchConversations = async (isAdmin: boolean, clientId?: string): Promise<Conversation[]> => {
-  let query = supabase
-    .from('conversations')
-    .select(`
-      *,
-      client:client_id (
-        full_name,
-        email,
-        phone,
-        status,
-        process_type_id
-      )
-    `)
-    .order('updated_at', { ascending: false });
-  
-  if (!isAdmin && clientId) {
-    query = query.eq('client_id', clientId);
-  }
+export interface Message {
+  id: string;
+  conversation_id: string;
+  sender_type: 'admin' | 'client';
+  sender_id: string;
+  content: string;
+  created_at: string;
+  is_read: boolean;
+}
 
-  const { data, error } = await query;
+export interface Conversation {
+  id: string;
+  client_id: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  process_type?: string;
+  client?: {
+    id: string;
+    full_name: string;
+    email: string;
+    phone?: string;
+    status: string;
+  };
+}
 
-  if (error) {
+// Function to fetch all conversations for a user
+export const fetchConversations = async (userId: string, isAdmin: boolean): Promise<Conversation[]> => {
+  try {
+    let query = supabase
+      .from('conversations')
+      .select(`
+        *,
+        client:client_id (
+          id, full_name, email, phone, status
+        )
+      `)
+      .eq('is_active', true)
+      .order('updated_at', { ascending: false });
+    
+    // For clients, only fetch their own conversations
+    if (!isAdmin) {
+      query = query.eq('client_id', userId);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
     console.error('Error fetching conversations:', error);
     throw error;
   }
-
-  return data || [];
 };
 
-// Create a new conversation
-export const createConversation = async (clientId: string, processType: string | null): Promise<Conversation> => {
-  const { data, error } = await supabase
-    .from('conversations')
-    .insert([
-      { client_id: clientId, process_type: processType }
-    ])
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error creating conversation:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-// Fetch messages for a specific conversation
+// Function to fetch messages for a conversation
 export const fetchMessages = async (conversationId: string): Promise<Message[]> => {
-  const { data, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true });
-
-  if (error) {
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
     console.error('Error fetching messages:', error);
     throw error;
   }
-
-  return data || [];
 };
 
-// Send a message
-export const sendMessage = async (
-  conversationId: string, 
-  content: string, 
-  senderId: string, 
-  senderType: 'admin' | 'client'
-): Promise<Message> => {
-  // Also update the conversation's updated_at time
-  await supabase
-    .from('conversations')
-    .update({ updated_at: new Date().toISOString() })
-    .eq('id', conversationId);
-
-  const { data, error } = await supabase
-    .from('messages')
-    .insert([
-      {
-        conversation_id: conversationId,
-        content,
-        sender_id: senderId,
-        sender_type: senderType
-      }
-    ])
-    .select()
-    .single();
-
-  if (error) {
+// Function to send a message
+export const sendMessage = async (messageData: {
+  conversation_id: string;
+  sender_type: 'admin' | 'client';
+  sender_id: string;
+  content: string;
+}): Promise<Message> => {
+  try {
+    // Update conversation's updated_at timestamp
+    await supabase
+      .from('conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', messageData.conversation_id);
+    
+    // Insert the message
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({
+        ...messageData,
+        is_read: false,
+      })
+      .select('*')
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
     console.error('Error sending message:', error);
     throw error;
   }
-
-  return data;
 };
 
-// Mark all messages as read
-export const markMessagesAsRead = async (conversationId: string): Promise<void> => {
-  const { error } = await supabase
-    .from('messages')
-    .update({ is_read: true })
-    .eq('conversation_id', conversationId)
-    .eq('is_read', false);
-
-  if (error) {
-    console.error('Error marking messages as read:', error);
+// Function to start a conversation
+export const startConversation = async (clientId: string, processType?: string): Promise<Conversation> => {
+  try {
+    // Check if an active conversation already exists
+    const { data: existingConversations } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('client_id', clientId)
+      .eq('is_active', true)
+      .limit(1);
+    
+    if (existingConversations && existingConversations.length > 0) {
+      // Update the existing conversation's timestamp
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', existingConversations[0].id);
+      
+      // Return the existing conversation
+      return existingConversations[0];
+    }
+    
+    // Create a new conversation
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert({
+        client_id: clientId,
+        process_type: processType,
+      })
+      .select(`
+        *,
+        client:client_id (
+          id, full_name, email, phone, status
+        )
+      `)
+      .single();
+    
+    if (error) throw error;
+    
+    // Send a system welcome message
+    await sendMessage({
+      conversation_id: data.id,
+      sender_type: 'admin',
+      sender_id: '00000000-0000-0000-0000-000000000000', // System user ID
+      content: 'Bem-vindo(a) ao atendimento. Como podemos ajudar?',
+    });
+    
+    return data;
+  } catch (error) {
+    console.error('Error starting conversation:', error);
     throw error;
+  }
+};
+
+// Mark messages as read
+export const markMessagesAsRead = async (conversationId: string, senderType: 'admin' | 'client'): Promise<void> => {
+  try {
+    await supabase
+      .from('messages')
+      .update({ is_read: true })
+      .eq('conversation_id', conversationId)
+      .eq('sender_type', senderType);
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
   }
 };
 
@@ -156,61 +215,4 @@ export const countUnreadMessages = async (isAdmin: boolean, userId: string): Pro
     console.error('Error counting unread messages:', error);
     throw error;
   }
-};
-
-// Subscribe to new messages for a conversation
-export const subscribeToMessages = (
-  conversationId: string,
-  callback: (message: Message) => void
-): RealtimeChannel => {
-  const channel = supabase
-    .channel(`conversation:${conversationId}`)
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${conversationId}`
-      },
-      (payload) => {
-        callback(payload.new as Message);
-      }
-    )
-    .subscribe();
-
-  return channel;
-};
-
-// Subscribe to new conversations (for admin)
-export const subscribeToConversations = (
-  callback: (conversation: Conversation) => void
-): RealtimeChannel => {
-  const channel = supabase
-    .channel('new_conversations')
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'conversations'
-      },
-      (payload) => {
-        callback(payload.new as Conversation);
-      }
-    )
-    .on(
-      'postgres_changes',
-      {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'conversations'
-      },
-      (payload) => {
-        callback(payload.new as Conversation);
-      }
-    )
-    .subscribe();
-
-  return channel;
 };
