@@ -10,5 +10,5 @@ export const isAdminPath = (path: string): boolean => {
 export const isClientPath = (path: string): boolean => {
   return path === '/' || path === '/dashboard' || 
          path === '/documents' || path === '/payments' || 
-         path === '/knowledge';
+         path === '/knowledge' || path === '/messages';
 };

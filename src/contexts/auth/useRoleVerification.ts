@@ -28,6 +28,7 @@ export function useRoleVerification(
         
         if (!mounted) return;
         
+        console.log("Role verification complete. Is admin:", isUserAdmin);
         handleSessionRedirect(isUserAdmin, window.location.pathname, true);
         setLoading(false);
         setRoleVerified(true);

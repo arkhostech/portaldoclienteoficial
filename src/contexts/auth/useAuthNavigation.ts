@@ -36,6 +36,14 @@ export function useAuthNavigation() {
     currentPath: string,
     hasSession: boolean
   ) => {
+    console.log("Session redirect check:", { 
+      isUserAdmin, 
+      currentPath, 
+      hasSession,
+      isAdminPath: isAdminPath(currentPath),
+      isClientPath: isClientPath(currentPath)
+    });
+    
     if (!hasSession) {
       // Handle not logged in - redirect to appropriate login page if trying to access protected path
       if (isAdminPath(currentPath) && currentPath !== '/admin-login') {
@@ -46,23 +54,24 @@ export function useAuthNavigation() {
       return;
     }
 
-    // Only redirect in specific cases to avoid loops
-    if (currentPath === '/admin-login') {
-      if (isUserAdmin) {
-        navigate('/admin');
-      }
-      // If not admin, let them see the login page
-    } else if (currentPath === '/') {
-      if (!isUserAdmin && hasSession) {
-        navigate('/dashboard');
-      }
-      // If admin, let them see the client login page
-    } else if (isAdminPath(currentPath) && !isUserAdmin) {
-      // Only redirect if not on admin login page
-      if (currentPath !== '/admin-login') {
-        toast.error("Apenas administradores podem acessar este portal.");
-        navigate('/');
-      }
+    // If user is authenticated as admin, ensure they have access to admin paths
+    if (isUserAdmin && isAdminPath(currentPath)) {
+      // Admin is already on an admin path, no need to redirect
+      console.log("Admin user on admin path, no redirect needed");
+      return;
+    }
+    
+    // If user is authenticated as client, ensure they have access to client paths
+    if (!isUserAdmin && isClientPath(currentPath)) {
+      // Client is already on a client path, no redirect needed
+      console.log("Client user on client path, no redirect needed");
+      return;
+    }
+
+    // Handle incorrect path access
+    if (isAdminPath(currentPath) && !isUserAdmin && currentPath !== '/admin-login') {
+      toast.error("Apenas administradores podem acessar este portal.");
+      navigate('/');
     } else if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
       toast.error("Administradores devem acessar pelo portal administrativo.");
       navigate('/admin-login');

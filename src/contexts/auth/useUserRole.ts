@@ -20,12 +20,15 @@ export function useUserRole() {
 
   const updateUserRole = async (user: User | null) => {
     if (!user) {
+      console.log("No user provided to updateUserRole");
       setIsAdmin(false);
       return false;
     }
     
     try {
+      console.log("Checking admin status for user:", user.id);
       const isUserAdmin = await checkUserRole(user.id);
+      console.log("Admin check result:", isUserAdmin);
       setIsAdmin(isUserAdmin);
       return isUserAdmin;
     } catch (error) {
