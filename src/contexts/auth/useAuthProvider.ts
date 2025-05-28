@@ -1,159 +1,243 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { AuthSession, User, Session } from "@supabase/supabase-js";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { checkUserRoleWithCache, clearUserRoleCache } from "@/integrations/supabase/client";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase, checkUserRoleWithCache, clearUserRoleCache } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate, useLocation } from "react-router-dom";
+import { isAdminPath, isClientPath } from "./utils";
+import { AuthContextType } from "./types";
 
-export const useAuthProvider = () => {
-  const [user, setUser] = useState<User | null | false>(false);
+export function useAuthProvider(): AuthContextType {
+  const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
-  const redirectInProgressRef = useRef(false);
-  
-  // Safe navigate function to prevent navigation loops
-  const safeNavigate = (path: string) => {
-    if (redirectInProgressRef.current) return;
-    redirectInProgressRef.current = true;
-    navigate(path);
-    
-    setTimeout(() => {
-      redirectInProgressRef.current = false;
-    }, 100);
-  };
+  const location = useLocation();
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const redirectInProgress = useRef(false);
 
-  // Initialize auth state
-  const initAuth = useCallback(async () => {
-    console.info("AuthProvider: Initializing");
+  // Memoized function to check user role - avoids unnecessary database queries
+  const checkUserRole = useCallback(async (userId: string): Promise<boolean> => {
     try {
-      console.info("Checking existing session");
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        await handleAuthChange(session);
-      } else {
-        setUser(null);
-        setSession(null);
-        setIsAdmin(false);
-      }
-    } catch (error) {
-      console.error("Error initializing auth:", error);
-      setUser(null);
-      setSession(null);
-      setIsAdmin(false);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Handle auth changes
-  const handleAuthChange = useCallback(async (session: AuthSession | null) => {
-    setSession(session);
-    
-    if (!session) {
-      setUser(null);
-      setIsAdmin(false);
-      return;
-    }
-    
-    try {
-      const currentUser = session.user;
-      setUser(currentUser);
-      
-      if (currentUser) {
-        const userRole = await checkUserRoleWithCache(currentUser.id);
-        const isUserAdmin = userRole === 'admin';
-        setIsAdmin(isUserAdmin);
-        console.log("User role:", userRole, "isAdmin:", isUserAdmin);
-      }
+      const userRole = await checkUserRoleWithCache(userId);
+      return userRole === 'admin';
     } catch (error) {
       console.error("Error checking user role:", error);
-      setIsAdmin(false);
+      return false;
     }
   }, []);
 
-  // Sign in with email and password
-  const signIn = useCallback(async (email: string, password: string) => {
+  // Authentication actions
+  const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
-
-      if (data.user) {
-        const userRole = await checkUserRoleWithCache(data.user.id);
-        const isUserAdmin = userRole === 'admin';
-        
-        // Navigate to appropriate dashboard based on role
-        if (isUserAdmin) {
-          safeNavigate('/admin');
-        } else {
-          safeNavigate('/dashboard');
-        }
-        
-        return { success: true };
-      }
       
-      return { success: false, error: "No user data returned" };
+      toast.success("Login bem-sucedido!");
     } catch (error: any) {
-      console.error("Sign in error:", error);
-      toast.error(error.message || "Erro ao fazer login");
-      return { success: false, error: error.message };
+      console.error("Login error:", error);
+      toast.error(`Erro ao fazer login: ${error.message}`);
+      throw error;
     }
-  }, []);
+  };
 
-  // Sign out
-  const signOut = useCallback(async () => {
+  const signOut = async () => {
     try {
-      await supabase.auth.signOut();
-      if (user && typeof user === 'object' && user.id) {
+      // Clear cached data for the current user
+      if (user) {
         clearUserRoleCache(user.id);
       }
-      safeNavigate('/');
-      return { success: true };
+      
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // Redirect based on current path
+      if (isAdminPath(location.pathname)) {
+        navigate("/admin-login");
+      } else {
+        navigate("/");
+      }
+      
+      toast.success("Desconectado com sucesso!");
     } catch (error: any) {
       console.error("Sign out error:", error);
-      toast.error(error.message || "Erro ao sair");
-      return { success: false, error: error.message };
+      toast.error(`Erro ao desconectar: ${error.message}`);
     }
-  }, [user]);
+  };
 
-  // Subscribe to auth changes
+  // Safe navigation function to prevent multiple redirects
+  const safeNavigate = useCallback((path: string) => {
+    if (redirectInProgress.current) return;
+    
+    redirectInProgress.current = true;
+    console.log(`Redirecting to: ${path}`);
+    navigate(path);
+    
+    // Reset the flag after a delay to allow navigation to complete
+    setTimeout(() => {
+      redirectInProgress.current = false;
+    }, 1000);
+  }, [navigate]);
+
+  // Initialize auth state
   useEffect(() => {
-    initAuth();
-
+    console.log("AuthProvider: Initializing");
+    let mounted = true;
+    
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.info("Auth state changed:", event, {
-          _type: typeof session,
-          value: typeof session === 'undefined' ? 'undefined' : session ? 'session' : 'null'
-        });
-        handleAuthChange(session);
+      async (event, newSession) => {
+        console.log("Auth state changed:", event, newSession?.user?.id);
+        
+        if (!mounted) return;
+        
+        if (newSession) {
+          setSession(newSession);
+          setUser(newSession.user);
+          
+          // Use setTimeout to avoid potential deadlocks
+          setTimeout(async () => {
+            if (mounted && newSession.user) {
+              const isUserAdmin = await checkUserRole(newSession.user.id);
+              console.log("User is admin:", isUserAdmin);
+              setIsAdmin(isUserAdmin);
+              
+              // Only handle redirection for new sign-ins, not for refreshed sessions
+              if (event === 'SIGNED_IN') {
+                const currentPath = window.location.pathname;
+                
+                if (currentPath === '/admin-login') {
+                  if (!isUserAdmin) {
+                    toast.error("Apenas administradores podem acessar este portal.");
+                    safeNavigate('/');
+                    return;
+                  } else {
+                    safeNavigate("/admin");
+                    return;
+                  }
+                } 
+                
+                if (currentPath === '/') {
+                  if (isUserAdmin) {
+                    toast.error("Administradores devem acessar pelo portal administrativo.");
+                    safeNavigate('/admin-login');
+                    return;
+                  } else {
+                    safeNavigate("/dashboard");
+                    return;
+                  }
+                }
+              }
+              setLoading(false);
+            }
+          }, 0);
+        } else {
+          setSession(null);
+          setUser(null);
+          setIsAdmin(false);
+          setLoading(false);
+        }
       }
     );
 
+    // THEN check for existing session (only once)
+    if (!sessionChecked) {
+      const checkSession = async () => {
+        try {
+          console.log("Checking existing session");
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (!mounted) return;
+          
+          if (session) {
+            console.log("Found existing session for user:", session.user.id);
+            setSession(session);
+            setUser(session.user);
+            
+            const isUserAdmin = await checkUserRole(session.user.id);
+            console.log("User is admin (from existing session):", isUserAdmin);
+            
+            if (mounted) {
+              setIsAdmin(isUserAdmin);
+              setLoading(false);
+              
+              // Only redirect in specific cases to avoid loops
+              const currentPath = window.location.pathname;
+              
+              // Only redirect on login pages or if trying to access wrong section
+              if (currentPath === '/admin-login') {
+                if (isUserAdmin) {
+                  safeNavigate('/admin');
+                  return;
+                }
+                // If not admin, let them see the login page
+              } else if (currentPath === '/') {
+                if (!isUserAdmin && session) {
+                  safeNavigate('/dashboard');
+                  return;
+                }
+                // If admin, let them see the client login page
+              } else if (isAdminPath(currentPath) && !isUserAdmin) {
+                // Only redirect if not on admin login page
+                if (currentPath !== '/admin-login') {
+                  toast.error("Apenas administradores podem acessar este portal.");
+                  safeNavigate('/');
+                  return;
+                }
+              } else if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
+                toast.error("Administradores devem acessar pelo portal administrativo.");
+                safeNavigate('/admin-login');
+                return;
+              }
+            }
+          } else {
+            // Handle not logged in - redirect to appropriate login page if trying to access protected path
+            const currentPath = window.location.pathname;
+            
+            if (isAdminPath(currentPath) && currentPath !== '/admin-login') {
+              safeNavigate('/admin-login');
+              return;
+            }
+            
+            if (isClientPath(currentPath) && currentPath !== '/') {
+              safeNavigate('/');
+              return;
+            }
+            
+            setLoading(false);
+          }
+        } catch (error) {
+          console.error("Error getting session:", error);
+          setLoading(false);
+        }
+        setSessionChecked(true);
+      };
+
+      checkSession();
+    }
+
     return () => {
-      console.info("AuthProvider: Cleaning up");
+      console.log("AuthProvider: Cleaning up");
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [initAuth, handleAuthChange]);
+  }, [navigate, location.pathname, sessionChecked, checkUserRole, safeNavigate]);
 
-  // Debug auth state
-  useEffect(() => {
-    console.info("Auth state:", { user, loading, isAdmin, path: window.location.pathname });
-  }, [user, loading, isAdmin]);
-
-  return {
+  const value = {
     user,
     session,
-    loading,
-    isAdmin,
     signIn,
     signOut,
+    loading,
+    isAdmin
   };
-};
+  
+  console.log("Auth state:", { user: !!user, loading, isAdmin, path: location.pathname });
+  
+  return value;
+}

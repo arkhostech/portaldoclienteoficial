@@ -1,197 +1,210 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { 
+  fetchConversations, 
+  fetchMessages, 
+  sendMessage, 
+  createConversation,
+  markMessagesAsRead,
+  subscribeToMessages,
+  subscribeToConversations
+} from '@/services/messages';
+import { Conversation, Message } from '@/services/messages/types';
+import { toast } from '@/hooks/use-toast';
 
-interface Message {
-  id: string;
-  conversation_id: string;
-  sender_id: string;
-  sender_type: 'client' | 'admin';
-  content: string;
-  created_at: string;
-  is_read: boolean;
-}
-
-interface Conversation {
-  id: string;
-  client_id: string;
-  created_at: string;
-  messages?: Message[];
-}
-
-interface UseChatReturn {
-  conversations: Conversation[];
-  messages: Message[];
-  loading: boolean;
-  selectedConversation: string | null;
-  setSelectedConversation: (conversationId: string | null) => void;
-  sendMessage: (content: string) => Promise<void>;
-  markAllAsRead: () => Promise<void>;
-  markMessageAsRead: (messageId: string) => Promise<void>;
-  refreshConversations: () => Promise<void>;
-  refreshMessages: () => Promise<void>;
-}
-
-export const useChat = (): UseChatReturn => {
+export const useChat = (clientId?: string) => {
+  const { user, isAdmin } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [messageChannel, setMessageChannel] = useState<RealtimeChannel | null>(null);
+  const [conversationChannel, setConversationChannel] = useState<RealtimeChannel | null>(null);
 
-  const { user } = useAuth();
+  // Load all conversations
+  const loadConversations = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const data = await fetchConversations(isAdmin, user.id);
+      setConversations(data);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar as conversas',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, isAdmin]);
 
-  const fetchConversations = async () => {
+  // Load messages for a specific conversation
+  const loadMessages = useCallback(async (conversationId: string) => {
+    if (!conversationId) return;
+    
+    try {
+      setIsLoading(true);
+      const data = await fetchMessages(conversationId);
+      setMessages(data);
+      
+      // Mark messages as read
+      await markMessagesAsRead(conversationId);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar as mensagens',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Send a message
+  const handleSendMessage = useCallback(async (content: string) => {
+    if (!user || !activeConversation) return;
+    
+    try {
+      setIsSending(true);
+      const senderType = isAdmin ? 'admin' : 'client';
+      
+      const newMessage = await sendMessage(
+        activeConversation.id,
+        content,
+        user.id,
+        senderType
+      );
+      
+      // Update local messages state to avoid waiting for subscription
+      setMessages(prev => [...prev, newMessage]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível enviar a mensagem',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSending(false);
+    }
+  }, [user, activeConversation, isAdmin]);
+
+  // Start a new conversation (especially for clients)
+  const handleStartConversation = useCallback(async (targetClientId: string, processType: string | null = null) => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Check if conversation already exists for this client
+      if (!isAdmin) {
+        const existingConversation = conversations.find(conv => conv.client_id === user.id);
+        if (existingConversation) {
+          setActiveConversation(existingConversation);
+          await loadMessages(existingConversation.id);
+          return;
+        }
+      }
+      
+      // Create new conversation
+      const newConversation = await createConversation(
+        targetClientId, 
+        processType
+      );
+      
+      // Add the new conversation to the list
+      setConversations(prev => [newConversation, ...prev]);
+      setActiveConversation(newConversation);
+      setMessages([]);
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível iniciar uma nova conversa',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, isAdmin, conversations, loadMessages]);
+
+  // Set active conversation and load its messages
+  const handleSelectConversation = useCallback(async (conversation: Conversation) => {
+    setActiveConversation(conversation);
+    await loadMessages(conversation.id);
+  }, [loadMessages]);
+
+  // Setup realtime subscriptions
+  useEffect(() => {
     if (!user) return;
 
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('client_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error("Error fetching conversations:", error);
-        toast.error("Erro ao carregar as conversas.");
-      }
-
-      setConversations(data || []);
-    } catch (error) {
-      console.error("Unexpected error fetching conversations:", error);
-      toast.error("Erro inesperado ao carregar as conversas.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMessages = async (conversationId: string | null) => {
-    if (!conversationId) {
-      setMessages([]);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error("Error fetching messages:", error);
-        toast.error("Erro ao carregar as mensagens.");
-      }
-
-      setMessages(data || []);
-    } catch (error) {
-      console.error("Unexpected error fetching messages:", error);
-      toast.error("Erro inesperado ao carregar as mensagens.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sendMessage = async (content: string) => {
-    if (!user || !selectedConversation) return;
-
-    try {
-      const { error } = await supabase
-        .from('messages')
-        .insert([{
-          conversation_id: selectedConversation,
-          sender_id: user.id,
-          sender_type: 'client',
-          content: content,
-          is_read: false
-        }]);
-
-      if (error) {
-        console.error("Error sending message:", error);
-        toast.error("Erro ao enviar a mensagem.");
-      } else {
-        // Optimistically update the local state
-        const newMessage: Message = {
-          id: 'temp_' + Date.now(), // Temporary ID
-          conversation_id: selectedConversation,
-          sender_id: user.id,
-          sender_type: 'client',
-          content: content,
-          created_at: new Date().toISOString(),
-          is_read: false,
-        };
-        setMessages(prev => [...prev, newMessage]);
-        
-        // Refresh messages to get the actual ID from the database
-        await fetchMessages(selectedConversation);
-      }
-    } catch (error) {
-      console.error("Unexpected error sending message:", error);
-      toast.error("Erro inesperado ao enviar a mensagem.");
-    }
-  };
-
-  const markAllAsRead = async () => {
-    if (!selectedConversation) return;
-
-    try {
-      const { error } = await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('conversation_id', selectedConversation)
-        .eq('sender_type', 'admin');
-
-      if (error) {
-        console.error("Error marking messages as read:", error);
-        toast.error("Erro ao marcar mensagens como lidas.");
-      } else {
-        // Update local state
-        setMessages(prev => prev.map(msg => ({ ...msg, is_read: true })));
-      }
-    } catch (error) {
-      console.error("Unexpected error marking messages as read:", error);
-      toast.error("Erro inesperado ao marcar mensagens como lidas.");
-    }
-  };
-
-  useEffect(() => {
-    fetchConversations();
-  }, [user]);
-
-  useEffect(() => {
-    if (selectedConversation) {
-      fetchMessages(selectedConversation);
-    }
-  }, [selectedConversation]);
-
-  const markMessageAsRead = async (messageId: string) => {
-    try {
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('id', messageId);
+    // Subscribe to all conversations if admin
+    if (isAdmin) {
+      const channel = subscribeToConversations((updatedConversation) => {
+        // Update the conversation list
+        setConversations(prev => {
+          const index = prev.findIndex(c => c.id === updatedConversation.id);
+          if (index >= 0) {
+            // Update existing conversation
+            const updated = [...prev];
+            updated[index] = { ...updated[index], ...updatedConversation };
+            return updated;
+          } else {
+            // Add new conversation
+            return [updatedConversation, ...prev];
+          }
+        });
+      });
       
-      // Update local state
-      setMessages(prev => prev.map(msg => 
-        msg.id === messageId ? { ...msg, is_read: true } : msg
-      ));
-    } catch (error) {
-      console.error('Error marking message as read:', error);
+      setConversationChannel(channel);
     }
-  };
+
+    // Load initial conversations
+    loadConversations();
+
+    return () => {
+      // Cleanup subscription
+      if (conversationChannel) {
+        supabase.removeChannel(conversationChannel);
+      }
+    };
+  }, [user, isAdmin, loadConversations]);
+
+  // Subscribe to messages for active conversation
+  useEffect(() => {
+    if (!activeConversation) return;
+    
+    const channel = subscribeToMessages(activeConversation.id, (newMessage) => {
+      setMessages(prev => [...prev, newMessage]);
+    });
+    
+    setMessageChannel(channel);
+    
+    return () => {
+      if (messageChannel) {
+        supabase.removeChannel(messageChannel);
+      }
+    };
+  }, [activeConversation]);
 
   return {
     conversations,
+    activeConversation,
     messages,
-    loading,
-    selectedConversation,
-    setSelectedConversation,
-    sendMessage,
-    markAllAsRead,
-    markMessageAsRead,
-    refreshConversations: fetchConversations,
-    refreshMessages: fetchMessages
+    isLoading,
+    isSending,
+    loadConversations,
+    loadMessages,
+    handleSendMessage,
+    handleStartConversation,
+    handleSelectConversation,
   };
 };
