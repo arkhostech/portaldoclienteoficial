@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { AuthSession, User } from "@supabase/supabase-js";
+import { AuthSession, User, Session } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { checkUserRoleWithCache, clearUserRoleCache } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 export const useAuthProvider = () => {
   const [user, setUser] = useState<User | null | false>(false);
+  const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
@@ -35,11 +36,13 @@ export const useAuthProvider = () => {
         await handleAuthChange(session);
       } else {
         setUser(null);
+        setSession(null);
         setIsAdmin(false);
       }
     } catch (error) {
       console.error("Error initializing auth:", error);
       setUser(null);
+      setSession(null);
       setIsAdmin(false);
     } finally {
       setLoading(false);
@@ -48,6 +51,8 @@ export const useAuthProvider = () => {
 
   // Handle auth changes
   const handleAuthChange = useCallback(async (session: AuthSession | null) => {
+    setSession(session);
+    
     if (!session) {
       setUser(null);
       setIsAdmin(false);
@@ -106,7 +111,9 @@ export const useAuthProvider = () => {
   const signOut = useCallback(async () => {
     try {
       await supabase.auth.signOut();
-      clearUserRoleCache(user?.id || '');
+      if (user && typeof user === 'object' && user.id) {
+        clearUserRoleCache(user.id);
+      }
       safeNavigate('/');
       return { success: true };
     } catch (error: any) {
@@ -143,6 +150,7 @@ export const useAuthProvider = () => {
 
   return {
     user,
+    session,
     loading,
     isAdmin,
     signIn,

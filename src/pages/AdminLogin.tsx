@@ -29,10 +29,10 @@ const AdminLogin = () => {
     setError('');
     
     try {
-      const { success, error: loginError } = await signIn(email, password);
+      const result = await signIn(email, password);
       
-      if (!success) {
-        setError(loginError || 'Credenciais inválidas');
+      if (!result.success) {
+        setError(result.error || 'Credenciais inválidas');
         return;
       }
     } catch (err: any) {

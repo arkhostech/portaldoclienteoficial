@@ -1,209 +1,197 @@
-
-import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
-import {
-  fetchConversations,
-  fetchMessages,
-  sendMessage,
-  startConversation,
-  markMessagesAsRead
-} from "@/services/messages";
-import { debounce } from "lodash";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Message {
   id: string;
   conversation_id: string;
-  sender_type: 'admin' | 'client';
   sender_id: string;
+  sender_type: 'client' | 'admin';
   content: string;
   created_at: string;
+  is_read: boolean;
 }
 
 interface Conversation {
   id: string;
   client_id: string;
-  client?: {
-    id: string;
-    full_name: string;
-    email: string;
-    phone?: string;
-    status: string;
-  };
-  process_type?: string;
+  created_at: string;
+  messages?: Message[];
 }
 
-export const useChat = () => {
-  const { user, isAdmin } = useAuth();
+interface UseChatReturn {
+  conversations: Conversation[];
+  messages: Message[];
+  loading: boolean;
+  selectedConversation: string | null;
+  setSelectedConversation: (conversationId: string | null) => void;
+  sendMessage: (content: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  markMessageAsRead: (messageId: string) => Promise<void>;
+  refreshConversations: () => Promise<void>;
+  refreshMessages: () => Promise<void>;
+}
+
+export const useChat = (): UseChatReturn => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
 
-  // Debounced function to mark messages as read
-  const debouncedMarkAsRead = useCallback(
-    debounce((conversationId: string) => {
-      if (conversationId) {
-        markMessagesAsRead(conversationId, isAdmin ? 'client' : 'admin').catch((error) => {
-          console.error("Error marking messages as read:", error);
-        });
-      }
-    }, 500),
-    [isAdmin]
-  );
+  const { user } = useAuth();
 
-  // Fetch conversations
-  const loadConversations = useCallback(async () => {
+  const fetchConversations = async () => {
     if (!user) return;
-    
-    setIsLoading(true);
+
+    setLoading(true);
     try {
-      const conversationsData = await fetchConversations(user.id, isAdmin);
-      setConversations(conversationsData);
-      
-      // Auto-select first conversation if none is active
-      if (conversationsData.length > 0 && !activeConversation) {
-        handleSelectConversation(conversationsData[0]);
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('client_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching conversations:", error);
+        toast.error("Erro ao carregar as conversas.");
+      }
+
+      setConversations(data || []);
+    } catch (error) {
+      console.error("Unexpected error fetching conversations:", error);
+      toast.error("Erro inesperado ao carregar as conversas.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMessages = async (conversationId: string | null) => {
+    if (!conversationId) {
+      setMessages([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error("Error fetching messages:", error);
+        toast.error("Erro ao carregar as mensagens.");
+      }
+
+      setMessages(data || []);
+    } catch (error) {
+      console.error("Unexpected error fetching messages:", error);
+      toast.error("Erro inesperado ao carregar as mensagens.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendMessage = async (content: string) => {
+    if (!user || !selectedConversation) return;
+
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .insert([{
+          conversation_id: selectedConversation,
+          sender_id: user.id,
+          sender_type: 'client',
+          content: content,
+          is_read: false
+        }]);
+
+      if (error) {
+        console.error("Error sending message:", error);
+        toast.error("Erro ao enviar a mensagem.");
+      } else {
+        // Optimistically update the local state
+        const newMessage: Message = {
+          id: 'temp_' + Date.now(), // Temporary ID
+          conversation_id: selectedConversation,
+          sender_id: user.id,
+          sender_type: 'client',
+          content: content,
+          created_at: new Date().toISOString(),
+          is_read: false,
+        };
+        setMessages(prev => [...prev, newMessage]);
+        
+        // Refresh messages to get the actual ID from the database
+        await fetchMessages(selectedConversation);
       }
     } catch (error) {
-      console.error("Error loading conversations:", error);
-      toast.error("Erro ao carregar conversas");
-    } finally {
-      setIsLoading(false);
+      console.error("Unexpected error sending message:", error);
+      toast.error("Erro inesperado ao enviar a mensagem.");
     }
-  }, [user, isAdmin, activeConversation]);
+  };
 
-  // Load messages for a conversation
-  const loadMessages = useCallback(async (conversationId: string) => {
+  const markAllAsRead = async () => {
+    if (!selectedConversation) return;
+
     try {
-      const messagesData = await fetchMessages(conversationId);
-      setMessages(messagesData);
-      
-      // Mark messages as read
-      debouncedMarkAsRead(conversationId);
-    } catch (error) {
-      console.error("Error loading messages:", error);
-      toast.error("Erro ao carregar mensagens");
-    }
-  }, [debouncedMarkAsRead]);
+      const { error } = await supabase
+        .from('messages')
+        .update({ is_read: true })
+        .eq('conversation_id', selectedConversation)
+        .eq('sender_type', 'admin');
 
-  // Handle selecting a conversation
-  const handleSelectConversation = useCallback((conversation: Conversation) => {
-    setActiveConversation(conversation);
-    loadMessages(conversation.id);
-  }, [loadMessages]);
-
-  // Send a message
-  const handleSendMessage = useCallback(async (content: string) => {
-    if (!user || !activeConversation || !content.trim()) return;
-    
-    setIsSending(true);
-    try {
-      const senderType = isAdmin ? 'admin' : 'client';
-      const newMessage = await sendMessage({
-        conversation_id: activeConversation.id,
-        sender_type: senderType,
-        sender_id: user.id,
-        content: content.trim(),
-      });
-      
-      // Add the new message to the list
-      setMessages(prev => [...prev, newMessage]);
+      if (error) {
+        console.error("Error marking messages as read:", error);
+        toast.error("Erro ao marcar mensagens como lidas.");
+      } else {
+        // Update local state
+        setMessages(prev => prev.map(msg => ({ ...msg, is_read: true })));
+      }
     } catch (error) {
-      console.error("Error sending message:", error);
-      toast.error("Erro ao enviar mensagem");
-    } finally {
-      setIsSending(false);
+      console.error("Unexpected error marking messages as read:", error);
+      toast.error("Erro inesperado ao marcar mensagens como lidas.");
     }
-  }, [user, activeConversation, isAdmin]);
+  };
 
-  // Start a new conversation
-  const handleStartConversation = useCallback(async (clientId: string, processType?: string) => {
-    if (!user) return;
-    
-    try {
-      const conversation = await startConversation(clientId, processType);
-      setConversations(prev => [conversation, ...prev]);
-      setActiveConversation(conversation);
-      return conversation;
-    } catch (error) {
-      console.error("Error starting conversation:", error);
-      toast.error("Erro ao iniciar conversa");
-      return null;
-    }
+  useEffect(() => {
+    fetchConversations();
   }, [user]);
 
-  // Subscribe to realtime updates for new messages
   useEffect(() => {
-    if (!activeConversation) return;
-    
-    const channel = supabase
-      .channel(`messages-${activeConversation.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${activeConversation.id}`,
-      }, (payload) => {
-        const newMessage = payload.new as Message;
-        
-        // Only add if not from current user to avoid duplicates
-        if (newMessage.sender_id !== user?.id) {
-          setMessages(prev => [...prev, newMessage]);
-          
-          // Mark as read if we're looking at the conversation
-          debouncedMarkAsRead(activeConversation.id);
-        }
-      })
-      .subscribe();
-    
-    // Load initial messages
-    loadMessages(activeConversation.id);
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeConversation, user, loadMessages, debouncedMarkAsRead]);
+    if (selectedConversation) {
+      fetchMessages(selectedConversation);
+    }
+  }, [selectedConversation]);
 
-  // Load conversations on mount
-  useEffect(() => {
-    if (user) {
-      loadConversations();
-    }
-    
-    // Set up subscription for new conversations
-    if (user) {
-      const channel = supabase
-        .channel('new-conversations')
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'conversations',
-          filter: isAdmin ? undefined : `client_id=eq.${user.id}`,
-        }, () => {
-          loadConversations();
-        })
-        .subscribe();
+  const markMessageAsRead = async (messageId: string) => {
+    try {
+      await supabase
+        .from('messages')
+        .update({ is_read: true })
+        .eq('id', messageId);
       
-      return () => {
-        supabase.removeChannel(channel);
-      };
+      // Update local state
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId ? { ...msg, is_read: true } : msg
+      ));
+    } catch (error) {
+      console.error('Error marking message as read:', error);
     }
-  }, [user, isAdmin, loadConversations]);
+  };
 
   return {
     conversations,
-    activeConversation,
     messages,
-    isLoading,
-    isSending,
-    handleSendMessage,
-    handleSelectConversation,
-    handleStartConversation,
-    loadConversations,
+    loading,
+    selectedConversation,
+    setSelectedConversation,
+    sendMessage,
+    markAllAsRead,
+    markMessageAsRead,
+    refreshConversations: fetchConversations,
+    refreshMessages: fetchMessages
   };
 };
-
-// Para o uso do supabase, adicione esta linha no início do arquivo
-import { supabase } from "@/integrations/supabase/client";
