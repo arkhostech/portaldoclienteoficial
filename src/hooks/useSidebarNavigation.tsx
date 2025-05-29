@@ -6,10 +6,10 @@ import {
   LayoutDashboard, 
   Users, 
   FileText, 
-  CreditCard,
   Settings,
   FolderOpen,
-  LayoutPanelTop
+  LayoutPanelTop,
+  MessageCircle
 } from 'lucide-react';
 
 export interface NavItem {
@@ -44,9 +44,9 @@ export const useSidebarNavigation = () => {
       href: '/admin/cases' 
     },
     { 
-      title: 'Pagamentos', 
-      icon: <CreditCard className="h-5 w-5" />, 
-      href: '/admin/payments' 
+      title: 'Chat com Clientes', 
+      icon: <MessageCircle className="h-5 w-5" />, 
+      href: '/admin/messages' 
     },
     { 
       title: 'Estágios Clientes', 
@@ -72,9 +72,9 @@ export const useSidebarNavigation = () => {
       href: '/documents' 
     },
     { 
-      title: 'Pagamentos', 
-      icon: <CreditCard className="h-5 w-5" />, 
-      href: '/payments' 
+      title: 'Mensagens', 
+      icon: <MessageCircle className="h-5 w-5" />, 
+      href: '/messages' 
     }
   ];
 

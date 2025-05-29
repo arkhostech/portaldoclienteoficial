@@ -10,6 +10,8 @@ interface PaymentsTabProps {
   title: string;
 }
 
+// This is just a stub component to fix build errors
+// It won't be used in the application anymore since payment functionality has been removed
 export const PaymentsTab = ({ payments, isLoading, title }: PaymentsTabProps) => {
   return (
     <Card>
@@ -20,7 +22,7 @@ export const PaymentsTab = ({ payments, isLoading, title }: PaymentsTabProps) =>
         {isLoading ? (
           <LoadingState />
         ) : payments.length === 0 ? (
-          <EmptyState message="Nenhum pagamento recente encontrado" />
+          <EmptyState message="Nenhum pagamento encontrado" />
         ) : (
           <div className="space-y-4">
             {payments.map((payment) => (
@@ -31,7 +33,7 @@ export const PaymentsTab = ({ payments, isLoading, title }: PaymentsTabProps) =>
                 </div>
                 <div className="text-right">
                   <p className="font-medium">{payment.value}</p>
-                  <p className="text-xs text-muted-foreground">Vence em {formatDate(payment.due_date)}</p>
+                  <p className="text-xs text-muted-foreground">Data: {formatDate(payment.due_date)}</p>
                 </div>
               </div>
             ))}
