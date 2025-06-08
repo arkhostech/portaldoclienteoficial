@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -37,10 +36,20 @@ const Messages = () => {
     });
   };
 
-  const handleSend = () => {
-    if (newMessage.trim() !== "") {
-      handleSendMessage(newMessage);
-      setNewMessage("");
+  const handleSend = async () => {
+    if (newMessage.trim() !== "" && user) {
+      // If no active conversation exists, create one first
+      if (!activeConversation) {
+        await handleStartConversation(user.id);
+        // Wait a bit for the conversation to be set
+        setTimeout(() => {
+          handleSendMessage(newMessage);
+          setNewMessage("");
+        }, 100);
+      } else {
+        handleSendMessage(newMessage);
+        setNewMessage("");
+      }
     }
   };
 
@@ -51,10 +60,11 @@ const Messages = () => {
 
   // Start a conversation if the user doesn't have one
   useEffect(() => {
-    if (user && conversations.length === 0 && !isLoading) {
-      handleStartConversation(user.id);
+    if (user && conversations.length === 0 && !isLoading && !activeConversation) {
+      // Only auto-start conversation if it's the first time loading and there are truly no conversations
+      // Conversation will be created when user sends their first message
     }
-  }, [user, conversations, isLoading, handleStartConversation]);
+  }, [user, conversations, isLoading, handleStartConversation, activeConversation]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -25,26 +24,6 @@ export const useChat = (clientId?: string) => {
   const [messageChannel, setMessageChannel] = useState<RealtimeChannel | null>(null);
   const [conversationChannel, setConversationChannel] = useState<RealtimeChannel | null>(null);
 
-  // Load all conversations
-  const loadConversations = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      setIsLoading(true);
-      const data = await fetchConversations(isAdmin, user.id);
-      setConversations(data);
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar as conversas',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, isAdmin]);
-
   // Load messages for a specific conversation
   const loadMessages = useCallback(async (conversationId: string) => {
     if (!conversationId) return;
@@ -67,6 +46,32 @@ export const useChat = (clientId?: string) => {
       setIsLoading(false);
     }
   }, []);
+
+  // Load all conversations
+  const loadConversations = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const data = await fetchConversations(isAdmin, user.id);
+      setConversations(data);
+      
+      // Auto-select the first conversation for clients (they only have one)
+      if (!isAdmin && data.length > 0 && !activeConversation) {
+        setActiveConversation(data[0]);
+        await loadMessages(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar as conversas',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, isAdmin, activeConversation, loadMessages]);
 
   // Send a message
   const handleSendMessage = useCallback(async (content: string) => {
@@ -105,13 +110,42 @@ export const useChat = (clientId?: string) => {
       setIsLoading(true);
       
       // Check if conversation already exists for this client
-      if (!isAdmin) {
-        const existingConversation = conversations.find(conv => conv.client_id === user.id);
-        if (existingConversation) {
-          setActiveConversation(existingConversation);
-          await loadMessages(existingConversation.id);
-          return;
-        }
+      const existingConversation = conversations.find(conv => conv.client_id === targetClientId);
+      if (existingConversation) {
+        setActiveConversation(existingConversation);
+        await loadMessages(existingConversation.id);
+        return;
+      }
+      
+      // If no existing conversation found locally, check database as well
+      const { data: dbConversations } = await supabase
+        .from('conversations')
+        .select(`
+          *,
+          client:client_id (
+            full_name,
+            email,
+            phone,
+            status,
+            process_type_id
+          )
+        `)
+        .eq('client_id', targetClientId)
+        .limit(1);
+        
+      if (dbConversations && dbConversations.length > 0) {
+        const existingDbConversation = dbConversations[0];
+        setActiveConversation(existingDbConversation);
+        await loadMessages(existingDbConversation.id);
+        // Also add to local state if not present
+        setConversations(prev => {
+          const exists = prev.find(c => c.id === existingDbConversation.id);
+          if (!exists) {
+            return [existingDbConversation, ...prev];
+          }
+          return prev;
+        });
+        return;
       }
       
       // Create new conversation
@@ -146,8 +180,9 @@ export const useChat = (clientId?: string) => {
   useEffect(() => {
     if (!user) return;
 
-    // Subscribe to all conversations if admin
+    // Subscribe to conversations based on user type
     if (isAdmin) {
+      // Admin subscribes to all conversations
       const channel = subscribeToConversations((updatedConversation) => {
         // Update the conversation list
         setConversations(prev => {
@@ -164,6 +199,82 @@ export const useChat = (clientId?: string) => {
         });
       });
       
+      setConversationChannel(channel);
+    } else {
+      // Client subscribes to conversations where they are the client_id
+      const channel = supabase
+        .channel('client_conversations')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'conversations',
+            filter: `client_id=eq.${user.id}`
+          },
+          async (payload) => {
+            // Fetch the conversation with client data
+            const { data } = await supabase
+              .from('conversations')
+              .select(`
+                *,
+                client:client_id (
+                  full_name,
+                  email,
+                  phone,
+                  status,
+                  process_type_id
+                )
+              `)
+              .eq('id', payload.new.id)
+              .single();
+              
+            if (data) {
+              setConversations(prev => [data, ...prev]);
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'conversations',
+            filter: `client_id=eq.${user.id}`
+          },
+          async (payload) => {
+            // Update existing conversation
+            const { data } = await supabase
+              .from('conversations')
+              .select(`
+                *,
+                client:client_id (
+                  full_name,
+                  email,
+                  phone,
+                  status,
+                  process_type_id
+                )
+              `)
+              .eq('id', payload.new.id)
+              .single();
+              
+            if (data) {
+              setConversations(prev => {
+                const index = prev.findIndex(c => c.id === data.id);
+                if (index >= 0) {
+                  const updated = [...prev];
+                  updated[index] = { ...updated[index], ...data };
+                  return updated;
+                } else {
+                  return [data, ...prev];
+                }
+              });
+            }
+          }
+        )
+        .subscribe();
+        
       setConversationChannel(channel);
     }
 
