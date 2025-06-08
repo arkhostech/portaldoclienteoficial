@@ -59,20 +59,43 @@ export const createConversation = async (clientId: string, processType: string |
   return data;
 };
 
-// Fetch messages for a specific conversation
-export const fetchMessages = async (conversationId: string): Promise<Message[]> => {
-  const { data, error } = await supabase
+// Fetch messages for a specific conversation with pagination
+export const fetchMessages = async (
+  conversationId: string, 
+  limit: number = 20, 
+  before?: string
+): Promise<Message[]> => {
+  let query = supabase
     .from('messages')
     .select('*')
     .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false }) // Ordem decrescente para pegar as mais recentes
+    .limit(limit);
+
+  // Se temos um 'before', buscamos mensagens anteriores a essa data
+  if (before) {
+    query = query.lt('created_at', before);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching messages:', error);
     throw error;
   }
 
-  return data || [];
+  // Retorna em ordem crescente (mais antiga para mais nova)
+  return (data || []).reverse();
+};
+
+// Fetch initial messages (últimas 20)
+export const fetchInitialMessages = async (conversationId: string): Promise<Message[]> => {
+  return fetchMessages(conversationId, 20);
+};
+
+// Fetch older messages (20 anteriores a uma data específica)
+export const fetchOlderMessages = async (conversationId: string, beforeDate: string): Promise<Message[]> => {
+  return fetchMessages(conversationId, 20, beforeDate);
 };
 
 // Send a message

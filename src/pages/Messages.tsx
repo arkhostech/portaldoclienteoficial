@@ -6,7 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/auth";
 import { useChat } from "@/hooks/useChat";
-import { Send, PaperclipIcon } from "lucide-react";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
+import { useScrollToBottom } from "@/hooks/useScrollToBottom";
+import { useScrollPosition } from "@/hooks/useScrollPosition";
+import { Send, PaperclipIcon, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -14,6 +17,7 @@ const Messages = () => {
   const { user } = useAuth();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   
   const {
     conversations,
@@ -21,8 +25,13 @@ const Messages = () => {
     messages,
     isLoading,
     isSending,
+    hasMoreMessages,
+    loadingOlder,
+    shouldAutoScroll,
     handleSendMessage,
     handleStartConversation,
+    loadOlderMessages,
+    reactivateAutoScroll,
   } = useChat();
 
   const formatDate = (dateString: string) => {
@@ -53,19 +62,45 @@ const Messages = () => {
     }
   };
 
-  // Auto-scroll to bottom when messages change
+  // Scroll infinito para carregar mensagens antigas
+  useScrollToTop({
+    containerRef: messagesContainerRef,
+    onScrollToTop: () => {
+      if (activeConversation && hasMoreMessages && !loadingOlder) {
+        loadOlderMessages(activeConversation.id);
+      }
+    },
+    threshold: 50,
+    enabled: !!activeConversation && hasMoreMessages && !loadingOlder
+  });
+
+  // Preserva a posição do scroll quando carrega mensagens antigas
+  useScrollPosition({
+    containerRef: messagesContainerRef,
+    isLoading: loadingOlder,
+    dependency: messages.length
+  });
+
+  // Reativa auto-scroll quando usuário rola para próximo do final
+  useScrollToBottom({
+    containerRef: messagesContainerRef,
+    onNearBottom: reactivateAutoScroll,
+    threshold: 100,
+    enabled: !!activeConversation && !shouldAutoScroll
+  });
+
+  // Auto-scroll to bottom apenas para novas mensagens (não quando carrega antigas)
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && messagesContainerRef.current && shouldAutoScroll && !loadingOlder) {
       // Small delay to ensure DOM has updated
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ 
-          behavior: "smooth", 
-          block: "end",
-          inline: "nearest"
-        });
+        const scrollContainer = messagesContainerRef.current;
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
       }, 100);
     }
-  }, [messages]);
+  }, [messages.length, shouldAutoScroll, loadingOlder]);
 
   // Start a conversation if the user doesn't have one
   useEffect(() => {
@@ -97,8 +132,28 @@ const Messages = () => {
 
         {/* Messages list with fixed height and internal scroll */}
         <div className="flex-1 border rounded-lg bg-background overflow-hidden">
-          <ScrollArea className="h-full">
-            <div className="p-4 space-y-4 min-h-full flex flex-col">
+          <div 
+            ref={messagesContainerRef}
+            className="h-full overflow-y-auto p-4"
+          >
+            {/* Loading indicator para mensagens antigas */}
+            {loadingOlder && (
+              <div className="flex justify-center py-4">
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Carregando mensagens antigas...</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Indicador se tem mais mensagens */}
+            {!hasMoreMessages && messages.length > 0 && (
+              <div className="text-center py-2 text-xs text-muted-foreground">
+                • Início da conversa •
+              </div>
+            )}
+            
+            <div className="space-y-4 min-h-full flex flex-col">
               <div className="flex-1">
                 {messages.length > 0 ? (
                   <div className="space-y-4">
@@ -146,7 +201,7 @@ const Messages = () => {
               </div>
               <div ref={messagesEndRef} />
             </div>
-          </ScrollArea>
+          </div>
         </div>
 
         {/* Message input - fixed at bottom */}

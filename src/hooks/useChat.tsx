@@ -4,7 +4,8 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   fetchConversations, 
-  fetchMessages, 
+  fetchInitialMessages,
+  fetchOlderMessages, 
   sendMessage, 
   createConversation,
   markMessagesAsRead,
@@ -23,15 +24,19 @@ export const useChat = (clientId?: string) => {
   const [isSending, setIsSending] = useState(false);
   const [messageChannel, setMessageChannel] = useState<RealtimeChannel | null>(null);
   const [conversationChannel, setConversationChannel] = useState<RealtimeChannel | null>(null);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
-  // Load messages for a specific conversation
+  // Load initial messages for a specific conversation (últimas 20)
   const loadMessages = useCallback(async (conversationId: string) => {
     if (!conversationId) return;
     
     try {
       setIsLoading(true);
-      const data = await fetchMessages(conversationId);
+      const data = await fetchInitialMessages(conversationId);
       setMessages(data);
+      setHasMoreMessages(data.length === 20); // Se retornou 20, pode ter mais
       
       // Mark messages as read
       await markMessagesAsRead(conversationId);
@@ -46,6 +51,42 @@ export const useChat = (clientId?: string) => {
       setIsLoading(false);
     }
   }, []);
+
+  // Load older messages (para scroll infinito)
+  const loadOlderMessages = useCallback(async (conversationId: string) => {
+    if (!conversationId || !hasMoreMessages || loadingOlder) return;
+    
+    try {
+      setLoadingOlder(true);
+      setShouldAutoScroll(false); // Não fazer auto-scroll ao carregar mensagens antigas
+      
+      const oldestMessage = messages[0];
+      if (!oldestMessage) return;
+      
+      const olderMessages = await fetchOlderMessages(conversationId, oldestMessage.created_at);
+      
+      if (olderMessages.length === 0) {
+        setHasMoreMessages(false);
+        return;
+      }
+      
+      // Adiciona as mensagens antigas no início
+      setMessages(prev => [...olderMessages, ...prev]);
+      setHasMoreMessages(olderMessages.length === 20);
+      
+    } catch (error) {
+      console.error('Error loading older messages:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar mensagens antigas',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoadingOlder(false);
+      // NÃO resetar auto-scroll automaticamente
+      // Será reativado apenas quando nova mensagem chegar ou usuário rolar para baixo
+    }
+  }, [messages, hasMoreMessages, loadingOlder]);
 
   // Load all conversations
   const loadConversations = useCallback(async () => {
@@ -80,6 +121,9 @@ export const useChat = (clientId?: string) => {
     try {
       setIsSending(true);
       const senderType = isAdmin ? 'admin' : 'client';
+      
+      // Reativar auto-scroll quando usuário enviar mensagem
+      setShouldAutoScroll(true);
       
       await sendMessage(
         activeConversation.id,
@@ -175,6 +219,11 @@ export const useChat = (clientId?: string) => {
     setActiveConversation(conversation);
     await loadMessages(conversation.id);
   }, [loadMessages]);
+
+  // Reativar auto-scroll (quando usuário rola para próximo do final)
+  const reactivateAutoScroll = useCallback(() => {
+    setShouldAutoScroll(true);
+  }, []);
 
   // Setup realtime subscriptions
   useEffect(() => {
@@ -302,6 +351,8 @@ export const useChat = (clientId?: string) => {
         // Check if message already exists to avoid duplicates
         const exists = prev.find(msg => msg.id === newMessage.id);
         if (!exists) {
+          // Reativar auto-scroll quando nova mensagem chegar
+          setShouldAutoScroll(true);
           return [...prev, newMessage];
         }
         return prev;
@@ -339,10 +390,15 @@ export const useChat = (clientId?: string) => {
     messages,
     isLoading,
     isSending,
+    hasMoreMessages,
+    loadingOlder,
+    shouldAutoScroll,
     loadConversations,
     loadMessages,
+    loadOlderMessages,
     handleSendMessage,
     handleStartConversation,
     handleSelectConversation,
+    reactivateAutoScroll,
   };
 };
