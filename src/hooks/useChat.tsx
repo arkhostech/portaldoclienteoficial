@@ -10,7 +10,10 @@ import {
   createConversation,
   markMessagesAsRead,
   subscribeToMessages,
-  subscribeToConversations
+  subscribeToConversations,
+  fetchUnreadCountsByConversation,
+  markMultipleMessagesAsRead,
+  markConversationMessagesAsRead
 } from '@/services/messages';
 import { Conversation, Message } from '@/services/messages/types';
 import { toast } from '@/hooks/use-toast';
@@ -99,34 +102,16 @@ export const useChat = (clientId?: string) => {
       const data = await fetchConversations(isAdmin, user.id);
       setConversations(data);
       
-      // Se for admin, carregar contagem de mensagens não lidas para cada conversa
+      // **OTIMIZAÇÃO: Usar função otimizada para contagem de não lidas**
       if (isAdmin && data.length > 0) {
-        const unreadCountPromises = data.map(async (conversation) => {
-          try {
-            const { count } = await supabase
-              .from('messages')
-              .select('id', { count: 'exact' })
-              .eq('conversation_id', conversation.id)
-              .eq('sender_type', 'client')
-              .or('is_read.eq.false,is_read.is.null');
-            
-            return { conversationId: conversation.id, count: count || 0 };
-          } catch (error) {
-            console.error(`Error counting unread messages for conversation ${conversation.id}:`, error);
-            return { conversationId: conversation.id, count: 0 };
-          }
-        });
-
-        const unreadCounts = await Promise.all(unreadCountPromises);
-        
-                 // Atualizar mapa de não lidas por conversa
-        const newUnreadMap = new Map<string, number>();
-        unreadCounts.forEach(({ conversationId, count }) => {
-          if (count > 0) {
-            newUnreadMap.set(conversationId, count);
-          }
-        });
-                 setUnreadByConversation(newUnreadMap);
+        try {
+          const unreadCountsMap = await fetchUnreadCountsByConversation(isAdmin, user.id);
+          setUnreadByConversation(unreadCountsMap);
+        } catch (error) {
+          console.error('Error loading optimized unread counts:', error);
+          // Fallback para o método original em caso de erro
+          setUnreadByConversation(new Map());
+        }
       }
       
       // Auto-select the first conversation for clients (they only have one)
@@ -279,14 +264,11 @@ export const useChat = (clientId?: string) => {
     setShouldAutoScroll(true);
   }, []);
 
-  // Marcar mensagem como vista (remove das não lidas)
+  // Marcar mensagem como vista (remove das não lidas) - **OTIMIZADO**
   const markMessageAsViewed = useCallback(async (messageId: string, conversationId: string) => {
-    // Marcar como lida no banco de dados
+    // **OTIMIZAÇÃO: Usar batch update mesmo para uma mensagem**
     try {
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('id', messageId);
+      await markMultipleMessagesAsRead([messageId]);
     } catch (error) {
       console.error('Error marking message as read:', error);
     }
@@ -307,8 +289,17 @@ export const useChat = (clientId?: string) => {
     });
   }, []);
 
-  // Marcar várias mensagens como vistas
-  const markMessagesAsViewed = useCallback((messageIds: string[], conversationId: string) => {
+  // Marcar várias mensagens como vistas - **OTIMIZADO**
+  const markMessagesAsViewed = useCallback(async (messageIds: string[], conversationId: string) => {
+    // **OTIMIZAÇÃO: Batch update no banco de dados**
+    if (messageIds.length > 0) {
+      try {
+        await markMultipleMessagesAsRead(messageIds);
+      } catch (error) {
+        console.error('Error marking multiple messages as read:', error);
+      }
+    }
+
     setUnreadMessages(prev => {
       const newSet = new Set(prev);
       messageIds.forEach(id => newSet.delete(id));
@@ -470,12 +461,34 @@ export const useChat = (clientId?: string) => {
               return newSet;
             });
 
-                         // Incrementar contador da conversa específica
+            // Incrementar contador da conversa específica
             setUnreadByConversation(prevMap => {
               const newMap = new Map(prevMap);
               const current = newMap.get(newMessage.conversation_id) || 0;
               newMap.set(newMessage.conversation_id, current + 1);
-                             return newMap;
+              return newMap;
+            });
+
+            // **NOVA FUNCIONALIDADE: Mover conversa para o topo automaticamente**
+            setConversations(prevConversations => {
+              const updated = [...prevConversations];
+              const convIndex = updated.findIndex(c => c.id === newMessage.conversation_id);
+              
+              if (convIndex >= 0) {
+                // Atualizar updated_at da conversa
+                updated[convIndex] = {
+                  ...updated[convIndex],
+                  updated_at: newMessage.created_at
+                };
+                
+                // Mover para o topo da lista (só se não estiver já no topo)
+                if (convIndex > 0) {
+                  const [conv] = updated.splice(convIndex, 1);
+                  updated.unshift(conv);
+                }
+              }
+              
+              return updated;
             });
           }
         }
@@ -538,18 +551,22 @@ export const useChat = (clientId?: string) => {
         return prev;
       });
       
-      // Update conversation updated_at to move it to top of list
+      // **MELHORADO: Update conversation updated_at to move it to top of list**
       setConversations(prev => {
         const updated = [...prev];
         const convIndex = updated.findIndex(c => c.id === activeConversation.id);
         if (convIndex >= 0) {
+          // Atualizar updated_at da conversa
           updated[convIndex] = {
             ...updated[convIndex],
             updated_at: newMessage.created_at
           };
-          // Move to top
-          const [conv] = updated.splice(convIndex, 1);
-          updated.unshift(conv);
+          
+          // Mover para o topo apenas se não estiver já no topo
+          if (convIndex > 0) {
+            const [conv] = updated.splice(convIndex, 1);
+            updated.unshift(conv);
+          }
         }
         return updated;
       });
