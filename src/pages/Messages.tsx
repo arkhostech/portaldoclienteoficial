@@ -164,7 +164,7 @@ const Messages = () => {
                           msg.sender_type === "client"
                             ? "ml-auto bg-primary/5 border-primary/10"
                             : "mr-auto bg-secondary/10"
-                        }`}
+                        } ${msg.id.startsWith('temp-') ? 'opacity-70' : ''}`}
                       >
                         <CardContent className="p-3">
                           <div className="flex justify-between items-start mb-2">
@@ -179,7 +179,7 @@ const Messages = () => {
                               </span>
                             </div>
                             <span className="text-xs text-muted-foreground ml-2">
-                              {formatDate(msg.created_at)}
+                              {msg.id.startsWith('temp-') ? 'Enviando...' : formatDate(msg.created_at)}
                             </span>
                           </div>
                           <p className="text-sm whitespace-pre-wrap break-words">

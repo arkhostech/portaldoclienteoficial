@@ -99,6 +99,36 @@ export const useChat = (clientId?: string) => {
       const data = await fetchConversations(isAdmin, user.id);
       setConversations(data);
       
+      // Se for admin, carregar contagem de mensagens não lidas para cada conversa
+      if (isAdmin && data.length > 0) {
+        const unreadCountPromises = data.map(async (conversation) => {
+          try {
+            const { count } = await supabase
+              .from('messages')
+              .select('id', { count: 'exact' })
+              .eq('conversation_id', conversation.id)
+              .eq('sender_type', 'client')
+              .or('is_read.eq.false,is_read.is.null');
+            
+            return { conversationId: conversation.id, count: count || 0 };
+          } catch (error) {
+            console.error(`Error counting unread messages for conversation ${conversation.id}:`, error);
+            return { conversationId: conversation.id, count: 0 };
+          }
+        });
+
+        const unreadCounts = await Promise.all(unreadCountPromises);
+        
+                 // Atualizar mapa de não lidas por conversa
+        const newUnreadMap = new Map<string, number>();
+        unreadCounts.forEach(({ conversationId, count }) => {
+          if (count > 0) {
+            newUnreadMap.set(conversationId, count);
+          }
+        });
+                 setUnreadByConversation(newUnreadMap);
+      }
+      
       // Auto-select the first conversation for clients (they only have one)
       if (!isAdmin && data.length > 0 && !activeConversation) {
         setActiveConversation(data[0]);
@@ -120,24 +150,46 @@ export const useChat = (clientId?: string) => {
   const handleSendMessage = useCallback(async (content: string) => {
     if (!user || !activeConversation) return;
     
+    const senderType = isAdmin ? 'admin' : 'client';
+    const tempId = `temp-${Date.now()}-${Math.random()}`;
+    
+    // Optimistic update - adicionar mensagem imediatamente na UI
+    const optimisticMessage: Message = {
+      id: tempId,
+      conversation_id: activeConversation.id,
+      sender_type: senderType,
+      sender_id: user.id,
+      content,
+      is_read: false,
+      created_at: new Date().toISOString()
+    };
+    
+    // Adicionar imediatamente na lista
+    setMessages(prev => [...prev, optimisticMessage]);
+    
+    // Reativar auto-scroll quando usuário enviar mensagem
+    setShouldAutoScroll(true);
+    
     try {
       setIsSending(true);
-      const senderType = isAdmin ? 'admin' : 'client';
       
-      // Reativar auto-scroll quando usuário enviar mensagem
-      setShouldAutoScroll(true);
-      
-      await sendMessage(
+      // Enviar para o servidor
+      const sentMessage = await sendMessage(
         activeConversation.id,
         content,
         user.id,
         senderType
       );
       
-      // Don't update local state - let the subscription handle it
-      // This avoids duplicate messages
+      // Substituir a mensagem temporária pela real quando chegar via subscription
+      // Não fazemos nada aqui - deixamos a subscription handle
+      
     } catch (error) {
       console.error('Error sending message:', error);
+      
+      // Remover a mensagem temporária em caso de erro
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      
       toast({
         title: 'Erro',
         description: 'Não foi possível enviar a mensagem',
@@ -228,7 +280,17 @@ export const useChat = (clientId?: string) => {
   }, []);
 
   // Marcar mensagem como vista (remove das não lidas)
-  const markMessageAsViewed = useCallback((messageId: string, conversationId: string) => {
+  const markMessageAsViewed = useCallback(async (messageId: string, conversationId: string) => {
+    // Marcar como lida no banco de dados
+    try {
+      await supabase
+        .from('messages')
+        .update({ is_read: true })
+        .eq('id', messageId);
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+    }
+
     setUnreadMessages(prev => {
       const newSet = new Set(prev);
       newSet.delete(messageId);
@@ -381,6 +443,50 @@ export const useChat = (clientId?: string) => {
     };
   }, [user, isAdmin, loadConversations]);
 
+  // Subscription global para todas as mensagens de clientes (apenas para admin)
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+
+    const channel = supabase
+      .channel('admin_all_client_messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: 'sender_type=eq.client'
+        },
+        (payload) => {
+          const newMessage = payload.new as Message;
+          
+          // Só processar se não for uma mensagem da conversa ativa
+          // (pois essas já são tratadas pela subscription específica)
+          if (!activeConversation || newMessage.conversation_id !== activeConversation.id) {
+            // Adicionar às mensagens não lidas
+            setUnreadMessages(prevUnread => {
+              const newSet = new Set(prevUnread);
+              newSet.add(newMessage.id);
+              return newSet;
+            });
+
+                         // Incrementar contador da conversa específica
+            setUnreadByConversation(prevMap => {
+              const newMap = new Map(prevMap);
+              const current = newMap.get(newMessage.conversation_id) || 0;
+              newMap.set(newMessage.conversation_id, current + 1);
+                             return newMap;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isAdmin, activeConversation]);
+
   // Subscribe to messages for active conversation
   useEffect(() => {
     if (!activeConversation) {
@@ -394,25 +500,40 @@ export const useChat = (clientId?: string) => {
         // Check if message already exists to avoid duplicates
         const exists = prev.find(msg => msg.id === newMessage.id);
         if (!exists) {
-          // Se for admin e a mensagem for de cliente, marcar como não lida
-          if (isAdmin && newMessage.sender_type === 'client') {
-            setUnreadMessages(prevUnread => {
-              const newSet = new Set(prevUnread);
-              newSet.add(newMessage.id);
-              return newSet;
-            });
+          // Verificar se há mensagem temporária do mesmo usuário para substituir
+          const tempMessageIndex = prev.findIndex(msg => 
+            msg.id.startsWith('temp-') && 
+            msg.sender_id === newMessage.sender_id &&
+            msg.content === newMessage.content &&
+            Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000 // 5 segundos de diferença
+          );
+          
+          if (tempMessageIndex >= 0) {
+            // Substituir mensagem temporária pela real
+            const updated = [...prev];
+            updated[tempMessageIndex] = newMessage;
+            return updated;
+          } else {
+            // Se for admin e a mensagem for de cliente, marcar como não lida
+            if (isAdmin && newMessage.sender_type === 'client') {
+              setUnreadMessages(prevUnread => {
+                const newSet = new Set(prevUnread);
+                newSet.add(newMessage.id);
+                return newSet;
+              });
 
-            setUnreadByConversation(prevMap => {
-              const newMap = new Map(prevMap);
-              const current = newMap.get(activeConversation.id) || 0;
-              newMap.set(activeConversation.id, current + 1);
-              return newMap;
-            });
+              setUnreadByConversation(prevMap => {
+                const newMap = new Map(prevMap);
+                const current = newMap.get(activeConversation.id) || 0;
+                newMap.set(activeConversation.id, current + 1);
+                return newMap;
+              });
+            }
+
+            // Reativar auto-scroll quando nova mensagem chegar
+            setShouldAutoScroll(true);
+            return [...prev, newMessage];
           }
-
-          // Reativar auto-scroll quando nova mensagem chegar
-          setShouldAutoScroll(true);
-          return [...prev, newMessage];
         }
         return prev;
       });
