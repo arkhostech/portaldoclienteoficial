@@ -81,15 +81,15 @@ export const useChat = (clientId?: string) => {
       setIsSending(true);
       const senderType = isAdmin ? 'admin' : 'client';
       
-      const newMessage = await sendMessage(
+      await sendMessage(
         activeConversation.id,
         content,
         user.id,
         senderType
       );
       
-      // Update local messages state to avoid waiting for subscription
-      setMessages(prev => [...prev, newMessage]);
+      // Don't update local state - let the subscription handle it
+      // This avoids duplicate messages
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -291,17 +291,44 @@ export const useChat = (clientId?: string) => {
 
   // Subscribe to messages for active conversation
   useEffect(() => {
-    if (!activeConversation) return;
+    if (!activeConversation) {
+      // Clear messages when no active conversation
+      setMessages([]);
+      return;
+    }
     
     const channel = subscribeToMessages(activeConversation.id, (newMessage) => {
-      setMessages(prev => [...prev, newMessage]);
+      setMessages(prev => {
+        // Check if message already exists to avoid duplicates
+        const exists = prev.find(msg => msg.id === newMessage.id);
+        if (!exists) {
+          return [...prev, newMessage];
+        }
+        return prev;
+      });
+      
+      // Update conversation updated_at to move it to top of list
+      setConversations(prev => {
+        const updated = [...prev];
+        const convIndex = updated.findIndex(c => c.id === activeConversation.id);
+        if (convIndex >= 0) {
+          updated[convIndex] = {
+            ...updated[convIndex],
+            updated_at: newMessage.created_at
+          };
+          // Move to top
+          const [conv] = updated.splice(convIndex, 1);
+          updated.unshift(conv);
+        }
+        return updated;
+      });
     });
     
     setMessageChannel(channel);
     
     return () => {
-      if (messageChannel) {
-        supabase.removeChannel(messageChannel);
+      if (channel) {
+        supabase.removeChannel(channel);
       }
     };
   }, [activeConversation]);
