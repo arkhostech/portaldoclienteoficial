@@ -55,7 +55,16 @@ const Messages = () => {
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current) {
+      // Small delay to ensure DOM has updated
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ 
+          behavior: "smooth", 
+          block: "end",
+          inline: "nearest"
+        });
+      }, 100);
+    }
   }, [messages]);
 
   // Start a conversation if the user doesn't have one
@@ -76,7 +85,7 @@ const Messages = () => {
   return (
     <MainLayout title="Mensagens">
       <div className="flex flex-col h-[calc(100vh-10rem)]">
-        <div className="mb-4">
+        <div className="mb-4 flex-shrink-0">
           <h2 className="text-xl font-bold">Conversa com Escritório de Advocacia</h2>
           <p className="text-sm text-muted-foreground">
             Todas as mensagens são arquivadas para referência futura
@@ -86,46 +95,62 @@ const Messages = () => {
           </p>
         </div>
 
-        {/* Messages list */}
-        <ScrollArea className="flex-1 mb-4">
-          <div className="space-y-4 pr-2">
-            {messages.map((msg) => (
-              <Card
-                key={msg.id}
-                className={`max-w-3xl ${
-                  msg.sender_type === "client"
-                    ? "ml-auto bg-primary/5 border-primary/10"
-                    : "mr-auto bg-secondary/10"
-                }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center">
-                      <Avatar className="h-6 w-6 mr-2">
-                        <AvatarFallback>
-                          {msg.sender_type === "admin" ? "A" : "C"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">
-                        {msg.sender_type === "admin" ? "Advogado" : "Você"}
-                      </span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(msg.created_at)}
-                    </span>
+        {/* Messages list with fixed height and internal scroll */}
+        <div className="flex-1 border rounded-lg bg-background overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="p-4 space-y-4 min-h-full flex flex-col">
+              <div className="flex-1">
+                {messages.length > 0 ? (
+                  <div className="space-y-4">
+                    {messages.map((msg) => (
+                      <Card
+                        key={msg.id}
+                        className={`max-w-xs sm:max-w-sm md:max-w-md ${
+                          msg.sender_type === "client"
+                            ? "ml-auto bg-primary/5 border-primary/10"
+                            : "mr-auto bg-secondary/10"
+                        }`}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center">
+                              <Avatar className="h-5 w-5 mr-2">
+                                <AvatarFallback className="text-xs">
+                                  {msg.sender_type === "admin" ? "A" : "C"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium text-sm">
+                                {msg.sender_type === "admin" ? "Advogado" : "Você"}
+                              </span>
+                            </div>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              {formatDate(msg.created_at)}
+                            </span>
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap break-words">
+                            {msg.content}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                  <p className="mt-2 text-sm whitespace-pre-wrap break-words">
-                    {msg.content}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <p className="text-lg mb-2">💬</p>
+                      <p>Nenhuma mensagem ainda</p>
+                      <p className="text-sm">Envie uma mensagem para começar a conversa</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+        </div>
 
-        {/* Message input */}
-        <div className="sticky bottom-0 bg-white pt-2">
+        {/* Message input - fixed at bottom */}
+        <div className="flex-shrink-0 border-t bg-background pt-4 mt-4">
           <div className="flex items-end space-x-2">
             <div className="flex-1">
               <Textarea
@@ -133,15 +158,15 @@ const Messages = () => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="resize-none"
-                rows={3}
+                className="resize-none min-h-[3rem] max-h-32"
+                rows={2}
               />
             </div>
             <div className="flex-shrink-0 flex space-x-2">
               <Button 
                 onClick={handleSend} 
                 disabled={isSending || !newMessage.trim()}
-                className="h-10"
+                className="h-12"
               >
                 <Send className="h-4 w-4 mr-2" />
                 Enviar

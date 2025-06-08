@@ -274,101 +274,120 @@ const AdminMessages = () => {
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current) {
+      // Small delay to ensure DOM has updated
+      setTimeout(() => {
+        // Find the scrollable container
+        const scrollContainer = messagesEndRef.current?.closest('.overflow-y-auto');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+      }, 100);
+    }
   }, [messages]);
 
   return (
     <MainLayout title="Chat com Clientes">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[calc(100vh-10rem)]">
-        {/* Conversations list */}
-        <div className="md:col-span-1 border rounded-lg overflow-hidden">
-          <div className="p-3 border-b bg-secondary/10">
-            <div className="flex items-center justify-between">
+        {/* Conversations list - ALTURA FIXA */}
+        <div className="md:col-span-1 border rounded-lg h-[calc(100vh-10rem)] flex flex-col">
+          <div className="h-14 p-3 border-b bg-secondary/10 flex-shrink-0 flex items-center">
+            <div className="flex items-center justify-between w-full">
               <h3 className="font-semibold">Conversas</h3>
               <NewConversationModal onClientSelect={handleNewConversation} />
             </div>
           </div>
-          <ScrollArea className="h-[calc(100vh-12.5rem)]">
-            {isLoading && !conversations.length ? (
-              <div className="p-4 text-center text-muted-foreground">
-                Carregando conversas...
-              </div>
-            ) : conversations.length > 0 ? (
-              conversations.map((conversation) => (
-                <ConversationItem
-                  key={conversation.id}
-                  conversation={conversation}
-                  isActive={activeConversation?.id === conversation.id}
-                  onClick={() => handleSelectConversation(conversation)}
-                />
-              ))
-            ) : (
-              <div className="p-4 text-center text-muted-foreground">
-                Nenhuma conversa encontrada
-              </div>
-            )}
-          </ScrollArea>
+          <div className="h-[calc(100vh-14rem)] overflow-y-auto">
+            <div className="space-y-1 p-2">
+              {isLoading && !conversations.length ? (
+                <div className="p-4 text-center text-muted-foreground">
+                  Carregando conversas...
+                </div>
+              ) : conversations.length > 0 ? (
+                conversations.map((conversation) => (
+                  <ConversationItem
+                    key={conversation.id}
+                    conversation={conversation}
+                    isActive={activeConversation?.id === conversation.id}
+                    onClick={() => handleSelectConversation(conversation)}
+                  />
+                ))
+              ) : (
+                <div className="p-4 text-center text-muted-foreground">
+                  Nenhuma conversa encontrada
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Chat area */}
-        <div className="md:col-span-2 border rounded-lg flex flex-col">
+        {/* Chat area - ALTURA FIXA */}
+        <div className="md:col-span-2 border rounded-lg h-[calc(100vh-10rem)] flex flex-col">
           {activeConversation ? (
             <>
-              <div className="p-3 border-b bg-secondary/10">
+              {/* Header fixo */}
+              <div className="h-14 p-3 border-b bg-secondary/10 flex-shrink-0 flex items-center">
                 <h3 className="font-semibold">
                   Chat com {activeConversation.client?.full_name}
                 </h3>
               </div>
               
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                  {messages.length > 0 ? (
-                    messages.map((msg) => (
+              {/* Área de mensagens - altura fixa com scroll interno */}
+              <div className="h-[calc(100vh-20rem)] overflow-y-auto bg-gray-50 p-4">
+                {messages.length > 0 ? (
+                  <div className="space-y-4">
+                    {messages.map((msg) => (
                       <Card
                         key={msg.id}
-                        className={`max-w-3xl ${
+                        className={`max-w-xs sm:max-w-sm md:max-w-md ${
                           msg.sender_type === "admin"
                             ? "ml-auto bg-primary/5 border-primary/10"
                             : "mr-auto bg-secondary/10"
                         }`}
                       >
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <span className="font-medium">
+                        <CardContent className="p-3">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-medium text-sm">
                               {msg.sender_type === "admin" ? "Você" : "Cliente"}
                             </span>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground ml-2">
                               {formatDate(msg.created_at)}
                             </span>
                           </div>
-                          <p className="mt-2 text-sm whitespace-pre-wrap break-words">
+                          <p className="text-sm whitespace-pre-wrap break-words">
                             {msg.content}
                           </p>
                         </CardContent>
                       </Card>
-                    ))
-                  ) : (
-                    <div className="text-center text-muted-foreground">
-                      Nenhuma mensagem na conversa ainda
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <p className="text-lg mb-2">💬</p>
+                      <p>Nenhuma mensagem na conversa ainda</p>
+                      <p className="text-sm">Envie uma mensagem para começar</p>
                     </div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
+                  </div>
+                )}
+              </div>
               
-              <div className="p-4 border-t">
-                <div className="flex space-x-2">
+              {/* Input fixo na parte de baixo */}
+              <div className="h-20 p-4 border-t flex-shrink-0 bg-background flex items-center">
+                <div className="flex space-x-2 w-full">
                   <Textarea
                     placeholder="Digite sua mensagem..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    className="flex-1 resize-none"
+                    className="flex-1 resize-none min-h-[3rem] max-h-[3rem]"
                     rows={2}
                   />
                   <Button 
                     onClick={handleSend} 
                     disabled={isSending || !newMessage.trim() || !activeConversation}
+                    className="h-12"
                   >
                     <Send className="h-4 w-4 mr-2" />
                     Enviar
@@ -381,13 +400,17 @@ const AdminMessages = () => {
           )}
         </div>
 
-        {/* Client info */}
-        <div className="md:col-span-1">
+        {/* Client info - ALTURA FIXA */}
+        <div className="md:col-span-1 border rounded-lg h-[calc(100vh-10rem)] overflow-y-auto">
           {activeConversation ? (
             <ClientInfo activeConversation={activeConversation} />
           ) : (
-            <div className="border rounded-lg p-4 text-center text-muted-foreground">
-              Selecione uma conversa para ver detalhes do cliente
+            <div className="h-full flex items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <p className="mb-2">📋</p>
+                <p>Selecione uma conversa</p>
+                <p className="text-sm">para ver detalhes do cliente</p>
+              </div>
             </div>
           )}
         </div>
