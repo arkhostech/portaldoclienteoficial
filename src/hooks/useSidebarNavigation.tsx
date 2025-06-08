@@ -16,9 +16,10 @@ export interface NavItem {
   title: string;
   icon: React.ReactNode;
   href: string;
+  hasNotification?: boolean;
 }
 
-export const useSidebarNavigation = () => {
+export const useSidebarNavigation = (hasUnreadMessages?: boolean) => {
   const location = useLocation();
   const { isAdmin } = useAuth();
 
@@ -46,7 +47,8 @@ export const useSidebarNavigation = () => {
     { 
       title: 'Chat com Clientes', 
       icon: <MessageCircle className="h-5 w-5" />, 
-      href: '/admin/messages' 
+      href: '/admin/messages',
+      hasNotification: hasUnreadMessages 
     },
     { 
       title: 'Estágios Clientes', 

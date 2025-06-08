@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/auth";
+import { NotificationsProvider } from "./contexts/notifications";
 import { ToastProvider } from "@/hooks/use-toast";
 import Index from "./pages/Index";
 import AdminLogin from "./pages/AdminLogin";
@@ -31,7 +32,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
+            <NotificationsProvider>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -47,6 +49,7 @@ const App = () => (
               <Route path="/messages" element={<Messages />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </NotificationsProvider>
           </AuthProvider>
         </BrowserRouter>
       </ToastProvider>

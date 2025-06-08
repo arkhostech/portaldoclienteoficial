@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/auth";
+import { useNotifications } from "@/contexts/notifications";
 import { 
   LayoutDashboard, 
   Users, 
@@ -24,7 +25,8 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, setIsOpen, onCollapseChange }: SidebarProps) => {
   const { isAdmin, signOut } = useAuth();
-  const { navItems, currentPath } = useSidebarNavigation();
+  const { hasUnreadMessages } = useNotifications();
+  const { navItems, currentPath } = useSidebarNavigation(isAdmin ? hasUnreadMessages : false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   
   const handleSignOut = () => {

@@ -118,7 +118,8 @@ export const sendMessage = async (
         conversation_id: conversationId,
         content,
         sender_id: senderId,
-        sender_type: senderType
+        sender_type: senderType,
+        is_read: false  // Garantir que sempre seja inserido como false
       }
     ])
     .select()
@@ -138,7 +139,7 @@ export const markMessagesAsRead = async (conversationId: string): Promise<void> 
     .from('messages')
     .update({ is_read: true })
     .eq('conversation_id', conversationId)
-    .eq('is_read', false);
+    .or('is_read.eq.false,is_read.is.null');
 
   if (error) {
     console.error('Error marking messages as read:', error);
@@ -154,7 +155,7 @@ export const countUnreadMessages = async (isAdmin: boolean, userId: string): Pro
       const { count, error } = await supabase
         .from('messages')
         .select('id', { count: 'exact' })
-        .eq('is_read', false)
+        .or('is_read.eq.false,is_read.is.null')
         .eq('sender_type', 'client');
       
       if (error) throw error;
@@ -176,7 +177,7 @@ export const countUnreadMessages = async (isAdmin: boolean, userId: string): Pro
       const { count, error } = await supabase
         .from('messages')
         .select('id', { count: 'exact' })
-        .eq('is_read', false)
+        .or('is_read.eq.false,is_read.is.null')
         .eq('sender_type', 'admin')
         .in('conversation_id', conversationIds);
       

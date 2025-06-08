@@ -27,6 +27,8 @@ export const useChat = (clientId?: string) => {
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [unreadMessages, setUnreadMessages] = useState<Set<string>>(new Set());
+  const [unreadByConversation, setUnreadByConversation] = useState<Map<string, number>>(new Map());
 
   // Load initial messages for a specific conversation (últimas 20)
   const loadMessages = useCallback(async (conversationId: string) => {
@@ -225,6 +227,47 @@ export const useChat = (clientId?: string) => {
     setShouldAutoScroll(true);
   }, []);
 
+  // Marcar mensagem como vista (remove das não lidas)
+  const markMessageAsViewed = useCallback((messageId: string, conversationId: string) => {
+    setUnreadMessages(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(messageId);
+      return newSet;
+    });
+
+    setUnreadByConversation(prev => {
+      const newMap = new Map(prev);
+      const current = newMap.get(conversationId) || 0;
+      if (current > 0) {
+        newMap.set(conversationId, current - 1);
+      }
+      return newMap;
+    });
+  }, []);
+
+  // Marcar várias mensagens como vistas
+  const markMessagesAsViewed = useCallback((messageIds: string[], conversationId: string) => {
+    setUnreadMessages(prev => {
+      const newSet = new Set(prev);
+      messageIds.forEach(id => newSet.delete(id));
+      return newSet;
+    });
+
+    setUnreadByConversation(prev => {
+      const newMap = new Map(prev);
+      const currentCount = newMap.get(conversationId) || 0;
+      const newCount = Math.max(0, currentCount - messageIds.length);
+      newMap.set(conversationId, newCount);
+      return newMap;
+    });
+  }, []);
+
+  // Verificar se tem mensagens não lidas
+  const hasUnreadMessages = unreadMessages.size > 0;
+  const getUnreadCount = useCallback((conversationId: string) => {
+    return unreadByConversation.get(conversationId) || 0;
+  }, [unreadByConversation]);
+
   // Setup realtime subscriptions
   useEffect(() => {
     if (!user) return;
@@ -351,6 +394,22 @@ export const useChat = (clientId?: string) => {
         // Check if message already exists to avoid duplicates
         const exists = prev.find(msg => msg.id === newMessage.id);
         if (!exists) {
+          // Se for admin e a mensagem for de cliente, marcar como não lida
+          if (isAdmin && newMessage.sender_type === 'client') {
+            setUnreadMessages(prevUnread => {
+              const newSet = new Set(prevUnread);
+              newSet.add(newMessage.id);
+              return newSet;
+            });
+
+            setUnreadByConversation(prevMap => {
+              const newMap = new Map(prevMap);
+              const current = newMap.get(activeConversation.id) || 0;
+              newMap.set(activeConversation.id, current + 1);
+              return newMap;
+            });
+          }
+
           // Reativar auto-scroll quando nova mensagem chegar
           setShouldAutoScroll(true);
           return [...prev, newMessage];
@@ -400,5 +459,9 @@ export const useChat = (clientId?: string) => {
     handleStartConversation,
     handleSelectConversation,
     reactivateAutoScroll,
+    markMessageAsViewed,
+    markMessagesAsViewed,
+    hasUnreadMessages,
+    getUnreadCount,
   };
 };

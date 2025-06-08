@@ -9,6 +9,7 @@ import { Send, User, Phone, Mail, FileText, Clock, AlertCircle, Plus, Search, Lo
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { useScrollToBottom } from "@/hooks/useScrollToBottom";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -67,17 +68,19 @@ const ClientInfo = ({ activeConversation }: { activeConversation: any }) => {
 const ConversationItem = ({ 
   conversation, 
   isActive, 
-  onClick 
+  onClick,
+  unreadCount 
 }: { 
   conversation: any, 
   isActive: boolean, 
-  onClick: () => void 
+  onClick: () => void,
+  unreadCount?: number 
 }) => {
   const client = conversation.client;
   
   if (!client) return null;
   
-  const hasUnreadMessages = false; // Future implementation
+  const hasUnreadMessages = (unreadCount || 0) > 0;
   
   return (
     <div 
@@ -92,13 +95,15 @@ const ConversationItem = ({
             {client.full_name.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between">
-            <p className="font-medium truncate">{client.full_name}</p>
-            {hasUnreadMessages && (
-              <Badge variant="default" className="ml-2">Novo</Badge>
-            )}
-          </div>
+                  <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-center">
+              <p className="font-medium truncate">{client.full_name}</p>
+              {hasUnreadMessages && (
+                <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2">
+                  {unreadCount}
+                </div>
+              )}
+            </div>
           <p className="text-sm text-muted-foreground truncate">
             {conversation.process_type || "Processo não especificado"}
           </p>
@@ -250,6 +255,8 @@ const AdminMessages = () => {
     handleStartConversation,
     loadOlderMessages,
     reactivateAutoScroll,
+    markMessageAsViewed,
+    getUnreadCount,
   } = useChat();
 
   const formatDate = (dateString: string) => {
@@ -308,6 +315,21 @@ const AdminMessages = () => {
     enabled: !!activeConversation && !shouldAutoScroll
   });
 
+  // Intersection Observer para detectar mensagens vistas
+  const { observe: observeMessage } = useIntersectionObserver({
+    onIntersect: (element) => {
+      const messageId = element.getAttribute('data-message-id');
+      const conversationId = element.getAttribute('data-conversation-id');
+      const senderType = element.getAttribute('data-sender-type');
+      
+      if (messageId && conversationId && senderType === 'client') {
+        markMessageAsViewed(messageId, conversationId);
+      }
+    },
+    threshold: 0.5,
+    enabled: !!activeConversation
+  });
+
   // Auto-scroll to bottom apenas para novas mensagens (não quando carrega antigas)
   useEffect(() => {
     if (messagesEndRef.current && messagesContainerRef.current && shouldAutoScroll && !loadingOlder) {
@@ -338,15 +360,16 @@ const AdminMessages = () => {
                 <div className="p-4 text-center text-muted-foreground">
                   Carregando conversas...
                 </div>
-              ) : conversations.length > 0 ? (
-                conversations.map((conversation) => (
-                  <ConversationItem
-                    key={conversation.id}
-                    conversation={conversation}
-                    isActive={activeConversation?.id === conversation.id}
-                    onClick={() => handleSelectConversation(conversation)}
-                  />
-                ))
+                              ) : conversations.length > 0 ? (
+                  conversations.map((conversation) => (
+                    <ConversationItem
+                      key={conversation.id}
+                      conversation={conversation}
+                      isActive={activeConversation?.id === conversation.id}
+                      onClick={() => handleSelectConversation(conversation)}
+                      unreadCount={getUnreadCount(conversation.id)}
+                    />
+                  ))
               ) : (
                 <div className="p-4 text-center text-muted-foreground">
                   Nenhuma conversa encontrada
@@ -361,10 +384,17 @@ const AdminMessages = () => {
           {activeConversation ? (
             <>
               {/* Header fixo */}
-              <div className="h-14 p-3 border-b bg-secondary/10 flex-shrink-0 flex items-center">
+              <div className="h-14 p-3 border-b bg-secondary/10 flex-shrink-0 flex items-center justify-between">
                 <h3 className="font-semibold">
                   Chat com {activeConversation.client?.full_name}
                 </h3>
+                {getUnreadCount(activeConversation.id) > 0 && (
+                  <div className="flex items-center space-x-2">
+                    <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                      {getUnreadCount(activeConversation.id)} nova{getUnreadCount(activeConversation.id) > 1 ? 's' : ''}
+                    </div>
+                  </div>
+                )}
               </div>
               
               {/* Área de mensagens - altura fixa com scroll interno */}
@@ -394,6 +424,14 @@ const AdminMessages = () => {
                     {messages.map((msg) => (
                       <Card
                         key={msg.id}
+                        ref={(el) => {
+                          if (el && msg.sender_type === 'client') {
+                            el.setAttribute('data-message-id', msg.id);
+                            el.setAttribute('data-conversation-id', activeConversation.id);
+                            el.setAttribute('data-sender-type', msg.sender_type);
+                            observeMessage(el);
+                          }
+                        }}
                         className={`max-w-xs sm:max-w-sm md:max-w-md ${
                           msg.sender_type === "admin"
                             ? "ml-auto bg-primary/5 border-primary/10"
