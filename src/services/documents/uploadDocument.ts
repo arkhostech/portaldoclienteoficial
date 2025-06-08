@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentFormData } from "./types";
 import { createDelayedToast } from "./utils";
@@ -18,7 +17,7 @@ export const uploadDocument = async (
     
     // Upload the file to storage
     const { data: fileData, error: uploadError } = await supabase.storage
-      .from('client_documents')
+      .from('clientdocuments')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false
@@ -67,7 +66,7 @@ export const uploadDocument = async (
       
       // Delete the uploaded file since the document record failed
       await supabase.storage
-        .from('client_documents')
+        .from('clientdocuments')
         .remove([filePath]);
       
       return null;

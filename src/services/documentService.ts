@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentFormData } from "@/types/document";
 import { toast } from "sonner";
@@ -37,7 +36,7 @@ export const uploadDocument = async (
     
     // Upload file to storage
     const { error: uploadError } = await supabase.storage
-      .from('client_documents')
+      .from('clientdocuments')
       .upload(filePath, file);
     
     if (uploadError) {
@@ -62,7 +61,7 @@ export const uploadDocument = async (
       console.error("Document creation error:", error);
       // Clean up the uploaded file
       await supabase.storage
-        .from('client_documents')
+        .from('clientdocuments')
         .remove([filePath]);
         
       toast.error("Falha ao criar registro do documento");
@@ -124,7 +123,7 @@ export const deleteDocument = async (documentId: string, filePath: string | null
     // If there's a file, delete it from storage
     if (filePath) {
       const { error: storageError } = await supabase.storage
-        .from('client_documents')
+        .from('clientdocuments')
         .remove([filePath]);
       
       if (storageError) {
@@ -146,7 +145,7 @@ export const deleteDocument = async (documentId: string, filePath: string | null
 export const getDocumentDownloadUrl = async (filePath: string): Promise<string | null> => {
   try {
     const { data, error } = await supabase.storage
-      .from('client_documents')
+      .from('clientdocuments')
       .createSignedUrl(filePath, 3600); // URL valid for 1 hour
     
     if (error) {

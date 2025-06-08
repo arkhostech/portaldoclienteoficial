@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { createDelayedToast } from "./utils";
 
@@ -26,7 +25,7 @@ export const getDocumentUrl = async (filePath: string): Promise<string | null> =
     
     // Log storage bucket info for debugging
     try {
-      const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('client_documents');
+      const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('clientdocuments');
       if (bucketError) {
         console.error("Error getting bucket info:", bucketError);
       } else {
@@ -39,7 +38,7 @@ export const getDocumentUrl = async (filePath: string): Promise<string | null> =
     // Try to create signed URL - reduced to 60 seconds for security
     console.log("Creating signed URL for path:", filePath);
     const { data, error } = await supabase.storage
-      .from('client_documents')
+      .from('clientdocuments')
       .createSignedUrl(filePath, 60); // URL valid for 60 seconds
     
     if (error) {

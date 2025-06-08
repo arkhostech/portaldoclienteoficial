@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { createDelayedToast } from "./utils";
 
@@ -19,7 +18,7 @@ export const deleteDocument = async (documentId: string, filePath: string | null
     // If there's a file associated with the document, delete it from storage
     if (filePath) {
       const { error: storageError } = await supabase.storage
-        .from('client_documents')
+        .from('clientdocuments')
         .remove([filePath]);
       
       if (storageError) {
