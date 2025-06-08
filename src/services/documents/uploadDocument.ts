@@ -2,6 +2,41 @@ import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentFormData } from "./types";
 import { createDelayedToast } from "./utils";
 
+// Function to sanitize file names
+const sanitizeFileName = (fileName: string): string => {
+  // Get file extension
+  const lastDotIndex = fileName.lastIndexOf('.');
+  const name = lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
+  const extension = lastDotIndex > 0 ? fileName.substring(lastDotIndex) : '';
+  
+  // Remove emojis, special characters, and accents
+  let sanitized = name
+    // Remove emojis (Unicode ranges for various emoji blocks)
+    .replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '')
+    // Remove accents and normalize
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    // Remove special characters except letters, numbers, spaces, hyphens, underscores
+    .replace(/[^a-zA-Z0-9\s\-_]/g, '')
+    // Replace multiple spaces with single space
+    .replace(/\s+/g, ' ')
+    // Trim spaces
+    .trim()
+    // Replace spaces with underscores
+    .replace(/\s/g, '_');
+  
+  // Limit length to 50 characters
+  if (sanitized.length > 50) {
+    sanitized = sanitized.substring(0, 50);
+  }
+  
+  // If name becomes empty, use a default
+  if (!sanitized) {
+    sanitized = 'document';
+  }
+  
+  return sanitized + extension;
+};
+
 export const uploadDocument = async (
   clientId: string,
   file: File,
@@ -11,8 +46,13 @@ export const uploadDocument = async (
     console.log("Uploading document for clientId:", clientId);
     console.log("Document data:", documentData);
     
-    // Generate a unique file path
-    const filePath = `${clientId}/${Date.now()}_${file.name}`;
+    // Sanitize the file name
+    const sanitizedFileName = sanitizeFileName(file.name);
+    console.log("Original file name:", file.name);
+    console.log("Sanitized file name:", sanitizedFileName);
+    
+    // Generate a unique file path with sanitized name
+    const filePath = `${clientId}/${Date.now()}_${sanitizedFileName}`;
     console.log("Generated file path:", filePath);
     
     // Upload the file to storage

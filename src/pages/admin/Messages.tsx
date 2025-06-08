@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth";
 import { useChat } from "@/hooks/useChat";
-import { Send, User, Phone, Mail, FileText, Clock, AlertCircle } from "lucide-react";
+import { Send, User, Phone, Mail, FileText, Clock, AlertCircle, Plus, Search } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { fetchClients } from "@/services/clients/fetchClients";
+import { Client } from "@/services/clients/types";
 
 const ClientInfo = ({ activeConversation }: { activeConversation: any }) => {
   const client = activeConversation?.client;
@@ -48,8 +50,10 @@ const ClientInfo = ({ activeConversation }: { activeConversation: any }) => {
         
         <div className="flex items-center">
           <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-          <Badge variant={client.status === 'active' ? 'outline' : 'secondary'}>
-            {client.status === 'active' ? 'Ativo' : 'Inativo'}
+          <Badge variant={client.status === 'documentacao' ? 'outline' : 'secondary'}>
+            {client.status === 'documentacao' ? 'Documentação' : 
+             client.status === 'em_andamento' ? 'Em Andamento' :
+             client.status === 'concluido' ? 'Concluído' : client.status}
           </Badge>
         </div>
       </div>
@@ -101,12 +105,124 @@ const ConversationItem = ({
   );
 };
 
+const NewConversationModal = ({ onClientSelect }: { onClientSelect: (clientId: string) => void }) => {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const loadClients = async () => {
+    setIsLoading(true);
+    try {
+      const clientData = await fetchClients();
+      setClients(clientData);
+    } catch (error) {
+      console.error("Error loading clients:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      loadClients();
+    }
+  }, [open]);
+
+  const filteredClients = clients.filter(client =>
+    client.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.phone && client.phone.includes(searchTerm))
+  );
+
+  const handleSelectClient = (clientId: string) => {
+    onClientSelect(clientId);
+    setOpen(false);
+    setSearchTerm("");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Conversa
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px] max-h-[600px]">
+        <DialogHeader>
+          <DialogTitle>Selecionar Cliente</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar cliente..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <ScrollArea className="h-[400px]">
+            {isLoading ? (
+              <div className="p-4 text-center text-muted-foreground">
+                Carregando clientes...
+              </div>
+            ) : filteredClients.length > 0 ? (
+              <div className="space-y-2">
+                {filteredClients.map((client) => (
+                  <div
+                    key={client.id}
+                    className="p-3 border rounded-lg cursor-pointer hover:bg-accent/10 transition-colors"
+                    onClick={() => handleSelectClient(client.id)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Avatar>
+                        <AvatarFallback>
+                          {client.full_name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{client.full_name}</p>
+                        <p className="text-sm text-muted-foreground truncate">{client.email}</p>
+                        {client.process_type && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {client.process_type}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant={client.status === 'documentacao' ? 'outline' : 'secondary'}>
+                        {client.status === 'documentacao' ? 'Documentação' : 
+                         client.status === 'em_andamento' ? 'Em Andamento' :
+                         client.status === 'concluido' ? 'Concluído' : client.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 text-center text-muted-foreground">
+                {searchTerm ? "Nenhum cliente encontrado." : "Nenhum cliente cadastrado."}
+              </div>
+            )}
+          </ScrollArea>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center h-96">
     <AlertCircle className="h-16 w-16 text-muted-foreground mb-4" />
     <h3 className="text-xl font-medium">Sem conversas ativas</h3>
     <p className="text-sm text-muted-foreground text-center mt-2">
       Quando um cliente iniciar uma conversa, ela aparecerá aqui.
+    </p>
+    <p className="text-sm text-muted-foreground text-center mt-1">
+      Ou inicie uma nova conversa com um cliente.
     </p>
   </div>
 );
@@ -124,6 +240,7 @@ const AdminMessages = () => {
     isSending,
     handleSendMessage,
     handleSelectConversation,
+    handleStartConversation,
   } = useChat();
 
   const formatDate = (dateString: string) => {
@@ -151,6 +268,10 @@ const AdminMessages = () => {
     }
   };
 
+  const handleNewConversation = async (clientId: string) => {
+    await handleStartConversation(clientId);
+  };
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -162,7 +283,10 @@ const AdminMessages = () => {
         {/* Conversations list */}
         <div className="md:col-span-1 border rounded-lg overflow-hidden">
           <div className="p-3 border-b bg-secondary/10">
-            <h3 className="font-semibold">Conversas</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Conversas</h3>
+              <NewConversationModal onClientSelect={handleNewConversation} />
+            </div>
           </div>
           <ScrollArea className="h-[calc(100vh-12.5rem)]">
             {isLoading && !conversations.length ? (

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Message, Conversation } from './types';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -40,7 +39,16 @@ export const createConversation = async (clientId: string, processType: string |
     .insert([
       { client_id: clientId, process_type: processType }
     ])
-    .select()
+    .select(`
+      *,
+      client:client_id (
+        full_name,
+        email,
+        phone,
+        status,
+        process_type_id
+      )
+    `)
     .single();
 
   if (error) {
