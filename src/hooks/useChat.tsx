@@ -15,6 +15,7 @@ import {
   markMultipleMessagesAsRead,
   markConversationMessagesAsRead
 } from '@/services/messages';
+import { chatCache } from '@/utils/cache';
 import { Conversation, Message } from '@/services/messages/types';
 import { toast } from '@/hooks/use-toast';
 
@@ -257,6 +258,11 @@ export const useChat = (clientId?: string) => {
     
     try {
       setIsLoading(true);
+      
+      // Limpar cache de conversações para garantir dados atualizados de tipos de processo
+      const cacheKey = `conversations_${user.id}_${isAdmin}`;
+      chatCache.delete(cacheKey);
+      
       const data = await fetchConversations(isAdmin, user.id);
       setConversations(data);
       

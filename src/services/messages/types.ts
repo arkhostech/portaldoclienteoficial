@@ -22,5 +22,8 @@ export interface Conversation {
     phone: string | null;
     status: string;
     process_type_id: string | null;
+    process_type?: {
+      name: string;
+    } | null;
   };
 }

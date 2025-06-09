@@ -139,7 +139,10 @@ export const fetchConversations = async (isAdmin: boolean, clientId?: string): P
         email,
         phone,
         status,
-        process_type_id
+        process_type_id,
+        process_type:process_type_id (
+          name
+        )
       )
     `)
     .order('updated_at', { ascending: false });
@@ -172,7 +175,10 @@ export const createConversation = async (clientId: string, processType: string |
         email,
         phone,
         status,
-        process_type_id
+        process_type_id,
+        process_type:process_type_id (
+          name
+        )
       )
     `)
     .single();
@@ -276,6 +282,9 @@ export const sendMessage = async (
     // **OTIMIZAÇÃO: Invalidar cache de forma assíncrona**
     setTimeout(() => {
       chatCache.invalidateConversation(conversationId);
+      // Limpar cache das conversações para refletir tipos de processo atualizados
+      const cacheKey = `conversations_${senderId}`;
+      chatCache.delete(cacheKey);
     }, 0);
 
     return messageResult.data;

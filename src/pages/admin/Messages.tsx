@@ -19,51 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { fetchClients } from "@/services/clients/fetchClients";
 import { Client } from "@/services/clients/types";
 
-const ClientInfo = ({ activeConversation }: { activeConversation: any }) => {
-  const client = activeConversation?.client;
-  
-  if (!client) return null;
-  
-  return (
-    <div className="border rounded-lg p-4">
-      <h3 className="text-lg font-semibold mb-2">Informações do Cliente</h3>
-      <div className="space-y-3">
-        <div className="flex items-center">
-          <User className="h-4 w-4 mr-2 text-muted-foreground" />
-          <div>{client.full_name}</div>
-        </div>
-        
-        <div className="flex items-center">
-          <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-          <div>{client.email}</div>
-        </div>
-        
-        {client.phone && (
-          <div className="flex items-center">
-            <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-            <div>{client.phone}</div>
-          </div>
-        )}
-        
-        <div className="flex items-center">
-          <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
-          <div>
-            {activeConversation.process_type || "Processo não especificado"}
-          </div>
-        </div>
-        
-        <div className="flex items-center">
-          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-          <Badge variant={client.status === 'documentacao' ? 'outline' : 'secondary'}>
-            {client.status === 'documentacao' ? 'Documentação' : 
-             client.status === 'em_andamento' ? 'Em Andamento' :
-             client.status === 'concluido' ? 'Concluído' : client.status}
-          </Badge>
-        </div>
-      </div>
-    </div>
-  );
-};
+
 
 const ConversationItem = ({ 
   conversation, 
@@ -105,7 +61,7 @@ const ConversationItem = ({
               )}
             </div>
           <p className="text-sm text-muted-foreground truncate">
-            {conversation.process_type || "Processo não especificado"}
+                                  {conversation.client?.process_type?.name || "Processo não especificado"}
           </p>
         </div>
       </div>
@@ -234,6 +190,87 @@ const EmptyState = () => (
     </p>
   </div>
 );
+
+// Componente Modal para Informações do Cliente
+const ClientInfoModal = ({ activeConversation }: { activeConversation: any }) => {
+  const [open, setOpen] = useState(false);
+  const client = activeConversation?.client;
+  
+  if (!client) return null;
+  
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <User className="h-4 w-4 mr-2" />
+          Informações do Cliente
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>Informações do Cliente</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="flex items-center space-x-3">
+            <Avatar className="h-12 w-12">
+              <AvatarFallback className="text-lg">
+                {client.full_name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-semibold text-lg">{client.full_name}</h3>
+            </div>
+          </div>
+          
+          <Separator />
+          
+          <div className="space-y-3">
+            <div className="flex items-center">
+              <Mail className="h-4 w-4 mr-3 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Email</p>
+                <p className="font-medium">{client.email}</p>
+              </div>
+            </div>
+            
+            {client.phone && (
+              <div className="flex items-center">
+                <Phone className="h-4 w-4 mr-3 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Telefone</p>
+                  <p className="font-medium">{client.phone}</p>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex items-center">
+              <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Tipo de Processo</p>
+                <p className="font-medium">
+                  {activeConversation.client?.process_type?.name || "Processo não especificado"}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 mr-3 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <p className="font-medium">
+                  {client.status === 'documentacao' ? 'Documentação' : 
+                   client.status === 'em_andamento' ? 'Em Andamento' :
+                   client.status === 'concluido' ? 'Concluído' : client.status}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const AdminMessages = () => {
   const { user } = useAuth();
@@ -371,9 +408,9 @@ const AdminMessages = () => {
 
   return (
     <MainLayout title="Chat com Clientes">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[calc(100vh-10rem)]">
-        {/* Conversations list - ALTURA FIXA */}
-        <div className="md:col-span-1 border rounded-lg h-[calc(100vh-10rem)] flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 h-[calc(100vh-10rem)]">
+        {/* Conversations list - 30% do espaço */}
+        <div className="col-span-1 lg:col-span-3 border rounded-lg h-[calc(100vh-10rem)] flex flex-col">
           <div className="h-14 p-3 border-b bg-secondary/10 flex-shrink-0 flex items-center">
             <div className="flex items-center justify-between w-full">
               <h3 className="font-semibold">Conversas</h3>
@@ -405,8 +442,8 @@ const AdminMessages = () => {
           </div>
         </div>
 
-        {/* Chat area - ALTURA FIXA */}
-        <div className="md:col-span-2 border rounded-lg h-[calc(100vh-10rem)] flex flex-col">
+        {/* Chat area - 70% do espaço */}
+        <div className="col-span-1 lg:col-span-7 border rounded-lg h-[calc(100vh-10rem)] flex flex-col">
           {activeConversation ? (
             <>
               {/* Header fixo */}
@@ -419,13 +456,14 @@ const AdminMessages = () => {
                     </span>
                   )}
                 </h3>
-                {getUnreadCount(activeConversation.id) > 0 && (
-                  <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2">
+                  <ClientInfoModal activeConversation={activeConversation} />
+                  {getUnreadCount(activeConversation.id) > 0 && (
                     <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                       {getUnreadCount(activeConversation.id)} não vista{getUnreadCount(activeConversation.id) > 1 ? 's' : ''}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
               
               {/* Área de mensagens - altura fixa com scroll interno */}
@@ -543,20 +581,6 @@ const AdminMessages = () => {
           )}
         </div>
 
-        {/* Client info - ALTURA FIXA */}
-        <div className="md:col-span-1 border rounded-lg h-[calc(100vh-10rem)] overflow-y-auto">
-          {activeConversation ? (
-            <ClientInfo activeConversation={activeConversation} />
-          ) : (
-            <div className="h-full flex items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                <p className="mb-2">📋</p>
-                <p>Selecione uma conversa</p>
-                <p className="text-sm">para ver detalhes do cliente</p>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </MainLayout>
   );
