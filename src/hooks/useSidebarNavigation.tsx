@@ -39,11 +39,7 @@ export const useSidebarNavigation = (hasUnreadMessages?: boolean) => {
       icon: <FileText className="h-5 w-5" />, 
       href: '/admin/documents' 
     },
-    { 
-      title: 'Processos', 
-      icon: <FileText className="h-5 w-5" />, 
-      href: '/admin/cases' 
-    },
+
     { 
       title: 'Chat com Clientes', 
       icon: <MessageCircle className="h-5 w-5" />, 

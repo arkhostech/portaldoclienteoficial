@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   FileText,
   UserCog,
-  FolderOpenDot,
   ListTodo,
   Settings,
 } from "lucide-react";
@@ -47,11 +46,7 @@ export default function SideNavigation() {
       href: "/admin/documents",
       icon: FileText,
     },
-    {
-      name: "Processos",
-      href: "/admin/cases",
-      icon: FolderOpenDot,
-    },
+
     {
       name: "Etapas",
       href: "/admin/client-stages",

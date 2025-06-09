@@ -6,7 +6,6 @@ import {
   AlertCircle,
   TrendingUp,
   TrendingDown,
-  DollarSign,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,9 +20,6 @@ const AdminDashboardSummary = () => {
     processes: {
       total: 0,
       awaiting: 0,
-    },
-    payments: {
-      count: 0,
     },
   });
 
@@ -61,19 +57,6 @@ const AdminDashboardSummary = () => {
           process => process.status === "pending"
         ) || [];
         
-        // Fetch payments for current month
-        const currentDate = new Date();
-        const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-        
-        const { data: payments, error: paymentsError } = await supabase
-          .from("scheduled_payments")
-          .select("*")
-          .gte("due_date", firstDayOfMonth.toISOString().split('T')[0])
-          .lte("due_date", lastDayOfMonth.toISOString().split('T')[0]);
-        
-        if (paymentsError) throw paymentsError;
-        
         setStats({
           clients: {
             total: clients?.length || 0,
@@ -83,9 +66,6 @@ const AdminDashboardSummary = () => {
           processes: {
             total: processes?.length || 0,
             awaiting: pendingProcesses.length || 0,
-          },
-          payments: {
-            count: payments?.length || 0,
           },
         });
       } catch (error) {
@@ -99,7 +79,7 @@ const AdminDashboardSummary = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {/* Total Clients */}
       <Card>
         <CardContent className="pt-6">
@@ -159,26 +139,7 @@ const AdminDashboardSummary = () => {
         </CardContent>
       </Card>
 
-      {/* Monthly Payments */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Pagamentos este Mês
-              </p>
-              <div className="flex flex-col">
-                <h3 className="text-3xl font-bold tracking-tight">
-                  {isLoading ? "..." : stats.payments.count}
-                </h3>
-              </div>
-            </div>
-            <div className="p-2 bg-green-500/10 rounded-full">
-              <DollarSign className="h-5 w-5 text-green-500" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
     </div>
   );
 };
