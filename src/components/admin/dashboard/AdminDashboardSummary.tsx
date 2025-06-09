@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   Users,
@@ -79,67 +78,88 @@ const AdminDashboardSummary = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Total Clients */}
-      <Card>
-        <CardContent className="pt-6">
+      <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-blue-50 to-indigo-50">
+        <CardContent className="p-6">
           <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Total de Clientes
-              </p>
-              <div className="flex items-baseline space-x-2">
-                <h3 className="text-3xl font-bold tracking-tight">
-                  {isLoading ? "..." : stats.clients.total}
-                </h3>
-                <div
-                  className={`flex items-center text-xs ${
-                    stats.clients.trend === "up"
-                      ? "text-green-500"
-                      : "text-red-500"
-                  }`}
-                >
-                  {stats.clients.trend === "up" ? (
-                    <TrendingUp className="h-3 w-3 mr-1" />
+            <div className="space-y-3 flex-1">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+                <p className="text-sm font-semibold text-blue-900/70 uppercase tracking-wide">
+                  Total de Clientes
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-4xl font-bold text-gray-900 tracking-tight">
+                  {isLoading ? (
+                    <div className="h-10 w-16 bg-gray-200 rounded-md animate-pulse"></div>
                   ) : (
-                    <TrendingDown className="h-3 w-3 mr-1" />
+                    stats.clients.total
                   )}
-                  <span>+{isLoading ? "..." : stats.clients.growth} esta semana</span>
+                </h3>
+                
+                <div className="flex items-center space-x-2">
+                  <div className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    stats.clients.trend === "up"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}>
+                    {stats.clients.trend === "up" ? (
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 mr-1" />
+                    )}
+                    <span>
+                      {isLoading ? "..." : `+${stats.clients.growth}`} esta semana
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Users className="h-5 w-5 text-primary" />
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Active Processes */}
-      <Card>
-        <CardContent className="pt-6">
+      <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-amber-50 to-orange-50">
+        <CardContent className="p-6">
           <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Processos Ativos
-              </p>
-              <div className="flex items-baseline space-x-2">
-                <h3 className="text-3xl font-bold tracking-tight">
-                  {isLoading ? "..." : stats.processes.total}
-                </h3>
-                <span className="text-xs text-amber-600">
-                  {isLoading ? "..." : stats.processes.awaiting} aguardando aprovação
-                </span>
+            <div className="space-y-3 flex-1">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-amber-500/10 rounded-lg group-hover:bg-amber-500/20 transition-colors">
+                  <FileText className="h-5 w-5 text-amber-600" />
+                </div>
+                <p className="text-sm font-semibold text-amber-900/70 uppercase tracking-wide">
+                  Processos Ativos
+                </p>
               </div>
-            </div>
-            <div className="p-2 bg-amber-500/10 rounded-full">
-              <FileText className="h-5 w-5 text-amber-500" />
+              
+              <div className="space-y-2">
+                <h3 className="text-4xl font-bold text-gray-900 tracking-tight">
+                  {isLoading ? (
+                    <div className="h-10 w-16 bg-gray-200 rounded-md animate-pulse"></div>
+                  ) : (
+                    stats.processes.total
+                  )}
+                </h3>
+                
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    <span>
+                      {isLoading ? "..." : stats.processes.awaiting} aguardando aprovação
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
-
-
     </div>
   );
 };
