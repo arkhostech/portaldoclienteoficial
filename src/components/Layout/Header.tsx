@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/contexts/auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Menu, Bell } from "lucide-react";
+import { Menu } from "lucide-react";
 
 interface HeaderProps {
   title: string;
@@ -34,11 +34,6 @@ const Header = ({ title, toggleSidebar }: HeaderProps) => {
       </div>
       
       <div className="flex items-center gap-2 sm:gap-4">
-        <button className="relative" aria-label="Notifications">
-          <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-          <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-        </button>
-        
         {user && (
           <div className="flex items-center gap-2">
             <div className="hidden md:block text-right">

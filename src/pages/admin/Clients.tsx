@@ -5,7 +5,7 @@ import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { UserPlus, Search, Filter } from "lucide-react";
+import { UserPlus, Search } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { Client } from "@/services/clientService";
 import { useClients } from "@/hooks/useClients";
@@ -92,13 +92,7 @@ const Clients = () => {
 
         <Card>
           <CardHeader className="pb-2">
-            <div className="flex justify-between">
-              <CardTitle>Lista de Clientes</CardTitle>
-              <Button variant="outline" size="sm">
-                <Filter className="mr-2 h-4 w-4" />
-                Filtrar
-              </Button>
-            </div>
+            <CardTitle>Lista de Clientes</CardTitle>
           </CardHeader>
           <CardContent>
             <ClientsTable 
