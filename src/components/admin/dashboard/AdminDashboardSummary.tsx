@@ -43,17 +43,18 @@ const AdminDashboardSummary = () => {
           client => new Date(client.created_at) > oneWeekAgo
         ) || [];
         
-        // Fetch active processes (using clients with process_type_id as a proxy)
+        // Fetch active processes (all processes except concluded ones)
         const { data: processes, error: processesError } = await supabase
           .from("clients")
           .select("id, process_type_id, status")
-          .not("process_type_id", "is", null);
+          .not("process_type_id", "is", null)
+          .neq("status", "concluido");
         
         if (processesError) throw processesError;
         
-        // Get pending processes (assuming "pending" is a status)
-        const pendingProcesses = processes?.filter(
-          process => process.status === "pending"
+        // Get processes awaiting documentation (status = "documentacao")
+        const awaitingProcesses = processes?.filter(
+          process => process.status === "documentacao"
         ) || [];
         
         setStats({
@@ -64,7 +65,7 @@ const AdminDashboardSummary = () => {
           },
           processes: {
             total: processes?.length || 0,
-            awaiting: pendingProcesses.length || 0,
+            awaiting: awaitingProcesses.length || 0,
           },
         });
       } catch (error) {
@@ -151,7 +152,7 @@ const AdminDashboardSummary = () => {
                   <div className="flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                     <AlertCircle className="h-3 w-3 mr-1" />
                     <span>
-                      {isLoading ? "..." : stats.processes.awaiting} aguardando aprovação
+                      {isLoading ? "..." : stats.processes.awaiting} aguardando documentação
                     </span>
                   </div>
                 </div>
