@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +32,24 @@ export const useChat = (clientId?: string) => {
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState<Set<string>>(new Set());
   const [unreadByConversation, setUnreadByConversation] = useState<Map<string, number>>(new Map());
+  
+  // **NOVA FUNCIONALIDADE: Controle inteligente de autoscroll**
+  const [isViewingOldMessages, setIsViewingOldMessages] = useState(false);
+  const [pendingNewMessages, setPendingNewMessages] = useState<Set<string>>(new Set());
+  const [scrollContainerRef, setScrollContainerRef] = useState<HTMLDivElement | null>(null);
+  
+  // **FIX: Refs para valores atuais sem causar re-renders**
+  const isViewingOldMessagesRef = useRef(isViewingOldMessages);
+  const scrollContainerRefRef = useRef<HTMLDivElement | null>(null);
+  
+  // Atualizar refs quando valores mudam
+  useEffect(() => {
+    isViewingOldMessagesRef.current = isViewingOldMessages;
+  }, [isViewingOldMessages]);
+  
+  useEffect(() => {
+    scrollContainerRefRef.current = scrollContainerRef;
+  }, [scrollContainerRef]);
 
   // Load initial messages for a specific conversation (últimas 20)
   const loadMessages = useCallback(async (conversationId: string) => {
@@ -253,13 +271,13 @@ export const useChat = (clientId?: string) => {
     }
   }, [user, isAdmin, conversations, loadMessages]);
 
-  // Set active conversation and load its messages
+  // Placeholder temporário
   const handleSelectConversation = useCallback(async (conversation: Conversation) => {
     setActiveConversation(conversation);
     await loadMessages(conversation.id);
   }, [loadMessages]);
 
-  // Reativar auto-scroll (quando usuário rola para próximo do final)
+  // Placeholder - será definido depois
   const reactivateAutoScroll = useCallback(() => {
     setShouldAutoScroll(true);
   }, []);
@@ -315,11 +333,100 @@ export const useChat = (clientId?: string) => {
     });
   }, []);
 
+  // **NOVA FUNCIONALIDADE: Funções de controle inteligente**
+  const setViewingOldMessages = useCallback((viewing: boolean) => {
+    setIsViewingOldMessages(viewing);
+  }, []);
+
+  // **NOVA: Registrar referência do container de scroll**
+  const registerScrollContainer = useCallback((container: HTMLDivElement | null) => {
+    setScrollContainerRef(container);
+  }, []);
+
+  // **NOVA: Effect para detectar scroll diretamente no hook**
+  useEffect(() => {
+    if (!scrollContainerRef || !activeConversation) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      
+      // Se está a mais de 200px do final, está vendo mensagens antigas
+      const isViewingOld = distanceFromBottom > 200;
+      
+      console.log('🎯 HOOK - Scroll detectado:', { 
+        distanceFromBottom, 
+        isViewingOld, 
+        scrollTop, 
+        scrollHeight, 
+        clientHeight,
+        activeConversationId: activeConversation.id,
+        hasPendingMessages: pendingNewMessages.size > 0
+      });
+      
+      setIsViewingOldMessages(isViewingOld);
+      
+      // **NOVA FUNCIONALIDADE: Auto-limpar mensagens pendentes quando chega ao final**
+      if (!isViewingOld && pendingNewMessages.size > 0) {
+        console.log('🧹 Chegou ao final - limpando mensagens pendentes automaticamente');
+        
+        // Limpar mensagens pendentes
+        const messageIds = Array.from(pendingNewMessages);
+        setPendingNewMessages(new Set());
+        
+        // Marcar mensagens pendentes como vistas
+        if (activeConversation) {
+          markMessagesAsViewed(messageIds, activeConversation.id);
+        }
+        
+        // Reativar autoscroll
+        setShouldAutoScroll(true);
+      }
+    };
+
+    scrollContainerRef.addEventListener('scroll', handleScroll);
+    
+    // Verificar estado inicial
+    handleScroll();
+
+    return () => {
+      scrollContainerRef.removeEventListener('scroll', handleScroll);
+    };
+  }, [scrollContainerRef, activeConversation, pendingNewMessages, markMessagesAsViewed]);
+
+  const resetScrollState = useCallback(() => {
+    setShouldAutoScroll(true);
+    setIsViewingOldMessages(false);
+    setPendingNewMessages(new Set());
+  }, []);
+
+  // **NOVA: Versão melhorada do reactivateAutoScroll**
+  const enhancedReactivateAutoScroll = useCallback(() => {
+    setShouldAutoScroll(true);
+    setIsViewingOldMessages(false);
+    
+    // Limpar mensagens pendentes quando usuário rola para baixo
+    if (activeConversation && pendingNewMessages.size > 0) {
+      setPendingNewMessages(new Set());
+      
+      // Marcar mensagens pendentes como vistas
+      const messageIds = Array.from(pendingNewMessages);
+      markMessagesAsViewed(messageIds, activeConversation.id);
+    }
+  }, [activeConversation, pendingNewMessages, markMessagesAsViewed]);
+
   // Verificar se tem mensagens não lidas
   const hasUnreadMessages = unreadMessages.size > 0;
   const getUnreadCount = useCallback((conversationId: string) => {
     return unreadByConversation.get(conversationId) || 0;
   }, [unreadByConversation]);
+
+  // **NOVA: Contador que inclui mensagens pendentes para conversa ativa**
+  const getUnreadCountWithPending = useCallback((conversationId: string) => {
+    const regularUnread = unreadByConversation.get(conversationId) || 0;
+    const pendingCount = activeConversation?.id === conversationId ? pendingNewMessages.size : 0;
+    return regularUnread + pendingCount;
+  }, [unreadByConversation, activeConversation, pendingNewMessages]);
 
   // Setup realtime subscriptions
   useEffect(() => {
@@ -527,24 +634,80 @@ export const useChat = (clientId?: string) => {
             updated[tempMessageIndex] = newMessage;
             return updated;
           } else {
-            // Se for admin e a mensagem for de cliente, marcar como não lida
+            // **NOVA LÓGICA: Controle inteligente para mensagens de cliente**
             if (isAdmin && newMessage.sender_type === 'client') {
-              setUnreadMessages(prevUnread => {
-                const newSet = new Set(prevUnread);
-                newSet.add(newMessage.id);
-                return newSet;
+              // **FIX: Usar refs para verificação sem quebrar subscription**
+              const currentScrollRef = scrollContainerRefRef.current;
+              const isCurrentlyViewingOld = currentScrollRef ? (() => {
+                const { scrollTop, scrollHeight, clientHeight } = currentScrollRef;
+                const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+                const viewing = distanceFromBottom > 200;
+                console.log('🔍 Verificação síncrona de scroll:', { 
+                  scrollTop, 
+                  scrollHeight, 
+                  clientHeight, 
+                  distanceFromBottom, 
+                  viewing,
+                  hasScrollRef: !!currentScrollRef
+                });
+                return viewing;
+              })() : isViewingOldMessagesRef.current;
+              
+              console.log('🔍 Nova mensagem de cliente:', { 
+                messageId: newMessage.id, 
+                isViewingOldMessages: isViewingOldMessagesRef.current,
+                isCurrentlyViewingOld,
+                conversationId: newMessage.conversation_id,
+                scrollContainerExists: !!currentScrollRef
               });
+              
+              // Se usuário está vendo mensagens antigas, não fazer autoscroll
+              if (isCurrentlyViewingOld) {
+                console.log('📜 Usuário vendo antigas - adicionando às pendentes');
+                // Adicionar às mensagens pendentes (só mostra notificação)
+                setPendingNewMessages(prevPending => {
+                  const newSet = new Set(prevPending);
+                  newSet.add(newMessage.id);
+                  console.log('📝 Pendentes atualizadas:', newSet.size);
+                  return newSet;
+                });
+                
+                // Atualizar state para ficar sincronizado
+                setIsViewingOldMessages(true);
+                
+                // NÃO reativar autoscroll nem marcar como não lida nos contadores gerais
+              } else {
+                console.log('👁️ Usuário no final - comportamento normal');
+                // Comportamento normal: marcar como não lida e fazer autoscroll
+                setUnreadMessages(prevUnread => {
+                  const newSet = new Set(prevUnread);
+                  newSet.add(newMessage.id);
+                  return newSet;
+                });
 
-              setUnreadByConversation(prevMap => {
-                const newMap = new Map(prevMap);
-                const current = newMap.get(activeConversation.id) || 0;
-                newMap.set(activeConversation.id, current + 1);
-                return newMap;
+                setUnreadByConversation(prevMap => {
+                  const newMap = new Map(prevMap);
+                  const current = newMap.get(activeConversation.id) || 0;
+                  newMap.set(activeConversation.id, current + 1);
+                  return newMap;
+                });
+                
+                // Reativar auto-scroll quando nova mensagem chegar
+                setShouldAutoScroll(true);
+              }
+            } else {
+              // Para mensagens do admin, só fazer autoscroll se não estiver vendo antigas
+              console.log('💼 Mensagem do admin:', { 
+                messageId: newMessage.id, 
+                isViewingOld: isViewingOldMessagesRef.current,
+                willAutoScroll: !isViewingOldMessagesRef.current
               });
+              
+              if (!isViewingOldMessagesRef.current) {
+                setShouldAutoScroll(true);
+              }
             }
 
-            // Reativar auto-scroll quando nova mensagem chegar
-            setShouldAutoScroll(true);
             return [...prev, newMessage];
           }
         }
@@ -581,6 +744,13 @@ export const useChat = (clientId?: string) => {
     };
   }, [activeConversation]);
 
+  // **FUNCIONALIDADE MELHORADA: Redefinir handleSelectConversation**
+  const enhancedHandleSelectConversation = useCallback(async (conversation: Conversation) => {
+    setActiveConversation(conversation);
+    resetScrollState(); // Resetar estado de scroll ao trocar conversa
+    await loadMessages(conversation.id);
+  }, [loadMessages, resetScrollState]);
+
   return {
     conversations,
     activeConversation,
@@ -595,11 +765,18 @@ export const useChat = (clientId?: string) => {
     loadOlderMessages,
     handleSendMessage,
     handleStartConversation,
-    handleSelectConversation,
-    reactivateAutoScroll,
+    handleSelectConversation: enhancedHandleSelectConversation,
+    reactivateAutoScroll: enhancedReactivateAutoScroll,
     markMessageAsViewed,
     markMessagesAsViewed,
     hasUnreadMessages,
     getUnreadCount,
+    getUnreadCountWithPending,
+    // **NOVAS FUNCIONALIDADES**
+    setViewingOldMessages,
+    resetScrollState,
+    isViewingOldMessages,
+    pendingNewMessages: pendingNewMessages.size,
+    registerScrollContainer,
   };
 };

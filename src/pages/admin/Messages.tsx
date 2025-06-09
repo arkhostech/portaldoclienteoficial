@@ -257,7 +257,22 @@ const AdminMessages = () => {
     reactivateAutoScroll,
     markMessageAsViewed,
     getUnreadCount,
+    getUnreadCountWithPending,
+    setViewingOldMessages,
+    isViewingOldMessages,
+    pendingNewMessages,
+    registerScrollContainer,
   } = useChat();
+
+  // **DEBUG: Log estados para verificar**
+  useEffect(() => {
+    console.log('🎯 Estado atual:', {
+      isViewingOldMessages,
+      pendingNewMessages,
+      activeConversation: activeConversation?.id,
+      shouldAutoScroll
+    });
+  }, [isViewingOldMessages, pendingNewMessages, activeConversation, shouldAutoScroll]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -307,13 +322,24 @@ const AdminMessages = () => {
     dependency: messages.length
   });
 
-  // Reativa auto-scroll quando usuário rola para próximo do final
+  // **MELHORADO: Controle inteligente de scroll**
   useScrollToBottom({
     containerRef: messagesContainerRef,
     onNearBottom: reactivateAutoScroll,
     threshold: 100,
     enabled: !!activeConversation && !shouldAutoScroll
   });
+
+  // **NOVA: Registrar container para detecção de scroll no hook**
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      registerScrollContainer(messagesContainerRef.current);
+    }
+    
+    return () => {
+      registerScrollContainer(null);
+    };
+  }, [registerScrollContainer, activeConversation]);
 
   // Intersection Observer para detectar mensagens vistas
   const { observe: observeMessage } = useIntersectionObserver({
@@ -330,9 +356,9 @@ const AdminMessages = () => {
     enabled: !!activeConversation
   });
 
-  // Auto-scroll to bottom apenas para novas mensagens (não quando carrega antigas)
+  // Auto-scroll to bottom apenas para novas mensagens (não quando carrega antigas ou vendo antigas)
   useEffect(() => {
-    if (messagesEndRef.current && messagesContainerRef.current && shouldAutoScroll && !loadingOlder) {
+    if (messagesEndRef.current && messagesContainerRef.current && shouldAutoScroll && !loadingOlder && !isViewingOldMessages) {
       // Small delay to ensure DOM has updated
       setTimeout(() => {
         const scrollContainer = messagesContainerRef.current;
@@ -341,7 +367,7 @@ const AdminMessages = () => {
         }
       }, 100);
     }
-  }, [messages.length, shouldAutoScroll, loadingOlder]);
+  }, [messages.length, shouldAutoScroll, loadingOlder, isViewingOldMessages]);
 
   return (
     <MainLayout title="Chat com Clientes">
@@ -367,7 +393,7 @@ const AdminMessages = () => {
                       conversation={conversation}
                       isActive={activeConversation?.id === conversation.id}
                       onClick={() => handleSelectConversation(conversation)}
-                      unreadCount={getUnreadCount(conversation.id)}
+                      unreadCount={getUnreadCountWithPending(conversation.id)}
                     />
                   ))
               ) : (
@@ -387,11 +413,16 @@ const AdminMessages = () => {
               <div className="h-14 p-3 border-b bg-secondary/10 flex-shrink-0 flex items-center justify-between">
                 <h3 className="font-semibold">
                   Chat com {activeConversation.client?.full_name}
+                  {pendingNewMessages > 0 && (
+                    <span className="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                      {pendingNewMessages} nova{pendingNewMessages > 1 ? 's' : ''}
+                    </span>
+                  )}
                 </h3>
                 {getUnreadCount(activeConversation.id) > 0 && (
                   <div className="flex items-center space-x-2">
                     <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                      {getUnreadCount(activeConversation.id)} nova{getUnreadCount(activeConversation.id) > 1 ? 's' : ''}
+                      {getUnreadCount(activeConversation.id)} não vista{getUnreadCount(activeConversation.id) > 1 ? 's' : ''}
                     </div>
                   </div>
                 )}
@@ -400,8 +431,22 @@ const AdminMessages = () => {
               {/* Área de mensagens - altura fixa com scroll interno */}
               <div 
                 ref={messagesContainerRef}
-                className="h-[calc(100vh-20rem)] overflow-y-auto bg-gray-50 p-4"
+                className="h-[calc(100vh-20rem)] overflow-y-auto bg-gray-50 p-4 relative"
               >
+                {/* **NOVO: Indicador de novas mensagens quando vendo antigas** */}
+                {isViewingOldMessages && pendingNewMessages > 0 && (
+                  <div className="sticky top-0 z-10 bg-blue-500 text-white text-sm px-3 py-2 rounded-lg mb-4 shadow-lg">
+                    <div className="flex items-center justify-between">
+                      <span>{pendingNewMessages} nova{pendingNewMessages > 1 ? 's' : ''} mensagem{pendingNewMessages > 1 ? 's' : ''}</span>
+                      <button 
+                        onClick={reactivateAutoScroll}
+                        className="bg-white text-blue-500 px-2 py-1 rounded text-xs hover:bg-gray-100"
+                      >
+                        Ver novas ↓
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {/* Loading indicator para mensagens antigas */}
                 {loadingOlder && (
                   <div className="flex justify-center py-4">
