@@ -10,6 +10,7 @@ export interface Document {
   created_at: string;
   updated_at: string;
   status: string;
+  uploaded_by: 'admin' | 'client';
 }
 
 export interface DocumentFormData {

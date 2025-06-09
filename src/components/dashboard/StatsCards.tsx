@@ -14,24 +14,24 @@ const StatsCards = ({ stats, isLoading }: StatsCardsProps) => {
       title: "Documentos",
       value: stats.documentsCount,
       icon: FileText,
-      color: "from-blue-500/10 to-blue-600/20 border-blue-200",
-      iconColor: "text-blue-600",
+      iconColor: "text-[#1e3a8a]",
+      bgColor: "bg-[#dbeafe]",
       description: "Total de documentos"
     },
     {
       title: "Conversas",
       value: stats.conversationsCount,
       icon: MessageSquare,
-      color: "from-purple-500/10 to-purple-600/20 border-purple-200",
-      iconColor: "text-purple-600",
+      iconColor: "text-[#3b82f6]",
+      bgColor: "bg-[#dbeafe]",
       description: "Conversas ativas"
     },
     {
       title: "Última Atualização",
       value: stats.lastUpdate ? new Date(stats.lastUpdate).toLocaleDateString('pt-BR') : "--",
       icon: Clock,
-      color: "from-amber-500/10 to-amber-600/20 border-amber-200",
-      iconColor: "text-amber-600",
+      iconColor: "text-[#6b7280]",
+      bgColor: "bg-[#f3f4f6]",
       description: "Último update",
       isDate: true
     }
@@ -41,10 +41,10 @@ const StatsCards = ({ stats, isLoading }: StatsCardsProps) => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 3 }).map((_, index) => (
-          <Card key={index} className="border-0 shadow-md">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <Skeleton className="h-10 w-10 rounded-lg" />
+          <Card key={index} className="bg-white border border-[#f3f4f6] shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <Skeleton className="h-12 w-12 rounded-lg" />
                 <div className="space-y-2 flex-1">
                   <Skeleton className="h-4 w-20" />
                   <Skeleton className="h-6 w-16" />
@@ -66,21 +66,21 @@ const StatsCards = ({ stats, isLoading }: StatsCardsProps) => {
         return (
           <Card 
             key={index} 
-            className={`border-0 shadow-md bg-gradient-to-br ${stat.color} hover:shadow-lg transition-all duration-300 group`}
+            className="bg-white border border-[#f3f4f6] shadow-sm hover:shadow-md hover:border-[#93c5fd] transition-all duration-300 group"
           >
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-white/80 rounded-lg group-hover:bg-white transition-colors">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className={`p-3 ${stat.bgColor} rounded-lg group-hover:bg-[#dbeafe] transition-colors`}>
                   <Icon className={`h-6 w-6 ${stat.iconColor}`} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  <p className="text-sm font-medium text-[#6b7280] uppercase tracking-wide">
                     {stat.title}
                   </p>
-                  <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                  <h3 className="text-2xl font-bold text-[#000000] mt-1">
                     {stat.isDate ? stat.value : stat.value}
                   </h3>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-[#6b7280] mt-1">
                     {stat.description}
                   </p>
                 </div>

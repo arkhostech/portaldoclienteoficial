@@ -1,135 +1,125 @@
 // **OTIMIZAÇÃO 5: Monitor de performance**
 // Para acompanhar o impacto das otimizações implementadas
 
-interface PerformanceMetric {
-  operation: string;
-  startTime: number;
-  endTime?: number;
-  duration?: number;
-  cacheHit?: boolean;
+interface PerformanceMetrics {
+  operationName: string;
+  duration: number;
+  timestamp: number;
+  success: boolean;
   error?: string;
 }
 
 class PerformanceMonitor {
-  private metrics: PerformanceMetric[] = [];
-  private readonly maxMetrics = 100; // Manter só as últimas 100 métricas
+  private metrics: PerformanceMetrics[] = [];
+  private readonly maxMetrics = 1000; // Limitar a 1000 métricas na memória
 
-  startOperation(operation: string): string {
-    const id = `${operation}_${Date.now()}_${Math.random()}`;
+  addMetric(metric: PerformanceMetrics): void {
+    this.metrics.push(metric);
     
-    this.metrics.push({
-      operation: `${operation}:${id}`,
-      startTime: performance.now()
-    });
-
-    // Limpar métricas antigas
+    // Limitar o tamanho do array
     if (this.metrics.length > this.maxMetrics) {
       this.metrics = this.metrics.slice(-this.maxMetrics);
     }
-
-    return id;
   }
 
-  endOperation(operation: string, id: string, cacheHit: boolean = false, error?: string): void {
-    const fullOperation = `${operation}:${id}`;
-    const metric = this.metrics.find(m => m.operation === fullOperation);
+  getAverageTime(operationName: string): number {
+    const operationMetrics = this.metrics.filter(m => m.operationName === operationName && m.success);
+    if (operationMetrics.length === 0) return 0;
     
-    if (metric) {
-      metric.endTime = performance.now();
-      metric.duration = metric.endTime - metric.startTime;
-      metric.cacheHit = cacheHit;
-      metric.error = error;
+    const totalTime = operationMetrics.reduce((sum, m) => sum + m.duration, 0);
+    return totalTime / operationMetrics.length;
+  }
+
+  getSuccessRate(operationName: string): number {
+    const operationMetrics = this.metrics.filter(m => m.operationName === operationName);
+    if (operationMetrics.length === 0) return 100;
+    
+    const successCount = operationMetrics.filter(m => m.success).length;
+    return (successCount / operationMetrics.length) * 100;
+  }
+
+  getRecentErrors(operationName?: string, limit: number = 10): PerformanceMetrics[] {
+    let errorMetrics = this.metrics.filter(m => !m.success);
+    
+    if (operationName) {
+      errorMetrics = errorMetrics.filter(m => m.operationName === operationName);
     }
+    
+    return errorMetrics
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, limit);
   }
 
-  // Estatísticas resumidas
-  getStats(operation?: string): {
-    totalOperations: number;
-    averageDuration: number;
-    cacheHitRate: number;
-    errorRate: number;
-    recentOperations: PerformanceMetric[];
-  } {
-    let filteredMetrics = this.metrics.filter(m => m.duration !== undefined);
-    
-    if (operation) {
-      filteredMetrics = filteredMetrics.filter(m => m.operation.startsWith(operation));
-    }
-
-    const totalOperations = filteredMetrics.length;
-    const averageDuration = totalOperations > 0 
-      ? filteredMetrics.reduce((sum, m) => sum + (m.duration || 0), 0) / totalOperations 
-      : 0;
-    
-    const cacheHits = filteredMetrics.filter(m => m.cacheHit).length;
-    const cacheHitRate = totalOperations > 0 ? (cacheHits / totalOperations) * 100 : 0;
-    
-    const errors = filteredMetrics.filter(m => m.error).length;
-    const errorRate = totalOperations > 0 ? (errors / totalOperations) * 100 : 0;
-
-    return {
-      totalOperations,
-      averageDuration: Math.round(averageDuration * 100) / 100,
-      cacheHitRate: Math.round(cacheHitRate * 100) / 100,
-      errorRate: Math.round(errorRate * 100) / 100,
-      recentOperations: filteredMetrics.slice(-10)
-    };
-  }
-
-  // Log resumo para console (útil para debug)
-  logSummary(): void {
-    const operations = ['fetchUnreadCounts', 'sendMessage', 'markAsRead', 'loadMessages'];
-    
-    console.group('📊 Performance Monitor Summary');
+  getMetricsSummary(): Record<string, { avgTime: number; successRate: number; count: number }> {
+    const operations = ['sendMessage', 'loadMessages'];
+    const summary: Record<string, { avgTime: number; successRate: number; count: number }> = {};
     
     operations.forEach(op => {
-      const stats = this.getStats(op);
-      if (stats.totalOperations > 0) {
-        console.log(`${op}:`, {
-          ops: stats.totalOperations,
-          avgMs: stats.averageDuration,
-          cacheHit: `${stats.cacheHitRate}%`,
-          errors: `${stats.errorRate}%`
-        });
-      }
+      const operationMetrics = this.metrics.filter(m => m.operationName === op);
+      summary[op] = {
+        avgTime: this.getAverageTime(op),
+        successRate: this.getSuccessRate(op),
+        count: operationMetrics.length
+      };
     });
     
-    console.groupEnd();
+    return summary;
   }
 
-  // Limpar métricas
-  clear(): void {
+  clearMetrics(): void {
     this.metrics = [];
+  }
+
+  // Log das métricas no console (para debug)
+  logSummary(): void {
+    const summary = this.getMetricsSummary();
+    console.table(summary);
   }
 }
 
 // Instância global
-export const perfMonitor = new PerformanceMonitor();
+export const performanceMonitor = new PerformanceMonitor();
 
-// Wrapper para operações com monitoramento automático
+// Função wrapper para monitorar operações async
 export async function monitoredOperation<T>(
   operationName: string,
-  operation: () => Promise<T>,
-  cacheHit: boolean = false
+  operation: () => Promise<T>
 ): Promise<T> {
-  const id = perfMonitor.startOperation(operationName);
+  const startTime = performance.now();
   
   try {
     const result = await operation();
-    perfMonitor.endOperation(operationName, id, cacheHit);
+    const duration = performance.now() - startTime;
+    
+    performanceMonitor.addMetric({
+      operationName,
+      duration,
+      timestamp: Date.now(),
+      success: true
+    });
+    
+    // Log operações lentas
+    if (duration > 1000) {
+      console.warn(`⚠️ Operação lenta detectada: ${operationName} levou ${duration.toFixed(2)}ms`);
+    }
+    
     return result;
   } catch (error) {
-    perfMonitor.endOperation(operationName, id, cacheHit, error instanceof Error ? error.message : 'Unknown error');
+    const duration = performance.now() - startTime;
+    
+    performanceMonitor.addMetric({
+      operationName,
+      duration,
+      timestamp: Date.now(),
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    
     throw error;
   }
 }
 
-// Auto-log das estatísticas a cada 2 minutos (apenas em desenvolvimento)
-if (import.meta.env.DEV) {
-  setInterval(() => {
-    const stats = perfMonitor.getStats();
-    if (stats.totalOperations > 0) {
-      perfMonitor.logSummary();
-    }
-  }, 2 * 60 * 1000);
+// Debug: Expor métricas no console em desenvolvimento
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  (window as any).performanceMonitor = performanceMonitor;
 } 

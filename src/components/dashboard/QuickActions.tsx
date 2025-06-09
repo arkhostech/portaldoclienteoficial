@@ -16,48 +16,60 @@ const QuickActions = () => {
       description: "Visualizar e gerenciar documentos",
       icon: FileText,
       href: "/documents",
-      color: "from-blue-500 to-blue-600",
-      hoverColor: "hover:from-blue-600 hover:to-blue-700"
+      variant: "primary"
     },
     {
       title: "Upload",
       description: "Enviar novos documentos",
       icon: Upload,
       href: "/documents/upload",
-      color: "from-green-500 to-green-600",
-      hoverColor: "hover:from-green-600 hover:to-green-700"
+      variant: "secondary"
     },
     {
       title: "Chat",
       description: "Conversar com a equipe",
       icon: MessageSquare,
       href: "/chat",
-      color: "from-purple-500 to-purple-600",
-      hoverColor: "hover:from-purple-600 hover:to-purple-700"
+      variant: "tertiary"
     },
     {
       title: "Agenda",
       description: "Ver compromissos",
       icon: Calendar,
       href: "/schedule",
-      color: "from-amber-500 to-amber-600",
-      hoverColor: "hover:from-amber-600 hover:to-amber-700"
+      variant: "quaternary"
     },
     {
       title: "Ajuda",
       description: "Central de ajuda",
       icon: HelpCircle,
       href: "/help",
-      color: "from-gray-500 to-gray-600",
-      hoverColor: "hover:from-gray-600 hover:to-gray-700"
+      variant: "muted"
     }
   ];
 
+  const getButtonStyles = (variant: string) => {
+    switch (variant) {
+      case "primary":
+        return "bg-[#1e3a8a] border-[#1e3a8a] text-white hover:bg-[#1e40af] hover:border-[#1e40af] shadow-sm hover:shadow-md";
+      case "secondary":
+        return "bg-[#3b82f6] border-[#3b82f6] text-white hover:bg-[#2563eb] hover:border-[#2563eb] shadow-sm hover:shadow-md";
+      case "tertiary":
+        return "bg-[#93c5fd] border-[#93c5fd] text-[#1e3a8a] hover:bg-[#60a5fa] hover:border-[#60a5fa] hover:text-white shadow-sm hover:shadow-md";
+      case "quaternary":
+        return "bg-[#dbeafe] border-[#dbeafe] text-[#1e3a8a] hover:bg-[#93c5fd] hover:border-[#93c5fd] shadow-sm hover:shadow-md";
+      case "muted":
+        return "bg-[#f3f4f6] border-[#f3f4f6] text-[#6b7280] hover:bg-[#dbeafe] hover:border-[#dbeafe] hover:text-[#1e3a8a] shadow-sm hover:shadow-md";
+      default:
+        return "";
+    }
+  };
+
   return (
-    <Card className="border-0 shadow-md">
+    <Card className="bg-white border border-[#f3f4f6] shadow-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold text-gray-900 flex items-center">
-          <Calendar className="mr-2 h-5 w-5 text-primary" />
+        <CardTitle className="text-xl font-bold text-[#000000] flex items-center">
+          <Calendar className="mr-2 h-5 w-5 text-[#3b82f6]" />
           Ações Rápidas
         </CardTitle>
       </CardHeader>
@@ -71,16 +83,14 @@ const QuickActions = () => {
                 <Button
                   variant="outline"
                   className={`
-                    w-full h-auto p-4 flex-col space-y-2 border-0 
-                    bg-gradient-to-br ${action.color} ${action.hoverColor}
-                    text-white shadow-md hover:shadow-lg 
-                    transition-all duration-300 group
+                    w-full h-auto p-4 flex-col space-y-2 border transition-all duration-300 group
+                    ${getButtonStyles(action.variant)}
                   `}
                 >
                   <Icon className="h-6 w-6 group-hover:scale-110 transition-transform duration-200" />
                   <div className="text-center">
                     <div className="font-semibold text-xs">{action.title}</div>
-                    <div className="text-xs opacity-90 mt-1 leading-tight">
+                    <div className="text-xs mt-1 leading-tight opacity-90">
                       {action.description}
                     </div>
                   </div>

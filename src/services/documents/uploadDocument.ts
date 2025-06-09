@@ -40,7 +40,8 @@ const sanitizeFileName = (fileName: string): string => {
 export const uploadDocument = async (
   clientId: string,
   file: File,
-  documentData: DocumentFormData
+  documentData: DocumentFormData,
+  uploadedBy: 'admin' | 'client' = 'admin'
 ): Promise<Document | null> => {
   try {
     console.log("Uploading document for clientId:", clientId);
@@ -83,7 +84,8 @@ export const uploadDocument = async (
       client_id: clientId, // Explicitly set client_id to ensure it's included
       file_path: filePath,
       file_type: file.type,
-      file_size: file.size
+      file_size: file.size,
+      uploaded_by: uploadedBy
     };
     
     console.log("Creating document record:", documentRecord);

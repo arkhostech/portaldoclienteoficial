@@ -100,6 +100,7 @@ export type Database = {
           status: string
           title: string
           updated_at: string
+          uploaded_by: string
         }
         Insert: {
           client_id: string
@@ -112,6 +113,7 @@ export type Database = {
           status?: string
           title: string
           updated_at?: string
+          uploaded_by?: string
         }
         Update: {
           client_id?: string
@@ -124,6 +126,7 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          uploaded_by?: string
         }
         Relationships: [
           {

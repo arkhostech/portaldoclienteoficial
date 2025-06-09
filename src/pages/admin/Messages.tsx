@@ -1,15 +1,14 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth";
 import { useChat } from "@/hooks/useChat";
-import { Send, User, Phone, Mail, FileText, Clock, AlertCircle, Plus, Search, Loader2 } from "lucide-react";
+import { Send, User, Phone, Mail, FileText, Clock, AlertCircle, Plus, Search, Loader2, Check } from "lucide-react";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { useScrollToBottom } from "@/hooks/useScrollToBottom";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -18,55 +17,61 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { fetchClients } from "@/services/clients/fetchClients";
 import { Client } from "@/services/clients/types";
+import { NotificationBadge } from "@/components/ui/notification-badge";
+import { NewMessageBadge } from "@/components/ui/new-message-badge";
+import { useNotifications } from "@/contexts/NotificationContext";
 
-
-
-const ConversationItem = ({ 
-  conversation, 
-  isActive, 
-  onClick,
-  unreadCount 
-}: { 
-  conversation: any, 
-  isActive: boolean, 
-  onClick: () => void,
-  unreadCount?: number 
-}) => {
-  const client = conversation.client;
-  
-  if (!client) return null;
-  
-  const hasUnreadMessages = (unreadCount || 0) > 0;
-  
-  return (
-    <div 
-      className={`p-3 cursor-pointer border-b hover:bg-accent/5 transition-colors ${
-        isActive ? 'bg-primary/5 border-l-2 border-l-primary' : ''
-      }`}
-      onClick={onClick}
-    >
-      <div className="flex items-center space-x-3">
-        <Avatar>
-          <AvatarFallback>
-            {client.full_name.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-                  <div className="flex-1 min-w-0">
-            <div className="flex justify-between items-center">
-              <p className="font-medium truncate">{client.full_name}</p>
-              {hasUnreadMessages && (
-                <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2">
-                  {unreadCount}
-                </div>
-              )}
-            </div>
-          <p className="text-sm text-muted-foreground truncate">
-                                  {conversation.client?.process_type?.name || "Processo não especificado"}
-          </p>
-        </div>
+// Componente EmptyState
+const EmptyState = () => (
+  <div className="flex-1 flex items-center justify-center text-center">
+    <div className="max-w-md">
+      <div className="mb-4">
+        <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto" />
       </div>
+      <h3 className="text-lg font-semibold mb-2">Nenhuma conversa selecionada</h3>
+      <p className="text-muted-foreground mb-4">
+        Selecione uma conversa da lista ao lado ou inicie uma nova conversa com um cliente.
+      </p>
     </div>
-  );
+  </div>
+);
+
+// Helper function para extrair iniciais
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
+};
+
+// Helper function para formatar a data da última mensagem  
+const formatLastMessageTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+  
+  if (diffInMinutes < 1) return 'Agora';
+  if (diffInMinutes < 60) return `${diffInMinutes}min`;
+  if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
+  
+  return date.toLocaleDateString('pt-BR', { 
+    day: '2-digit', 
+    month: '2-digit' 
+  });
+};
+
+// Função para formatar data completa
+const formatMessageDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit", 
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const NewConversationModal = ({ onClientSelect }: { onClientSelect: (clientId: string) => void }) => {
@@ -108,67 +113,65 @@ const NewConversationModal = ({ onClientSelect }: { onClientSelect: (clientId: s
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" className="mb-4">
           <Plus className="h-4 w-4 mr-2" />
           Nova Conversa
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] max-h-[600px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Selecionar Cliente</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
           <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar cliente..."
-              className="pl-8"
+              placeholder="Buscar por nome, email ou telefone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
             />
           </div>
           
-          <ScrollArea className="h-[400px]">
+          <ScrollArea className="h-96">
             {isLoading ? (
-              <div className="p-4 text-center text-muted-foreground">
-                Carregando clientes...
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : filteredClients.length > 0 ? (
               <div className="space-y-2">
                 {filteredClients.map((client) => (
-                  <div
+                  <Card
                     key={client.id}
-                    className="p-3 border rounded-lg cursor-pointer hover:bg-accent/10 transition-colors"
+                    className="cursor-pointer hover:bg-accent transition-colors"
                     onClick={() => handleSelectClient(client.id)}
                   >
-                    <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarFallback>
-                          {client.full_name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{client.full_name}</p>
-                        <p className="text-sm text-muted-foreground truncate">{client.email}</p>
-                        {client.process_type && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {client.process_type}
-                          </p>
-                        )}
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-3">
+                        <Avatar>
+                          <AvatarFallback>
+                            {getInitials(client.full_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{client.full_name}</p>
+                          <p className="text-sm text-muted-foreground truncate">{client.email}</p>
+                          {client.phone && (
+                            <p className="text-sm text-muted-foreground">{client.phone}</p>
+                          )}
+                        </div>
+                                                 <Badge variant="secondary">
+                           {client.status}
+                         </Badge>
                       </div>
-                      <Badge variant={client.status === 'documentacao' ? 'outline' : 'secondary'}>
-                        {client.status === 'documentacao' ? 'Documentação' : 
-                         client.status === 'em_andamento' ? 'Em Andamento' :
-                         client.status === 'concluido' ? 'Concluído' : client.status}
-                      </Badge>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             ) : (
-              <div className="p-4 text-center text-muted-foreground">
-                {searchTerm ? "Nenhum cliente encontrado." : "Nenhum cliente cadastrado."}
+              <div className="text-center py-8 text-muted-foreground">
+                {searchTerm ? 'Nenhum cliente encontrado' : 'Nenhum cliente disponível'}
               </div>
             )}
           </ScrollArea>
@@ -177,19 +180,6 @@ const NewConversationModal = ({ onClientSelect }: { onClientSelect: (clientId: s
     </Dialog>
   );
 };
-
-const EmptyState = () => (
-  <div className="flex flex-col items-center justify-center h-96">
-    <AlertCircle className="h-16 w-16 text-muted-foreground mb-4" />
-    <h3 className="text-xl font-medium">Sem conversas ativas</h3>
-    <p className="text-sm text-muted-foreground text-center mt-2">
-      Quando um cliente iniciar uma conversa, ela aparecerá aqui.
-    </p>
-    <p className="text-sm text-muted-foreground text-center mt-1">
-      Ou inicie uma nova conversa com um cliente.
-    </p>
-  </div>
-);
 
 // Componente Modal para Informações do Cliente
 const ClientInfoModal = ({ activeConversation }: { activeConversation: any }) => {
@@ -226,44 +216,33 @@ const ClientInfoModal = ({ activeConversation }: { activeConversation: any }) =>
           <Separator />
           
           <div className="space-y-3">
-            <div className="flex items-center">
-              <Mail className="h-4 w-4 mr-3 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">{client.email}</p>
-              </div>
+            <div className="flex items-center space-x-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">{client.email}</span>
             </div>
             
             {client.phone && (
-              <div className="flex items-center">
-                <Phone className="h-4 w-4 mr-3 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Telefone</p>
-                  <p className="font-medium">{client.phone}</p>
-                </div>
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">{client.phone}</span>
               </div>
             )}
             
-            <div className="flex items-center">
-              <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Tipo de Processo</p>
-                <p className="font-medium">
-                  {activeConversation.client?.process_type?.name || "Processo não especificado"}
-                </p>
-              </div>
+            <div className="flex items-center space-x-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                Tipo de Processo: {client.process_type?.name || "Não definido"}
+              </span>
             </div>
             
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-3 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <p className="font-medium">
-                  {client.status === 'documentacao' ? 'Documentação' : 
-                   client.status === 'em_andamento' ? 'Em Andamento' :
-                   client.status === 'concluido' ? 'Concluído' : client.status}
-                </p>
-              </div>
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                Status: 
+                                 <Badge variant="secondary" className="ml-2">
+                   {client.status}
+                 </Badge>
+              </span>
             </div>
           </div>
         </div>
@@ -291,25 +270,15 @@ const AdminMessages = () => {
     handleSelectConversation,
     handleStartConversation,
     loadOlderMessages,
-    reactivateAutoScroll,
-    markMessageAsViewed,
-    getUnreadCount,
-    getUnreadCountWithPending,
     setViewingOldMessages,
     isViewingOldMessages,
-    pendingNewMessages,
     registerScrollContainer,
+    handleMarkAsRead
   } = useChat();
+  
+  const { hasNotification, markAsRead } = useNotifications();
 
-  // **DEBUG: Log estados para verificar**
-  useEffect(() => {
-    console.log('🎯 Estado atual:', {
-      isViewingOldMessages,
-      pendingNewMessages,
-      activeConversation: activeConversation?.id,
-      shouldAutoScroll
-    });
-  }, [isViewingOldMessages, pendingNewMessages, activeConversation, shouldAutoScroll]);
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -340,165 +309,163 @@ const AdminMessages = () => {
     await handleStartConversation(clientId);
   };
 
-  // Scroll infinito para carregar mensagens antigas
+  // Hooks de scroll
   useScrollToTop({
     containerRef: messagesContainerRef,
     onScrollToTop: () => {
       if (activeConversation && hasMoreMessages && !loadingOlder) {
-        loadOlderMessages(activeConversation.id);
+        loadOlderMessages();
       }
     },
     threshold: 50,
     enabled: !!activeConversation && hasMoreMessages && !loadingOlder
   });
 
-  // Preserva a posição do scroll quando carrega mensagens antigas
   useScrollPosition({
     containerRef: messagesContainerRef,
     isLoading: loadingOlder,
     dependency: messages.length
   });
 
-  // **MELHORADO: Controle inteligente de scroll**
   useScrollToBottom({
     containerRef: messagesContainerRef,
-    onNearBottom: reactivateAutoScroll,
-    threshold: 100,
-    enabled: !!activeConversation && !shouldAutoScroll
-  });
-
-  // **NOVA: Registrar container para detecção de scroll no hook**
-  useEffect(() => {
-    if (messagesContainerRef.current) {
-      registerScrollContainer(messagesContainerRef.current);
-    }
-    
-    return () => {
-      registerScrollContainer(null);
-    };
-  }, [registerScrollContainer, activeConversation]);
-
-  // Intersection Observer para detectar mensagens vistas
-  const { observe: observeMessage } = useIntersectionObserver({
-    onIntersect: (element) => {
-      const messageId = element.getAttribute('data-message-id');
-      const conversationId = element.getAttribute('data-conversation-id');
-      const senderType = element.getAttribute('data-sender-type');
-      
-      if (messageId && conversationId && senderType === 'client') {
-        markMessageAsViewed(messageId, conversationId);
-      }
+    onNearBottom: () => {
+      setViewingOldMessages(false);
     },
-    threshold: 0.5,
+    threshold: 100,
     enabled: !!activeConversation
   });
 
-  // Auto-scroll to bottom apenas para novas mensagens (não quando carrega antigas ou vendo antigas)
+  // Registrar container de scroll
   useEffect(() => {
-    if (messagesEndRef.current && messagesContainerRef.current && shouldAutoScroll && !loadingOlder && !isViewingOldMessages) {
-      // Small delay to ensure DOM has updated
-      setTimeout(() => {
-        const scrollContainer = messagesContainerRef.current;
-        if (scrollContainer) {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-        }
-      }, 100);
+    registerScrollContainer(messagesContainerRef.current);
+  }, [registerScrollContainer]);
+
+  // Auto-scroll para novas mensagens
+  useLayoutEffect(() => {
+    if (shouldAutoScroll && messagesEndRef.current && messages.length > 0 && !isLoading) {
+      // Aplicar scroll imediatamente de forma síncrona
+      messagesEndRef.current.scrollIntoView({ behavior: 'instant' });
     }
-  }, [messages.length, shouldAutoScroll, loadingOlder, isViewingOldMessages]);
+  }, [shouldAutoScroll, messages.length, isLoading]);
 
   return (
-    <MainLayout title="Chat com Clientes">
-      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 h-[calc(100vh-10rem)]">
-        {/* Conversations list - 30% do espaço */}
-        <div className="col-span-1 lg:col-span-3 border rounded-lg h-[calc(100vh-10rem)] flex flex-col">
-          <div className="h-14 p-3 border-b bg-secondary/10 flex-shrink-0 flex items-center">
-            <div className="flex items-center justify-between w-full">
-              <h3 className="font-semibold">Conversas</h3>
-              <NewConversationModal onClientSelect={handleNewConversation} />
-            </div>
+    <MainLayout title="Central de Mensagens">
+      <div className="flex h-[calc(100vh-200px)] max-w-7xl mx-auto gap-4">
+        {/* Lista de conversas */}
+        <div className="w-80 flex-shrink-0 bg-background border rounded-lg p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Conversas</h2>
+            <NewConversationModal onClientSelect={handleNewConversation} />
           </div>
-          <div className="h-[calc(100vh-14rem)] overflow-y-auto">
-            <div className="space-y-1 p-2">
-              {isLoading && !conversations.length ? (
-                <div className="p-4 text-center text-muted-foreground">
-                  Carregando conversas...
-                </div>
-                              ) : conversations.length > 0 ? (
-                  conversations.map((conversation) => (
-                    <ConversationItem
-                      key={conversation.id}
-                      conversation={conversation}
-                      isActive={activeConversation?.id === conversation.id}
-                      onClick={() => handleSelectConversation(conversation)}
-                      unreadCount={getUnreadCountWithPending(conversation.id)}
-                    />
-                  ))
-              ) : (
-                <div className="p-4 text-center text-muted-foreground">
-                  Nenhuma conversa encontrada
+          
+          <ScrollArea className="h-[calc(100%-4rem)]">
+            <div className="space-y-2">
+              {conversations.map((conv) => (
+                <Card
+                  key={conv.id}
+                  className={`cursor-pointer transition-colors relative ${
+                    activeConversation?.id === conv.id 
+                      ? 'bg-accent border-primary' 
+                      : 'hover:bg-accent/50'
+                  }`}
+                  onClick={() => handleSelectConversation(conv)}
+                >
+                  <CardContent className="p-3">
+                    <div className="flex items-start space-x-3">
+                      <Avatar>
+                        <AvatarFallback>
+                          {getInitials(conv.client?.full_name || 'Cliente')}
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="font-medium text-sm truncate">
+                            {conv.client?.full_name || 'Cliente'}
+                          </p>
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="text-xs text-muted-foreground flex-shrink-0">
+                              {formatLastMessageTime(conv.updated_at)}
+                            </span>
+                            <NewMessageBadge 
+                              show={hasNotification(conv.id)}
+                            />
+                          </div>
+                        </div>
+                        
+                        <p className="text-xs text-muted-foreground truncate">
+                          {conv.client?.process_type?.name || "Tipo não definido"}
+                        </p>
+                        
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-xs text-muted-foreground">
+                            {conv.client?.email}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              {conversations.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">Nenhuma conversa ainda</p>
+                  <p className="text-xs mt-1">Inicie uma nova conversa</p>
                 </div>
               )}
             </div>
-          </div>
+          </ScrollArea>
         </div>
 
-        {/* Chat area - 70% do espaço */}
-        <div className="col-span-1 lg:col-span-7 border rounded-lg h-[calc(100vh-10rem)] flex flex-col">
+        {/* Área de mensagens */}
+        <div className="flex-1 flex flex-col bg-background border rounded-lg">
           {activeConversation ? (
             <>
-              {/* Header fixo */}
-              <div className="h-14 p-3 border-b bg-secondary/10 flex-shrink-0 flex items-center justify-between">
-                <h3 className="font-semibold">
-                  Chat com {activeConversation.client?.full_name}
-                  {pendingNewMessages > 0 && (
-                    <span className="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                      {pendingNewMessages} nova{pendingNewMessages > 1 ? 's' : ''}
-                    </span>
-                  )}
-                </h3>
+              {/* Header da conversa */}
+              <div className="p-4 border-b flex items-center justify-between bg-muted/30">
+                <div className="flex items-center space-x-3">
+                  <Avatar>
+                    <AvatarFallback>
+                      {getInitials(activeConversation.client?.full_name || 'Cliente')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-semibold">{activeConversation.client?.full_name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {activeConversation.client?.process_type?.name || "Tipo não definido"}
+                    </p>
+                  </div>
+                </div>
+                
                 <div className="flex items-center space-x-2">
-                  <ClientInfoModal activeConversation={activeConversation} />
-                  {getUnreadCount(activeConversation.id) > 0 && (
-                    <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                      {getUnreadCount(activeConversation.id)} não vista{getUnreadCount(activeConversation.id) > 1 ? 's' : ''}
-                    </div>
+                  {hasNotification(activeConversation.id) && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleMarkAsRead}
+                      className="gap-2 bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                    >
+                      <Check className="h-3 w-3" />
+                      Marcar como lida
+                    </Button>
                   )}
+                  <ClientInfoModal activeConversation={activeConversation} />
                 </div>
               </div>
               
-              {/* Área de mensagens - altura fixa com scroll interno */}
+              {/* Área de mensagens com scroll */}
               <div 
                 ref={messagesContainerRef}
-                className="h-[calc(100vh-20rem)] overflow-y-auto bg-gray-50 p-4 relative"
+                className="flex-1 overflow-y-auto p-4"
               >
-                {/* **NOVO: Indicador de novas mensagens quando vendo antigas** */}
-                {isViewingOldMessages && pendingNewMessages > 0 && (
-                  <div className="sticky top-0 z-10 bg-blue-500 text-white text-sm px-3 py-2 rounded-lg mb-4 shadow-lg">
-                    <div className="flex items-center justify-between">
-                      <span>{pendingNewMessages} nova{pendingNewMessages > 1 ? 's' : ''} mensagem{pendingNewMessages > 1 ? 's' : ''}</span>
-                      <button 
-                        onClick={reactivateAutoScroll}
-                        className="bg-white text-blue-500 px-2 py-1 rounded text-xs hover:bg-gray-100"
-                      >
-                        Ver novas ↓
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {/* Loading indicator para mensagens antigas */}
                 {loadingOlder && (
-                  <div className="flex justify-center py-4">
-                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                  <div className="flex items-center justify-center py-4">
+                    <div className="flex items-center space-x-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       <span>Carregando mensagens antigas...</span>
                     </div>
-                  </div>
-                )}
-                
-                {/* Indicador se tem mais mensagens */}
-                {!hasMoreMessages && messages.length > 0 && (
-                  <div className="text-center py-2 text-xs text-muted-foreground">
-                    • Início da conversa •
                   </div>
                 )}
                 
@@ -507,14 +474,6 @@ const AdminMessages = () => {
                     {messages.map((msg) => (
                       <Card
                         key={msg.id}
-                        ref={(el) => {
-                          if (el && msg.sender_type === 'client') {
-                            el.setAttribute('data-message-id', msg.id);
-                            el.setAttribute('data-conversation-id', activeConversation.id);
-                            el.setAttribute('data-sender-type', msg.sender_type);
-                            observeMessage(el);
-                          }
-                        }}
                         className={`max-w-xs sm:max-w-sm md:max-w-md ${
                           msg.sender_type === "admin"
                             ? "ml-auto bg-primary/5 border-primary/10"
@@ -555,20 +514,20 @@ const AdminMessages = () => {
               </div>
               
               {/* Input fixo na parte de baixo */}
-              <div className="h-20 p-4 border-t flex-shrink-0 bg-background flex items-center">
+              <div className="h-36 p-4 border-t flex-shrink-0 bg-background flex items-center">
                 <div className="flex space-x-2 w-full">
                   <Textarea
                     placeholder="Digite sua mensagem..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    className="flex-1 resize-none min-h-[3rem] max-h-[3rem]"
-                    rows={2}
+                    className="flex-1 resize-none min-h-[120px] max-h-[200px]"
+                    rows={5}
                   />
                   <Button 
                     onClick={handleSend} 
                     disabled={isSending || !newMessage.trim() || !activeConversation}
-                    className="h-12"
+                    className="h-[120px]"
                   >
                     <Send className="h-4 w-4 mr-2" />
                     Enviar

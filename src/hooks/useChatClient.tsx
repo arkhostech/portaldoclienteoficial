@@ -8,15 +8,15 @@ import {
   fetchOlderMessages, 
   sendMessage, 
   createConversation,
-  subscribeToMessages,
-  markConversationMessagesAsRead
+  subscribeToMessages
 } from '@/services/messages';
 import { chatCache } from '@/utils/cache';
 import { Conversation, Message } from '@/services/messages/types';
-import { toast } from '@/hooks/use-toast';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 export const useChatClient = () => {
   const { user, isAdmin } = useAuth();
+  const { markAsRead, hasNotification } = useNotifications();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -27,16 +27,11 @@ export const useChatClient = () => {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   
-  // 🎯 DIFERENÇA: Cliente NÃO gerencia unread localmente - deixa para ClientNotificationsProvider
-  // Removi: unreadMessages, unreadByConversation, pendingNewMessages
-  
   const [isViewingOldMessages, setIsViewingOldMessages] = useState(false);
   const [scrollContainerRef, setScrollContainerRef] = useState<HTMLDivElement | null>(null);
   
-  // 🛡️ DEBOUNCE: Evitar chamadas múltiplas do Intersection Observer
-  const [markingAsViewed, setMarkingAsViewed] = useState<Set<string>>(new Set());
-  
   const isViewingOldMessagesRef = useRef(isViewingOldMessages);
+  const messagesRef = useRef<Message[]>(messages);
   const scrollContainerRefRef = useRef<HTMLDivElement | null>(null);
   
   useEffect(() => {
@@ -44,10 +39,13 @@ export const useChatClient = () => {
   }, [isViewingOldMessages]);
   
   useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+  
+  useEffect(() => {
     scrollContainerRefRef.current = scrollContainerRef;
   }, [scrollContainerRef]);
 
-  // 🎯 ESPECÍFICO CLIENTE: Sistema de persistência simplificado (sem unread tracking)
   const [pendingSends, setPendingSends] = useState<Map<string, {
     conversationId: string;
     content: string;
@@ -93,20 +91,14 @@ export const useChatClient = () => {
   }, [pendingSends]);
 
   const loadMessages = useCallback(async (conversationId: string) => {
-    if (!conversationId) return;
-    
     try {
       setIsLoading(true);
+      setHasMoreMessages(true);
       const messagesData = await fetchInitialMessages(conversationId);
-      setMessages(messagesData);
-      setHasMoreMessages(messagesData.length >= 20);
+      setMessages(messagesData || []);
+      setShouldAutoScroll(true);
     } catch (error) {
       console.error('Error loading messages:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar mensagens. Tente novamente.",
-        variant: "destructive"
-      });
     } finally {
       setIsLoading(false);
     }
@@ -117,14 +109,21 @@ export const useChatClient = () => {
 
     try {
       setLoadingOlder(true);
-      const oldestMessage = messages[0];
+      
+      // Usar ref para obter mensagens atuais sem adicionar como dependência
+      const currentMessages = messagesRef.current;
+      const oldestMessage = currentMessages[0];
       if (!oldestMessage) return;
 
-      const olderMessages = await fetchOlderMessages(activeConversation.id, oldestMessage.created_at);
-      
-      if (olderMessages.length > 0) {
+      const olderMessages = await fetchOlderMessages(
+        activeConversation.id,
+        oldestMessage.created_at!
+      );
+
+      if (olderMessages && olderMessages.length > 0) {
         setMessages(prev => [...olderMessages, ...prev]);
-        setHasMoreMessages(olderMessages.length >= 20);
+        setIsViewingOldMessages(true);
+        setShouldAutoScroll(false);
       } else {
         setHasMoreMessages(false);
       }
@@ -133,162 +132,99 @@ export const useChatClient = () => {
     } finally {
       setLoadingOlder(false);
     }
-  }, [activeConversation, messages, loadingOlder, hasMoreMessages]);
+  }, [activeConversation, loadingOlder, hasMoreMessages]);
 
   const loadConversations = useCallback(async () => {
     if (!user || isAdmin) return;
 
+    // Cache check - avoid multiple calls
+    const cacheKey = `conversations_${user.id}`;
+    const cached = chatCache.get<Conversation[]>(cacheKey);
+    if (cached) {
+      setConversations(cached);
+      return;
+    }
+
     try {
+      setIsLoading(true);
       const conversationsData = await fetchConversations(false, user.id);
-      setConversations(conversationsData);
+      setConversations(conversationsData || []);
+      
+      // Cache the result
+      chatCache.set(cacheKey, conversationsData || [], 30000);
     } catch (error) {
       console.error('Error loading conversations:', error);
+    } finally {
+      setIsLoading(false);
     }
   }, [user, isAdmin]);
 
   const handleSendMessage = useCallback(async (content: string) => {
-    if (!activeConversation || !user || isSending) return;
+    if (!user || !activeConversation || isSending) return;
 
-    const tempId = `temp-${Date.now()}`;
-    
     try {
       setIsSending(true);
-      
-      const tempMessage: Message = {
-        id: tempId,
-        conversation_id: activeConversation.id,
-        sender_type: 'client',
-        sender_id: user.id,
-        content,
-        is_read: false,
-        created_at: new Date().toISOString()
-      };
-
-      setMessages(prev => [...prev, tempMessage]);
-      setShouldAutoScroll(true);
-
-      setPendingSends(prev => {
-        const newMap = new Map(prev);
-        newMap.set(tempId, {
-          conversationId: activeConversation.id,
-          content,
-          senderId: user.id,
-          senderType: 'client',
-          retryCount: 0
-        });
-        return newMap;
-      });
-
       await sendMessage(activeConversation.id, content, user.id, 'client');
-      
-      setPendingSends(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(tempId);
-        return newMap;
-      });
-
+      setShouldAutoScroll(true);
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao enviar mensagem. Tentaremos novamente automaticamente.",
-        variant: "destructive"
-      });
     } finally {
       setIsSending(false);
     }
-  }, [activeConversation, user, isSending]);
-
-  // 🎯 ESPECÍFICO CLIENTE: Marcar mensagem como vista (SEM gerenciar contadores locais)
-  const markMessageAsViewed = useCallback(async (messageId: string, conversationId: string) => {
-    if (markingAsViewed.has(messageId)) {
-      return;
-    }
-
-    console.log('🎯 CLIENT: markMessageAsViewed chamado para mensagem:', messageId);
-    
-    setMarkingAsViewed(prev => new Set(prev).add(messageId));
-    
-    try {
-      // 🎯 ESPECÍFICO CLIENTE: Usar markConversationMessagesAsRead
-      await markConversationMessagesAsRead(conversationId, 'admin');
-      console.log('✅ CLIENT: Mensagem marcada como lida no banco');
-    } catch (error) {
-      console.error('Error marking message as read:', error);
-    } finally {
-      setTimeout(() => {
-        setMarkingAsViewed(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(messageId);
-          return newSet;
-        });
-      }, 1000);
-    }
-  }, [markingAsViewed]);
-
-  // 🎯 ESPECÍFICO CLIENTE: Marcar várias mensagens como vistas (SEM gerenciar contadores locais)
-  const markMessagesAsViewed = useCallback(async (messageIds: string[], conversationId: string) => {
-    if (messageIds.length === 0) return;
-    
-    console.log('🎯 CLIENT: markMessagesAsViewed chamado para:', messageIds.length, 'mensagens');
-    
-    try {
-      await markConversationMessagesAsRead(conversationId, 'admin');
-      console.log('✅ CLIENT: Mensagens marcadas como lidas no banco');
-    } catch (error) {
-      console.error('Error marking multiple messages as read:', error);
-    }
-  }, []);
+  }, [user, activeConversation, isSending]);
 
   const registerScrollContainer = useCallback((container: HTMLDivElement | null) => {
     setScrollContainerRef(container);
   }, []);
 
   const resetScrollState = useCallback(() => {
-    setShouldAutoScroll(true);
     setIsViewingOldMessages(false);
+    isViewingOldMessagesRef.current = false;
+    setShouldAutoScroll(true);
   }, []);
 
   const enhancedHandleSelectConversation = useCallback(async (conversation: Conversation) => {
     setActiveConversation(conversation);
+    setMessages([]);
     resetScrollState();
     await loadMessages(conversation.id);
   }, [loadMessages, resetScrollState]);
 
-  // Subscribe to messages for active conversation
+  const handleMarkAsRead = useCallback(() => {
+    if (activeConversation) {
+      markAsRead(activeConversation.id);
+    }
+  }, [activeConversation, markAsRead]);
+
+  // Subscribe to messages for active conversation only
   useEffect(() => {
     if (!activeConversation) {
-      setMessages([]);
+      if (messageChannel) {
+        supabase.removeChannel(messageChannel);
+        setMessageChannel(null);
+      }
       return;
     }
-    
+
     const channel = subscribeToMessages(activeConversation.id, (newMessage) => {
       setMessages(prev => {
-        const exists = prev.find(msg => msg.id === newMessage.id);
+        const exists = prev.find(m => m.id === newMessage.id);
         if (!exists) {
-          const tempMessageIndex = prev.findIndex(msg => 
-            msg.id.startsWith('temp-') && 
-            msg.sender_id === newMessage.sender_id &&
-            msg.content === newMessage.content &&
-            Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000
-          );
-          
-          if (tempMessageIndex >= 0) {
-            const updated = [...prev];
-            updated[tempMessageIndex] = newMessage;
-            return updated;
+          // Auto scroll para mensagens do próprio usuário
+          if (newMessage.sender_id === user?.id) {
+            setShouldAutoScroll(true);
           } else {
-            // 🎯 ESPECÍFICO CLIENTE: Lógica simplificada - só autoscroll
+            // Para mensagens de outros, só auto scroll se não estiver vendo antigas
             if (!isViewingOldMessagesRef.current) {
               setShouldAutoScroll(true);
             }
-            return [...prev, newMessage];
           }
+          return [...prev, newMessage];
         }
         return prev;
       });
-      
-      // Atualizar conversation updated_at
+
+      // Atualizar conversation updated_at para mover para o topo
       setConversations(prev => {
         const updated = [...prev];
         const convIndex = updated.findIndex(c => c.id === activeConversation.id);
@@ -314,60 +250,67 @@ export const useChatClient = () => {
         supabase.removeChannel(channel);
       }
     };
-  }, [activeConversation]);
+  }, [activeConversation, user]);
 
-  // Subscribe to conversations (for client)
+  // Event listeners para conversas vindas do CentralizedRealtimeProvider
   useEffect(() => {
     if (!user || isAdmin) return;
 
-    const channel = supabase
-      .channel('client_conversations')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'conversations',
-          filter: `client_id=eq.${user.id}`
-        },
-        (payload) => {
-          const newConversation = payload.new as Conversation;
-          setConversations(prev => [newConversation, ...prev]);
+    const handleConversationInserted = (event: CustomEvent) => {
+      const conversation = event.detail.conversation;
+      setConversations(prev => [conversation, ...prev]);
+      
+      // Invalidar cache
+      const cacheKey = `conversations_${user.id}`;
+      chatCache.delete(cacheKey);
+    };
+
+    const handleConversationUpdated = (event: CustomEvent) => {
+      const conversation = event.detail.conversation;
+      setConversations(prev => {
+        const index = prev.findIndex(c => c.id === conversation.id);
+        if (index >= 0) {
+          const updated = [...prev];
+          updated[index] = { ...updated[index], ...conversation };
+          return updated;
         }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'conversations',
-          filter: `client_id=eq.${user.id}`
-        },
-        (payload) => {
-          const updatedConversation = payload.new as Conversation;
-          setConversations(prev => {
-            const index = prev.findIndex(c => c.id === updatedConversation.id);
-            if (index >= 0) {
-              const updated = [...prev];
-              updated[index] = { ...updated[index], ...updatedConversation };
-              return updated;
-            }
-            return prev;
-          });
-        }
-      )
-      .subscribe();
-    
+        return prev;
+      });
+      
+      // Invalidar cache
+      const cacheKey = `conversations_${user.id}`;
+      chatCache.delete(cacheKey);
+    };
+
+    window.addEventListener('client-conversation-inserted', handleConversationInserted as EventListener);
+    window.addEventListener('client-conversation-updated', handleConversationUpdated as EventListener);
+
     return () => {
-      supabase.removeChannel(channel);
+      window.removeEventListener('client-conversation-inserted', handleConversationInserted as EventListener);
+      window.removeEventListener('client-conversation-updated', handleConversationUpdated as EventListener);
     };
   }, [user, isAdmin]);
 
+  // Load conversations when component mounts
   useEffect(() => {
     if (user && !isAdmin) {
       loadConversations();
     }
   }, [user, isAdmin, loadConversations]);
+
+  // Auto-select first conversation when conversations are loaded
+  useEffect(() => {
+    if (conversations.length > 0 && !activeConversation) {
+      enhancedHandleSelectConversation(conversations[0]);
+    }
+  }, [conversations.length, activeConversation?.id, enhancedHandleSelectConversation]);
+
+  // Garantir autoscroll quando mensagens são carregadas
+  useEffect(() => {
+    if (activeConversation && messages.length > 0 && !isLoading && !isViewingOldMessages) {
+      setShouldAutoScroll(true);
+    }
+  }, [activeConversation?.id, messages.length, isLoading, isViewingOldMessages]);
 
   return {
     conversations,
@@ -378,16 +321,22 @@ export const useChatClient = () => {
     hasMoreMessages,
     loadingOlder,
     shouldAutoScroll,
+    isViewingOldMessages,
+    scrollContainerRef: registerScrollContainer,
     loadConversations,
     loadMessages,
     loadOlderMessages,
     handleSendMessage,
     handleSelectConversation: enhancedHandleSelectConversation,
-    markMessageAsViewed,
-    markMessagesAsViewed,
-    setViewingOldMessages: setIsViewingOldMessages,
     resetScrollState,
-    isViewingOldMessages,
+    setShouldAutoScroll,
     registerScrollContainer,
+    setViewingOldMessages: (viewing: boolean) => {
+      setIsViewingOldMessages(viewing);
+      isViewingOldMessagesRef.current = viewing;
+    },
+    // Notificações
+    hasNotification,
+    handleMarkAsRead
   };
 }; 

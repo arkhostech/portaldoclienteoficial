@@ -9,6 +9,7 @@ export interface Document {
   file_size: number | null;
   created_at: string;
   updated_at: string;
+  uploaded_by?: 'admin' | 'client';
 }
 
 export interface DocumentFormData {

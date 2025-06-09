@@ -43,7 +43,7 @@ export const useDocumentUpload = (
       };
       
       console.log("Uploading document with data:", documentData);
-      const result = await uploadDocument(data.client_id, processedFile, documentData);
+      const result = await uploadDocument(data.client_id, processedFile, documentData, 'admin');
       
       if (result) {
         console.log("Document uploaded successfully:", result);

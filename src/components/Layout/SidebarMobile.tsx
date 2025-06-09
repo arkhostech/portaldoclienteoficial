@@ -1,8 +1,8 @@
-
 import { X, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { NavItem } from '@/hooks/useSidebarNavigation';
+import { NotificationBadge } from '@/components/ui/notification-badge';
 
 interface SidebarMobileProps {
   isOpen: boolean;
@@ -17,26 +17,27 @@ const SidebarMobile = ({
   isOpen, 
   setIsOpen, 
   navItems, 
-  currentPath,
-  isAdmin,
+  currentPath, 
+  isAdmin, 
   handleSignOut 
 }: SidebarMobileProps) => {
+  
+  if (!isOpen) return null;
+
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Overlay */}
       <div 
-        className={`fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden ${isOpen ? 'block' : 'hidden'}`}
+        className="fixed inset-0 bg-black bg-opacity-50 z-40 sm:hidden"
         onClick={() => setIsOpen(false)}
       />
-
-      {/* Mobile sidebar */}
-      <div 
-        className={`fixed inset-y-0 left-0 w-64 bg-secondary z-20 transform transition-transform duration-300 ease-in-out lg:hidden ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex justify-between items-center p-4">
-          <h1 className="text-white text-xl font-bold">{isAdmin ? 'Admin Portal' : 'Portal Cliente'}</h1>
+      
+      {/* Mobile Sidebar */}
+      <div className="fixed left-0 top-0 w-64 h-screen bg-secondary z-50 flex flex-col sm:hidden">
+        <div className="flex justify-between items-center p-4 h-16 border-b border-white/10">
+          <h1 className="text-white text-lg font-bold">
+            {isAdmin ? "Admin Portal" : "Portal do Cliente"}
+          </h1>
           <Button 
             variant="ghost" 
             size="icon" 
@@ -61,13 +62,13 @@ const SidebarMobile = ({
                       }`}
                     onClick={() => setIsOpen(false)}
                   >
-                    <div className="relative">
-                      {item.icon}
-                      {item.hasNotification && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                      )}
-                    </div>
+                    {item.icon}
                     <span className="text-sm font-medium ml-3">{item.title}</span>
+                    <NotificationBadge 
+                      show={!!item.hasNotification} 
+                      className="top-2 right-2"
+                      size="sm"
+                    />
                   </Link>
                 </li>
               ))}

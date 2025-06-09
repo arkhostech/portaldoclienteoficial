@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
+import { useNotifications } from '@/contexts/NotificationContext';
 import { 
   LayoutDashboard, 
   Users, 
@@ -19,9 +19,10 @@ export interface NavItem {
   hasNotification?: boolean;
 }
 
-export const useSidebarNavigation = (hasUnreadMessages?: boolean) => {
+export const useSidebarNavigation = () => {
   const location = useLocation();
   const { isAdmin } = useAuth();
+  const { totalUnread } = useNotifications();
 
   const adminNavItems = [
     { 
@@ -39,12 +40,11 @@ export const useSidebarNavigation = (hasUnreadMessages?: boolean) => {
       icon: <FileText className="h-5 w-5" />, 
       href: '/admin/documents' 
     },
-
     { 
       title: 'Chat com Clientes', 
       icon: <MessageCircle className="h-5 w-5" />, 
       href: '/admin/messages',
-      hasNotification: hasUnreadMessages 
+      hasNotification: totalUnread > 0
     },
     { 
       title: 'Estágios Clientes', 
@@ -73,7 +73,7 @@ export const useSidebarNavigation = (hasUnreadMessages?: boolean) => {
       title: 'Mensagens', 
       icon: <MessageCircle className="h-5 w-5" />, 
       href: '/messages',
-      hasNotification: hasUnreadMessages 
+      hasNotification: totalUnread > 0
     }
   ];
 

@@ -94,6 +94,7 @@ export default function DocumentsTable({
         <TableRow>
           <TableHead>Título</TableHead>
           {!hideClientColumn && <TableHead>Cliente</TableHead>}
+          <TableHead>Enviado por</TableHead>
           <TableHead>Data</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
@@ -127,6 +128,18 @@ export default function DocumentsTable({
                 </div>
               </TableCell>
             )}
+            <TableCell>
+              <div className="flex items-center">
+                <User className="h-3 w-3 mr-1 text-muted-foreground" />
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  doc.uploaded_by === 'client' 
+                    ? 'bg-blue-100 text-blue-800' 
+                    : 'bg-green-100 text-green-800'
+                }`}>
+                  {doc.uploaded_by === 'client' ? 'Cliente' : 'Admin'}
+                </span>
+              </div>
+            </TableCell>
             <TableCell>
               <div className="flex items-center">
                 <Clock className="h-3 w-3 mr-1 text-muted-foreground" />

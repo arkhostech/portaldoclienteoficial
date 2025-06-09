@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/auth";
 import { useChatClient } from "@/hooks/useChatClient";
+import { useNotifications } from "@/contexts/NotificationContext";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { useScrollToBottom } from "@/hooks/useScrollToBottom";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
-import { Send, PaperclipIcon, Loader2 } from "lucide-react";
+import { Send, PaperclipIcon, Loader2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -32,13 +32,14 @@ const Messages = () => {
     shouldAutoScroll,
     handleSendMessage,
     loadOlderMessages,
-    markMessagesAsViewed,
-    markMessageAsViewed,
     setViewingOldMessages,
     isViewingOldMessages,
     registerScrollContainer,
     handleSelectConversation,
+    handleMarkAsRead,
   } = useChatClient();
+  
+  const { hasNotification, markAsRead } = useNotifications();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -85,52 +86,6 @@ const Messages = () => {
     enabled: !!activeConversation && !shouldAutoScroll
   });
 
-  // Registrar container para detecção de scroll no hook
-  useEffect(() => {
-    if (messagesContainerRef.current) {
-      registerScrollContainer(messagesContainerRef.current);
-    }
-    
-    return () => {
-      registerScrollContainer(null);
-    };
-  }, [registerScrollContainer, activeConversation]);
-
-  // Intersection Observer para detectar mensagens vistas
-  const { observe: observeMessage } = useIntersectionObserver({
-    onIntersect: (element) => {
-      const messageId = element.getAttribute('data-message-id');
-      const conversationId = element.getAttribute('data-conversation-id');
-      const senderType = element.getAttribute('data-sender-type');
-      
-      if (messageId && conversationId && senderType === 'admin') {
-        console.log('🎯 Cliente marcando mensagem do admin como vista:', messageId);
-        markMessageAsViewed(messageId, conversationId);
-      }
-    },
-    threshold: 0.5,
-    enabled: !!activeConversation
-  });
-
-  // Auto-scroll to bottom apenas para novas mensagens
-  useEffect(() => {
-    if (messagesEndRef.current && messagesContainerRef.current && shouldAutoScroll && !loadingOlder && !isViewingOldMessages) {
-      setTimeout(() => {
-        const scrollContainer = messagesContainerRef.current;
-        if (scrollContainer) {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-        }
-      }, 100);
-    }
-  }, [messages.length, shouldAutoScroll, loadingOlder, isViewingOldMessages]);
-
-  // Selecionar primeira conversa se disponível
-  useEffect(() => {
-    if (!activeConversation && conversations.length > 0) {
-      handleSelectConversation(conversations[0]);
-    }
-  }, [conversations, activeConversation, handleSelectConversation]);
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -138,29 +93,52 @@ const Messages = () => {
     }
   };
 
+  // Registrar o container de scroll
+  useEffect(() => {
+    registerScrollContainer(messagesContainerRef.current);
+  }, [registerScrollContainer]);
+
+  // Auto-scroll quando shouldAutoScroll está ativo
+  useLayoutEffect(() => {
+    if (shouldAutoScroll && messagesEndRef.current && messages.length > 0 && !isLoading) {
+      // Aplicar scroll imediatamente de forma síncrona
+      messagesEndRef.current.scrollIntoView({ behavior: 'instant' });
+    }
+  }, [shouldAutoScroll, messages.length, isLoading]);
+
   return (
     <MainLayout title="Mensagens">
-      <div className="flex flex-col h-[calc(100vh-10rem)]">
-        <div className="mb-4 flex-shrink-0">
-          <h2 className="text-xl font-bold">Conversa com Escritório de Advocacia</h2>
-          <p className="text-sm text-muted-foreground">
-            Todas as mensagens são arquivadas para referência futura
-          </p>
-          <p className="text-sm text-muted-foreground mt-1 font-medium">
-            ⏰ As mensagens serão respondidas dentro do horário comercial
-          </p>
+      <div className="max-w-4xl mx-auto h-[calc(100vh-180px)] flex flex-col">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Mensagens</h1>
+          {activeConversation && (
+            <div className="flex items-center gap-2">
+              <div className="text-sm text-muted-foreground">
+                Conversa com suporte
+              </div>
+              {hasNotification(activeConversation.id) && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleMarkAsRead}
+                  className="gap-2 bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                >
+                  <Check className="h-3 w-3" />
+                  Marcar como lida
+                </Button>
+              )}
+            </div>
+          )}
         </div>
-
-        {/* Messages list with fixed height and internal scroll */}
-        <div className="flex-1 border rounded-lg bg-background overflow-hidden">
-          <div 
-            ref={messagesContainerRef}
-            className="h-full overflow-y-auto p-4 relative"
-          >
-            {/* Loading indicator para mensagens antigas */}
+        
+        <div 
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto border rounded-lg p-4 bg-background mb-4"
+        >
+          <div className="min-h-full">
             {loadingOlder && (
-              <div className="flex justify-center py-4">
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <div className="flex items-center justify-center py-4">
+                <div className="flex items-center space-x-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>Carregando mensagens antigas...</span>
                 </div>
@@ -174,6 +152,13 @@ const Messages = () => {
                   <span>Carregando mensagens...</span>
                 </div>
               </div>
+            ) : !activeConversation ? (
+              <div className="flex items-center justify-center h-32 text-muted-foreground">
+                <div className="text-center">
+                  <p className="mb-2">Você ainda não tem conversas ativas.</p>
+                  <p className="text-sm">Entre em contato conosco através dos outros canais de atendimento.</p>
+                </div>
+              </div>
             ) : messages.length === 0 ? (
               <div className="flex items-center justify-center h-32 text-muted-foreground">
                 <p>Nenhuma mensagem ainda. Envie uma mensagem para começar a conversa!</p>
@@ -183,10 +168,6 @@ const Messages = () => {
                 {messages.map((message) => (
                   <div
                     key={message.id}
-                    ref={observeMessage}
-                    data-message-id={message.id}
-                    data-conversation-id={message.conversation_id}
-                    data-sender-type={message.sender_type}
                     className={`flex ${
                       message.sender_type === 'client' ? 'justify-end' : 'justify-start'
                     }`}
@@ -212,7 +193,7 @@ const Messages = () => {
         </div>
 
         {/* Message input */}
-        <div className="mt-4 flex-shrink-0">
+        <div className="flex-shrink-0">
           <div className="flex gap-2">
             <Textarea
               value={newMessage}
@@ -224,14 +205,14 @@ const Messages = () => {
               }
               onKeyPress={handleKeyPress}
               disabled={!activeConversation || isSending}
-              className="flex-1 min-h-[44px] max-h-32 resize-none"
-              rows={1}
+              className="flex-1 min-h-[120px] max-h-[200px] resize-none"
+              rows={5}
             />
             <Button
               onClick={handleSend}
               disabled={!newMessage.trim() || !activeConversation || isSending}
               size="icon"
-              className="h-[44px] w-[44px]"
+              className="h-[120px] w-[44px]"
             >
               {isSending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
@@ -112,7 +111,7 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
         setIsOpen={setIsMobileMenuOpen} 
         onCollapseChange={handleSidebarCollapse}
       />
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarCollapsed ? 'sm:ml-16 lg:ml-16' : 'sm:ml-16 lg:ml-56'}`}>
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarCollapsed ? 'md:ml-16' : 'md:ml-64'}`}>
         <Header 
           title={title} 
           toggleSidebar={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

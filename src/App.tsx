@@ -1,63 +1,68 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./contexts/auth";
-import { NotificationsProvider } from "./contexts/notifications";
-import { ClientNotificationsProvider } from "./contexts/clientNotifications";
-import { ToastProvider } from "@/hooks/use-toast";
-import Index from "./pages/Index";
-import AdminLogin from "./pages/AdminLogin";
-import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import Documents from "./pages/Documents";
-import Messages from "./pages/Messages";
-import NotFound from "./pages/NotFound";
-import Clients from "./pages/admin/Clients";
-import AdminDocuments from "./pages/admin/Documents";
-import AdminMessages from "./pages/admin/Messages";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/auth/AuthContext";
+import { CentralizedRealtimeProvider } from "@/contexts/centralizedRealtime";
+import { ToastProvider } from "@/hooks/toast/toast-context";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { LogoutHandler } from "@/components/LogoutHandler";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import Index from "@/pages/Index";
+import Dashboard from "@/pages/Dashboard";
+import Documents from "@/pages/Documents";
+import Messages from "@/pages/Messages";
+import AdminDashboard from "@/pages/AdminDashboard";
+import AdminClients from "@/pages/admin/Clients";
+import AdminMessages from "@/pages/admin/Messages";
+import AdminDocuments from "@/pages/admin/Documents";
+import AdminClientDocuments from "@/pages/admin/ClientDocuments";
+import AdminClientStages from "@/pages/admin/ClientStages";
 
-import ClientStages from "./pages/admin/ClientStages";
-import ClientDocuments from "./pages/admin/ClientDocuments";
-import Settings from "./pages/admin/Settings";
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ToastProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <NotificationsProvider>
-              <ClientNotificationsProvider>
-                <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/admin-login" element={<AdminLogin />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/clients" element={<Clients />} />
-                <Route path="/admin/clients/:clientId/documents" element={<ClientDocuments />} />
-                <Route path="/admin/documents" element={<AdminDocuments />} />
-                <Route path="/admin/documents/:clientId" element={<ClientDocuments />} />
-
-                <Route path="/admin/messages" element={<AdminMessages />} />
-                <Route path="/admin/client-stages" element={<ClientStages />} />
-                <Route path="/admin/settings" element={<Settings />} />
-                <Route path="/documents" element={<Documents />} />
-                <Route path="/messages" element={<Messages />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              </ClientNotificationsProvider>
-            </NotificationsProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </ToastProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <CentralizedRealtimeProvider>
+                <NotificationProvider>
+                  <LogoutHandler />
+                  <Routes>
+                  {/* Client Routes */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/documents" element={<Documents />} />
+                  <Route path="/messages" element={<Messages />} />
+                  
+                  {/* Admin Routes */}
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin/clients" element={<AdminClients />} />
+                  <Route path="/admin/messages" element={<AdminMessages />} />
+                  <Route path="/admin/documents" element={<AdminDocuments />} />
+                  <Route path="/admin/documents/:clientId" element={<AdminClientDocuments />} />
+                  <Route path="/admin/client-stages" element={<AdminClientStages />} />
+                  
+                  {/* Catch all - redirect to appropriate dashboard */}
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </NotificationProvider>
+              </CentralizedRealtimeProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </ToastProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

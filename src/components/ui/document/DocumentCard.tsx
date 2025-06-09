@@ -1,4 +1,3 @@
-
 import { Download, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -72,78 +71,88 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
 
   return (
     <>
-      <Card className="group overflow-hidden hover:shadow-md transition-shadow">
-        <CardContent className="p-4">
-          <div className="flex items-start space-x-3">
-            {getFileIcon(document.type)}
+      <Card className="group overflow-hidden bg-white border border-[#f3f4f6] shadow-sm hover:shadow-md hover:border-[#93c5fd] transition-all duration-300">
+        <CardContent className="p-5">
+          <div className="flex items-start space-x-4">
+            <div className="p-3 bg-[#dbeafe] rounded-lg group-hover:bg-[#93c5fd] transition-colors duration-300">
+              {getFileIcon(document.type)}
+            </div>
             
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-medium truncate">{document.name}</h4>
-              <div className="flex items-center space-x-2 mt-1">
-                <Badge variant="outline" className="text-xs">
+              <h4 className="text-sm font-semibold text-[#000000] truncate mb-2 group-hover:text-[#1e3a8a] transition-colors duration-300">
+                {document.name}
+              </h4>
+              
+              <div className="flex items-center space-x-2 mb-3">
+                <Badge 
+                  variant="outline" 
+                  className="text-xs border-[#e5e7eb] text-[#6b7280] bg-[#f3f4f6] hover:bg-[#dbeafe] hover:text-[#1e3a8a] hover:border-[#93c5fd] transition-colors duration-200"
+                >
                   {document.category}
                 </Badge>
                 
                 {document.needsSignature && (
-                  <Badge variant={document.signed ? "outline" : "destructive"} className="text-xs">
+                  <Badge 
+                    variant={document.signed ? "outline" : "destructive"} 
+                    className={`text-xs ${
+                      document.signed 
+                        ? "border-[#10b981] text-[#10b981] bg-[#f0fdf4]" 
+                        : "border-[#ef4444] text-[#ef4444] bg-[#fef2f2]"
+                    }`}
+                  >
                     {document.signed ? "Assinado" : "Requer Assinatura"}
                   </Badge>
                 )}
               </div>
               
-              <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
+              <div className="flex justify-between items-center text-xs text-[#6b7280] mb-4">
                 <span>{formatDate(document.uploadDate)}</span>
-                <span>{document.size}</span>
+                <span className="font-medium">{document.size}</span>
               </div>
-            </div>
-          </div>
-          
-          <div className="mt-4 flex justify-between items-center">
-            <span className="text-xs text-muted-foreground">
-              Enviado por: {document.uploadedBy}
-            </span>
-            
-            <div className="flex space-x-2">
-              {document.needsSignature && !document.signed && (
-                <Button size="sm" className="text-xs py-1 px-2 h-auto">
-                  Assinar
-                </Button>
-              )}
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs py-1 px-2 h-auto" 
-                onClick={handleDownload}
-                disabled={isLoading || !document.filePath}
-              >
-                <Download className="h-3 w-3 mr-1" />
-                Download
-              </Button>
 
-              {canPreview ? (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs py-1 px-2 h-auto" 
-                  onClick={handlePreview}
-                  disabled={isLoading || !document.filePath}
-                >
-                  <Eye className="h-3 w-3 mr-1" />
-                  Visualizar
-                </Button>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs py-1 px-2 h-auto" 
-                  disabled={true}
-                  title="Visualização não disponível para este tipo de arquivo"
-                >
-                  <Eye className="h-3 w-3 mr-1" />
-                  Visualizar
-                </Button>
-              )}
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-[#6b7280]">
+                  Enviado por: <span className="font-medium text-[#000000]">{document.uploadedBy}</span>
+                </span>
+                
+                <div className="flex space-x-2">
+                  {document.needsSignature && !document.signed && (
+                    <Button 
+                      size="sm" 
+                      className="text-xs py-1.5 px-3 h-auto bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow-sm hover:shadow-md transition-all duration-200"
+                    >
+                      Assinar
+                    </Button>
+                  )}
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-xs py-1.5 px-3 h-auto border-[#e5e7eb] text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#000000] hover:border-[#93c5fd] transition-all duration-200" 
+                    onClick={handleDownload}
+                    disabled={isLoading || !document.filePath}
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Download
+                  </Button>
+
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className={`text-xs py-1.5 px-3 h-auto transition-all duration-200 ${
+                      canPreview && !isLoading && document.filePath
+                        ? "border-[#e5e7eb] text-[#6b7280] hover:bg-[#dbeafe] hover:text-[#1e3a8a] hover:border-[#3b82f6]"
+                        : "border-[#f3f4f6] text-[#9ca3af] cursor-not-allowed"
+                    }`}
+                    onClick={canPreview ? handlePreview : undefined}
+                    disabled={!canPreview || isLoading || !document.filePath}
+                    title={!canPreview ? "Visualização não disponível para este tipo de arquivo" : ""}
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
+                    Visualizar
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
