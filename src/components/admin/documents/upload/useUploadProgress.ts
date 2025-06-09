@@ -13,7 +13,7 @@ export const useUploadProgress = (
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleSubmit = async (formData: DocumentFormValues) => {
+  const handleSubmit = async (formData: any) => {
     if (files.length === 0) {
       console.error("No files selected");
       toast.error("Selecione pelo menos um arquivo para enviar");
@@ -35,6 +35,7 @@ export const useUploadProgress = (
     try {
       let successCount = 0;
       const totalFiles = files.length;
+      const isMultipleFiles = files.length > 1;
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -48,9 +49,14 @@ export const useUploadProgress = (
           });
         }, 50);
         
+        // Get the title for this file
+        const fileTitle = isMultipleFiles 
+          ? (formData.fileTitles?.[i] || file.name)
+          : (formData.title || file.name);
+        
         // Create the file data object to upload
         const fileData = { 
-          title: file.name, // Always use the filename as title
+          title: fileTitle,
           description: formData.description || "",
           client_id: formData.client_id,
           file

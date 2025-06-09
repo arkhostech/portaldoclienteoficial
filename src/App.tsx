@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/auth";
 import { NotificationsProvider } from "./contexts/notifications";
+import { ClientNotificationsProvider } from "./contexts/clientNotifications";
 import { ToastProvider } from "@/hooks/use-toast";
 import Index from "./pages/Index";
 import AdminLogin from "./pages/AdminLogin";
@@ -33,23 +33,25 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <NotificationsProvider>
-              <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/admin-login" element={<AdminLogin />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/clients" element={<Clients />} />
-              <Route path="/admin/clients/:clientId/documents" element={<ClientDocuments />} />
-              <Route path="/admin/documents" element={<AdminDocuments />} />
-              <Route path="/admin/documents/:clientId" element={<ClientDocuments />} />
+              <ClientNotificationsProvider>
+                <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/admin-login" element={<AdminLogin />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/clients" element={<Clients />} />
+                <Route path="/admin/clients/:clientId/documents" element={<ClientDocuments />} />
+                <Route path="/admin/documents" element={<AdminDocuments />} />
+                <Route path="/admin/documents/:clientId" element={<ClientDocuments />} />
 
-              <Route path="/admin/messages" element={<AdminMessages />} />
-              <Route path="/admin/client-stages" element={<ClientStages />} />
-              <Route path="/admin/settings" element={<Settings />} />
-              <Route path="/documents" element={<Documents />} />
-              <Route path="/messages" element={<Messages />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                <Route path="/admin/messages" element={<AdminMessages />} />
+                <Route path="/admin/client-stages" element={<ClientStages />} />
+                <Route path="/admin/settings" element={<Settings />} />
+                <Route path="/documents" element={<Documents />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              </ClientNotificationsProvider>
             </NotificationsProvider>
           </AuthProvider>
         </BrowserRouter>

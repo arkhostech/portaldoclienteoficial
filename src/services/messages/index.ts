@@ -35,7 +35,7 @@ export const fetchUnreadCountsByConversation = async (isAdmin: boolean, userId?:
       const { count } = await supabase
         .from('messages')
         .select('id', { count: 'exact' })
-        .or('is_read.eq.false,is_read.is.null')
+        .eq('is_read', false)
         .eq('sender_type', 'admin')
         .in('conversation_id', conversationIds);
       
@@ -48,7 +48,7 @@ export const fetchUnreadCountsByConversation = async (isAdmin: boolean, userId?:
         .from('messages')
         .select('conversation_id')
         .eq('sender_type', 'client')
-        .or('is_read.eq.false,is_read.is.null');
+        .eq('is_read', false);
 
       if (error) {
         console.error('Error fetching unread counts:', error);
@@ -105,7 +105,7 @@ export const markConversationMessagesAsRead = async (conversationId: string, sen
       .from('messages')
       .update({ is_read: true })
       .eq('conversation_id', conversationId)
-      .or('is_read.eq.false,is_read.is.null');
+      .eq('is_read', false); // Query simplificada que funciona com RLS
 
     // Se especificado, só marcar mensagens de um tipo de remetente
     if (senderType) {
@@ -309,7 +309,7 @@ export const countUnreadMessages = async (isAdmin: boolean, userId: string): Pro
       const { count, error } = await supabase
         .from('messages')
         .select('id', { count: 'exact' })
-        .or('is_read.eq.false,is_read.is.null')
+        .eq('is_read', false)
         .eq('sender_type', 'client');
       
       if (error) throw error;
@@ -331,7 +331,7 @@ export const countUnreadMessages = async (isAdmin: boolean, userId: string): Pro
       const { count, error } = await supabase
         .from('messages')
         .select('id', { count: 'exact' })
-        .or('is_read.eq.false,is_read.is.null')
+        .eq('is_read', false)
         .eq('sender_type', 'admin')
         .in('conversation_id', conversationIds);
       

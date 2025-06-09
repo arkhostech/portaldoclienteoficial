@@ -72,6 +72,7 @@ export const UploadDialogContent = ({
             onCancel={() => handleDialogClose(false)}
             onSubmit={handleSubmit}
             firstSelectedFileName={firstSelectedFileName}
+            files={files}
           />
         ) : null}
       </div>

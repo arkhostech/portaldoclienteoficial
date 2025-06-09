@@ -39,6 +39,9 @@ export const useChat = (clientId?: string) => {
   const [pendingNewMessages, setPendingNewMessages] = useState<Set<string>>(new Set());
   const [scrollContainerRef, setScrollContainerRef] = useState<HTMLDivElement | null>(null);
   
+  // 🛡️ DEBOUNCE: Evitar chamadas múltiplas do Intersection Observer
+  const [markingAsViewed, setMarkingAsViewed] = useState<Set<string>>(new Set());
+  
   // **FIX: Refs para valores atuais sem causar re-renders**
   const isViewingOldMessagesRef = useRef(isViewingOldMessages);
   const scrollContainerRefRef = useRef<HTMLDivElement | null>(null);
@@ -455,13 +458,38 @@ export const useChat = (clientId?: string) => {
     setShouldAutoScroll(true);
   }, []);
 
-  // Marcar mensagem como vista (remove das não lidas) - **OTIMIZADO**
+  // Marcar mensagem como vista (remove das não lidas) - **OTIMIZADO COM DEBOUNCE**
   const markMessageAsViewed = useCallback(async (messageId: string, conversationId: string) => {
-    // **OTIMIZAÇÃO: Usar batch update mesmo para uma mensagem**
+    // 🛡️ DEBOUNCE: Evitar marcar a mesma mensagem múltiplas vezes
+    if (markingAsViewed.has(messageId)) {
+      console.log('🛡️ CLIENT: markMessageAsViewed já em execução para:', messageId);
+      return;
+    }
+
+    console.log('🎯 CLIENT: markMessageAsViewed chamado para mensagem:', messageId);
+    
+    // Adicionar ao set de mensagens sendo processadas
+    setMarkingAsViewed(prev => new Set(prev).add(messageId));
+    
     try {
-      await markMultipleMessagesAsRead([messageId]);
+      if (isAdmin) {
+        await markMultipleMessagesAsRead([messageId]);
+      } else {
+        // **SOLUÇÃO CLIENTE: Marcar através de conversação (contorna RLS)**
+        console.log('🎯 CLIENT: Usando markConversationMessagesAsRead para mensagem única');
+        await markConversationMessagesAsRead(conversationId, 'admin');
+      }
     } catch (error) {
       console.error('Error marking message as read:', error);
+    } finally {
+      // Remover do set após processamento
+      setTimeout(() => {
+        setMarkingAsViewed(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(messageId);
+          return newSet;
+        });
+      }, 1000); // 1 segundo de cooldown
     }
 
     setUnreadMessages(prev => {
@@ -478,14 +506,22 @@ export const useChat = (clientId?: string) => {
       }
       return newMap;
     });
-  }, []);
+  }, [isAdmin, markingAsViewed]);
 
   // Marcar várias mensagens como vistas - **OTIMIZADO**
   const markMessagesAsViewed = useCallback(async (messageIds: string[], conversationId: string) => {
-    // **OTIMIZAÇÃO: Batch update no banco de dados**
+    console.log('🎯 CLIENT: markMessagesAsViewed chamado para:', messageIds);
+    
+    // **SOLUÇÃO: Para cliente, usar função alternativa que contorna RLS**
     if (messageIds.length > 0) {
       try {
-        await markMultipleMessagesAsRead(messageIds);
+        if (isAdmin) {
+          await markMultipleMessagesAsRead(messageIds);
+        } else {
+          // **SOLUÇÃO CLIENTE: Marcar através de conversação (contorna RLS)**
+          console.log('🎯 CLIENT: Usando markConversationMessagesAsRead para admin messages');
+          await markConversationMessagesAsRead(conversationId, 'admin');
+        }
       } catch (error) {
         console.error('Error marking multiple messages as read:', error);
       }
@@ -504,7 +540,7 @@ export const useChat = (clientId?: string) => {
       newMap.set(conversationId, newCount);
       return newMap;
     });
-  }, []);
+  }, [isAdmin]);
 
   // **NOVA FUNCIONALIDADE: Funções de controle inteligente**
   const setViewingOldMessages = useCallback((viewing: boolean) => {
@@ -868,10 +904,72 @@ export const useChat = (clientId?: string) => {
                 // Reativar auto-scroll quando nova mensagem chegar
                 setShouldAutoScroll(true);
               }
-            } else {
-              // Para mensagens do admin, só fazer autoscroll se não estiver vendo antigas
-              console.log('💼 Mensagem do admin:', { 
+            } else if (!isAdmin && newMessage.sender_type === 'admin') {
+              // **NOVA LÓGICA ESPELHADA: Controle inteligente para mensagens do admin (vista pelo cliente)**
+              const currentScrollRef = scrollContainerRefRef.current;
+              const isCurrentlyViewingOld = currentScrollRef ? (() => {
+                const { scrollTop, scrollHeight, clientHeight } = currentScrollRef;
+                const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+                const viewing = distanceFromBottom > 200;
+                console.log('🔍 Cliente - Verificação síncrona de scroll:', { 
+                  scrollTop, 
+                  scrollHeight, 
+                  clientHeight, 
+                  distanceFromBottom, 
+                  viewing,
+                  hasScrollRef: !!currentScrollRef
+                });
+                return viewing;
+              })() : isViewingOldMessagesRef.current;
+              
+              console.log('🔍 Cliente - Nova mensagem do admin:', { 
                 messageId: newMessage.id, 
+                isViewingOldMessages: isViewingOldMessagesRef.current,
+                isCurrentlyViewingOld,
+                conversationId: newMessage.conversation_id,
+                scrollContainerExists: !!currentScrollRef
+              });
+              
+              // Se cliente está vendo mensagens antigas, não fazer autoscroll
+              if (isCurrentlyViewingOld) {
+                console.log('📜 Cliente vendo antigas - adicionando às pendentes');
+                // Adicionar às mensagens pendentes (só mostra notificação)
+                setPendingNewMessages(prevPending => {
+                  const newSet = new Set(prevPending);
+                  newSet.add(newMessage.id);
+                  console.log('📝 Cliente - Pendentes atualizadas:', newSet.size);
+                  return newSet;
+                });
+                
+                // Atualizar state para ficar sincronizado
+                setIsViewingOldMessages(true);
+                
+                // NÃO reativar autoscroll nem marcar como não lida nos contadores gerais
+              } else {
+                console.log('👁️ Cliente no final - comportamento normal');
+                // Comportamento normal: marcar como não lida e fazer autoscroll
+                setUnreadMessages(prevUnread => {
+                  const newSet = new Set(prevUnread);
+                  newSet.add(newMessage.id);
+                  return newSet;
+                });
+
+                setUnreadByConversation(prevMap => {
+                  const newMap = new Map(prevMap);
+                  const current = newMap.get(activeConversation.id) || 0;
+                  newMap.set(activeConversation.id, current + 1);
+                  return newMap;
+                });
+                
+                // Reativar auto-scroll quando nova mensagem chegar
+                setShouldAutoScroll(true);
+              }
+            } else {
+              // Para outras situações, só fazer autoscroll se não estiver vendo antigas
+              console.log('💼 Outro tipo de mensagem:', { 
+                messageId: newMessage.id, 
+                senderType: newMessage.sender_type,
+                isAdmin,
                 isViewingOld: isViewingOldMessagesRef.current,
                 willAutoScroll: !isViewingOldMessagesRef.current
               });

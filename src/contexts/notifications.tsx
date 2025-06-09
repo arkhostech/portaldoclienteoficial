@@ -16,13 +16,22 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (!user || !isAdmin) {
+    if (!user) {
       return;
     }
 
-    // Função para buscar contagem de mensagens não lidas
+    // 🎯 APENAS ADMIN: Sistema de notificações simplificado
+    if (!isAdmin) {
+      // Cliente não usa este contexto para bolinha verde (só sticky banner)
+      setHasUnreadMessages(false);
+      setUnreadCount(0);
+      return;
+    }
+
+    // Função para buscar contagem de mensagens não lidas - APENAS ADMIN
     const fetchUnreadCount = async () => {
       try {
+        // Para admin: contar mensagens de clientes não lidas
         const { count, error } = await supabase
           .from('messages')
           .select('id', { count: 'exact' })
@@ -45,7 +54,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     // Buscar contagem inicial
     fetchUnreadCount();
 
-    // Subscription para novas mensagens de clientes
+    // Subscription para novas mensagens - APENAS ADMIN
     const channel = supabase
       .channel('admin_notifications')
       .on(
@@ -56,9 +65,16 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
           table: 'messages',
           filter: 'sender_type=eq.client'
         },
-        (payload) => {
+        async (payload) => {
+          console.log('🔔 ADMIN: INSERT recebido:', {
+            messageId: payload.new.id,
+            senderType: payload.new.sender_type,
+            isRead: payload.new.is_read
+          });
+          
           // Verificar se a mensagem já foi marcada como lida (tratar null como false)
           if (!payload.new.is_read) {
+            console.log('✅ ADMIN: Incrementando contador');
             setUnreadCount(prev => prev + 1);
             setHasUnreadMessages(true);
           }
@@ -72,9 +88,17 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
           table: 'messages',
           filter: 'sender_type=eq.client'
         },
-        (payload) => {
+        async (payload) => {
+          console.log('🎯 ADMIN: UPDATE recebido:', {
+            messageId: payload.new.id,
+            senderType: payload.new.sender_type,
+            wasRead: payload.old.is_read,
+            nowRead: payload.new.is_read
+          });
+          
           // Se uma mensagem foi marcada como lida
           if (payload.new.is_read && !payload.old.is_read) {
+            console.log('✅ ADMIN: Decrementando contador para mensagem:', payload.new.id);
             setUnreadCount(prev => {
               const newCount = Math.max(0, prev - 1);
               setHasUnreadMessages(newCount > 0);
@@ -91,9 +115,11 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [user, isAdmin]);
 
   const markAllAsRead = async () => {
-    if (!isAdmin) return;
+    if (!user || !isAdmin) return;
 
     try {
+      console.log('🧪 ADMIN: Marcando todas como lidas...');
+      // Para admin: marcar mensagens de clientes como lidas
       await supabase
         .from('messages')
         .update({ is_read: true })
@@ -102,6 +128,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setUnreadCount(0);
       setHasUnreadMessages(false);
+      console.log('🧪 ADMIN: Estado local resetado');
     } catch (error) {
       console.error('Error marking all as read:', error);
     }

@@ -6,18 +6,25 @@ import { useDocuments } from "@/hooks/documents/useDocuments";
 import DocumentUploadDialog from "@/components/admin/documents/DocumentUploadDialog";
 import DocumentEditDialog from "@/components/admin/documents/DocumentEditDialog";
 import DocumentDeleteDialog from "@/components/admin/documents/DocumentDeleteDialog";
+import MultipleDeleteDialog from "@/components/admin/documents/MultipleDeleteDialog";
 import { useClients } from "@/hooks/useClients";
 import { Document as DocumentType } from "@/services/documents/types";
 import { Input } from "@/components/ui/input";
-import { Search, FilePlus, ArrowLeft, Download, Pencil, Trash, FileText } from "lucide-react";
+import { Search, FilePlus, ArrowLeft, Download, Pencil, Trash, FileText, CheckSquare, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatDate } from "@/lib/utils";
+import { toast } from "sonner";
+import { deleteDocument } from "@/services/documents/deleteDocument";
 
 export default function ClientDocuments() {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
+  const [openMultipleDeleteDialog, setOpenMultipleDeleteDialog] = useState(false);
+  const [isMultipleDeleting, setIsMultipleDeleting] = useState(false);
   const { clients, isLoading: isClientsLoading } = useClients();
   
   const {
@@ -39,15 +46,105 @@ export default function ClientDocuments() {
     handleConfirmDelete,
     handleDeleteDocument,
     handleDownloadDocument,
+    loadDocuments,
   } = useDocuments(clientId || null);
 
   const client = clients.find(c => c.id === clientId);
+
+  // Clear selection when documents change (after delete)
+  useEffect(() => {
+    if (selectedDocuments.size > 0) {
+      // Remove any selected documents that no longer exist
+      const existingDocIds = new Set(documents.map(doc => doc.id));
+      const updatedSelection = new Set(
+        Array.from(selectedDocuments).filter(docId => existingDocIds.has(docId))
+      );
+      
+      if (updatedSelection.size !== selectedDocuments.size) {
+        setSelectedDocuments(updatedSelection);
+      }
+    }
+  }, [documents]);
 
   // Filter documents based on search term
   const filteredDocuments = documents.filter(doc =>
     doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // Selection functions
+  const toggleDocumentSelection = (documentId: string) => {
+    const newSelected = new Set(selectedDocuments);
+    if (newSelected.has(documentId)) {
+      newSelected.delete(documentId);
+    } else {
+      newSelected.add(documentId);
+    }
+    setSelectedDocuments(newSelected);
+  };
+
+  const selectAllDocuments = () => {
+    if (selectedDocuments.size === filteredDocuments.length) {
+      setSelectedDocuments(new Set());
+    } else {
+      setSelectedDocuments(new Set(filteredDocuments.map(doc => doc.id)));
+    }
+  };
+
+  const deleteSelectedDocuments = async () => {
+    if (selectedDocuments.size === 0) return;
+    setIsMultipleDeleting(true);
+
+    try {
+      let successCount = 0;
+      const docsToDelete = Array.from(selectedDocuments).map(docId => 
+        documents.find(d => d.id === docId)
+      ).filter(Boolean);
+      
+      // Use deleteDocument directly to avoid modal conflicts
+      
+      for (const doc of docsToDelete) {
+        if (doc) {
+          const result = await deleteDocument(doc.id, doc.file_path);
+          if (result) {
+            successCount++;
+          }
+        }
+      }
+      
+      if (successCount > 0) {
+        toast.success(`${successCount} documento(s) excluído(s) com sucesso`);
+        // Reload documents to update the UI
+        await loadDocuments();
+        setSelectedDocuments(new Set());
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir documentos");
+    } finally {
+      setIsMultipleDeleting(false);
+      setOpenMultipleDeleteDialog(false);
+    }
+  };
+
+  const handleMultipleDeleteClick = () => {
+    if (selectedDocuments.size === 0) return;
+    
+    // Se apenas 1 documento selecionado, usar modal individual
+    if (selectedDocuments.size === 1) {
+      const docId = Array.from(selectedDocuments)[0];
+      const doc = documents.find(d => d.id === docId);
+      if (doc) {
+        handleConfirmDelete(doc);
+      }
+      return;
+    }
+    
+    // Se múltiplos documentos, usar modal múltiplo
+    setOpenMultipleDeleteDialog(true);
+  };
+
+  const hasSelectedDocuments = selectedDocuments.size > 0;
+  const isAllSelected = selectedDocuments.size === filteredDocuments.length && filteredDocuments.length > 0;
 
   if (isClientsLoading) {
     return (
@@ -101,7 +198,38 @@ export default function ClientDocuments() {
               </div>
             </div>
           </div>
-          <div>
+          <div className="flex gap-2">
+            {hasSelectedDocuments && (
+              <>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAllDocuments}
+                >
+                  {isAllSelected ? (
+                    <>
+                      <Square className="mr-2 h-4 w-4" />
+                      Desselecionar Tudo
+                    </>
+                  ) : (
+                    <>
+                      <CheckSquare className="mr-2 h-4 w-4" />
+                      Selecionar Tudo
+                    </>
+                  )}
+                </Button>
+                
+                <Button 
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleMultipleDeleteClick}
+                >
+                  <Trash className="mr-2 h-4 w-4" />
+                  Excluir ({selectedDocuments.size})
+                </Button>
+              </>
+            )}
+            
             <Button 
               onClick={() => setOpenUploadDialog(true)}
               className="w-full md:w-auto"
@@ -136,10 +264,22 @@ export default function ClientDocuments() {
             ) : filteredDocuments.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredDocuments.map((doc) => (
-                  <Card key={doc.id} className="border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all">
+                  <Card key={doc.id} className={`border transition-all ${
+                    selectedDocuments.has(doc.id) 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  } hover:shadow-md`}>
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="relative">
+                        <div className="absolute top-0 right-0">
+                          <Checkbox
+                            checked={selectedDocuments.has(doc.id)}
+                            onCheckedChange={() => toggleDocumentSelection(doc.id)}
+                            className="h-4 w-4"
+                          />
+                        </div>
+                        
+                        <div className="flex items-start gap-3 flex-1 min-w-0 pr-6">
                           <FileText className="h-6 w-6 text-blue-500 flex-shrink-0 mt-1" />
                           <div className="min-w-0 flex-1">
                             <h3 className="font-medium text-sm mb-1 line-clamp-2" title={doc.title}>
@@ -152,7 +292,7 @@ export default function ClientDocuments() {
                         </div>
                       </div>
                       
-                      <div className="flex gap-2 justify-end">
+                      <div className="flex gap-2 justify-end mt-3">
                         <Button 
                           size="sm" 
                           variant="ghost" 
@@ -230,6 +370,14 @@ export default function ClientDocuments() {
         document={selectedDocument}
         onDelete={handleDeleteDocument}
         isDeleting={isDeleting}
+      />
+      
+      <MultipleDeleteDialog
+        open={openMultipleDeleteDialog}
+        onOpenChange={setOpenMultipleDeleteDialog}
+        selectedCount={selectedDocuments.size}
+        onDelete={deleteSelectedDocuments}
+        isDeleting={isMultipleDeleting}
       />
     </MainLayout>
   );

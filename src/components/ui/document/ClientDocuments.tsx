@@ -34,37 +34,33 @@ const ClientDocuments = ({
     >
       <CardContent className="p-0">
         {/* Folder Icon Section */}
-        <div className={`p-8 rounded-t-lg flex flex-col items-center justify-center relative min-h-[200px] ${
+        <div className={`p-6 rounded-t-lg flex flex-col items-center justify-center relative min-h-[140px] ${
           isEmpty 
             ? "bg-gradient-to-br from-gray-400 to-gray-500" 
             : "bg-gradient-to-br from-blue-500 to-blue-600"
         }`}>
           <Badge 
             variant="secondary" 
-            className={`absolute top-3 left-3 border-white/30 text-xs ${
-              isEmpty 
-                ? "bg-white/20 text-white" 
-                : "bg-white/20 text-white"
-            }`}
+            className="absolute top-2 left-2 bg-white/20 text-white border-white/30 text-xs font-medium"
           >
-            {isEmpty ? "Vazia" : "Padrão"}
+            {documents.length}
           </Badge>
           
           <Folder 
-            className="h-20 w-20 text-white drop-shadow-lg" 
+            className="h-12 w-12 text-white drop-shadow-lg" 
             fill="currentColor" 
             strokeWidth={1}
           />
           
           {isEmpty && (
-            <div className="mt-2 text-center">
+            <div className="mt-1 text-center">
               <p className="text-white/80 text-xs font-medium">Pasta vazia</p>
             </div>
           )}
         </div>
 
         {/* Client Info Section */}
-        <div className="p-4 bg-white rounded-b-lg">
+        <div className="p-3 bg-white rounded-b-lg">
           <h3 className="font-semibold text-gray-900 text-sm mb-1 truncate">
             {highlightMatch 
               ? highlightMatch(clientName, searchTerm)

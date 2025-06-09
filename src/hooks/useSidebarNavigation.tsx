@@ -72,7 +72,8 @@ export const useSidebarNavigation = (hasUnreadMessages?: boolean) => {
     { 
       title: 'Mensagens', 
       icon: <MessageCircle className="h-5 w-5" />, 
-      href: '/messages' 
+      href: '/messages',
+      hasNotification: hasUnreadMessages 
     }
   ];
 

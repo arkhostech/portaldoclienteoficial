@@ -54,14 +54,19 @@ const SidebarMobile = ({
                 <li key={item.title}>
                   <Link 
                     to={item.href} 
-                    className={`flex items-center px-4 py-3 rounded-lg transition-colors
+                    className={`flex items-center px-4 py-3 rounded-lg transition-colors relative
                       ${currentPath === item.href 
                         ? 'bg-accent text-secondary font-medium' 
                         : 'text-white hover:bg-white/10'
                       }`}
                     onClick={() => setIsOpen(false)}
                   >
-                    {item.icon}
+                    <div className="relative">
+                      {item.icon}
+                      {item.hasNotification && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                      )}
+                    </div>
                     <span className="text-sm font-medium ml-3">{item.title}</span>
                   </Link>
                 </li>

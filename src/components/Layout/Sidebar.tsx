@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/auth";
 import { useNotifications } from "@/contexts/notifications";
+import { useClientNotifications } from "@/contexts/clientNotifications";
 import { 
   LayoutDashboard, 
   Users, 
@@ -25,8 +26,15 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, setIsOpen, onCollapseChange }: SidebarProps) => {
   const { isAdmin, signOut } = useAuth();
-  const { hasUnreadMessages } = useNotifications();
-  const { navItems, currentPath } = useSidebarNavigation(isAdmin ? hasUnreadMessages : false);
+  
+  // 🎯 SISTEMA CORRETO: Admin usa NotificationsProvider, Cliente usa ClientNotificationsProvider
+  const adminNotifications = useNotifications();
+  const clientNotifications = useClientNotifications();
+  
+  // Selecionar o sistema correto baseado no tipo de usuário
+  const hasUnreadMessages = isAdmin ? adminNotifications.hasUnreadMessages : clientNotifications.hasUnreadMessages;
+  
+  const { navItems, currentPath } = useSidebarNavigation(hasUnreadMessages);
   const [isCollapsed, setIsCollapsed] = useState(false);
   
   const handleSignOut = () => {
