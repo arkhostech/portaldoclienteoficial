@@ -51,6 +51,146 @@ export const useChat = (clientId?: string) => {
     scrollContainerRefRef.current = scrollContainerRef;
   }, [scrollContainerRef]);
 
+  // **NOVA: Sistema de persistência de mensagens pendentes**
+  const [pendingSends, setPendingSends] = useState<Map<string, {
+    conversationId: string;
+    content: string;
+    senderId: string;
+    senderType: 'admin' | 'client';
+    retryCount: number;
+  }>>(new Map());
+
+  // **NOVA: Sistema de persistência com localStorage**
+  const PENDING_MESSAGES_KEY = 'chat_pending_messages';
+
+  // Carregar mensagens pendentes do localStorage
+  useEffect(() => {
+    try {
+      const savedPending = localStorage.getItem(PENDING_MESSAGES_KEY);
+      if (savedPending) {
+        const parsed = JSON.parse(savedPending);
+        // Validar estrutura antes de usar
+        const pendingMap = new Map<string, {
+          conversationId: string;
+          content: string;
+          senderId: string;
+          senderType: 'admin' | 'client';
+          retryCount: number;
+        }>();
+        
+        for (const [key, value] of Object.entries(parsed)) {
+          if (value && typeof value === 'object' && 
+              'conversationId' in value && 'content' in value) {
+            pendingMap.set(key, value as any);
+          }
+        }
+        
+        setPendingSends(pendingMap);
+        console.log('📱 Mensagens pendentes restauradas do localStorage:', pendingMap.size);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar mensagens pendentes do localStorage:', error);
+    }
+  }, []);
+
+  // Salvar mensagens pendentes no localStorage sempre que mudar
+  useEffect(() => {
+    try {
+      if (pendingSends.size > 0) {
+        const pendingObject = Object.fromEntries(pendingSends);
+        localStorage.setItem(PENDING_MESSAGES_KEY, JSON.stringify(pendingObject));
+      } else {
+        localStorage.removeItem(PENDING_MESSAGES_KEY);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar mensagens pendentes no localStorage:', error);
+    }
+  }, [pendingSends]);
+
+  // **NOVA: Restaurar mensagens temporárias na UI após carregar do localStorage**
+  useEffect(() => {
+    if (!activeConversation || pendingSends.size === 0) return;
+
+    // Adicionar mensagens pendentes da conversa ativa à UI
+    const pendingForConversation = Array.from(pendingSends.entries())
+      .filter(([_, data]) => data.conversationId === activeConversation.id);
+
+    if (pendingForConversation.length > 0) {
+      console.log('🔄 Restaurando mensagens pendentes na UI:', pendingForConversation.length);
+      
+      const tempMessages: Message[] = pendingForConversation.map(([tempId, data]) => ({
+        id: tempId,
+        conversation_id: data.conversationId,
+        sender_type: data.senderType,
+        sender_id: data.senderId,
+        content: data.content,
+        is_read: false,
+        created_at: new Date().toISOString()
+      }));
+
+      setMessages(prev => {
+        // Não duplicar mensagens que já estão na lista
+        const existingIds = new Set(prev.map(m => m.id));
+        const newMessages = tempMessages.filter(m => !existingIds.has(m.id));
+        return [...prev, ...newMessages];
+      });
+    }
+  }, [activeConversation, pendingSends]);
+
+  // **NOVA: Tentar reenviar mensagens pendentes**
+  const retryPendingSends = useCallback(async () => {
+    for (const [tempId, messageData] of pendingSends.entries()) {
+      if (messageData.retryCount >= 3) {
+        // Máximo de 3 tentativas
+        console.log('🚫 Mensagem cancelada após 3 tentativas:', tempId);
+        setMessages(prev => prev.filter(msg => msg.id !== tempId));
+        setPendingSends(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(tempId);
+          return newMap;
+        });
+        continue;
+      }
+
+      try {
+        console.log(`🔄 Tentativa ${messageData.retryCount + 1} para mensagem:`, tempId);
+        await sendMessage(
+          messageData.conversationId,
+          messageData.content,
+          messageData.senderId,
+          messageData.senderType
+        );
+        
+        // Sucesso - remover dos pendentes
+        setPendingSends(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(tempId);
+          return newMap;
+        });
+        
+      } catch (error) {
+        console.error(`❌ Erro na tentativa ${messageData.retryCount + 1}:`, error);
+        // Incrementar contador de retry
+        setPendingSends(prev => {
+          const newMap = new Map(prev);
+          const existing = newMap.get(tempId);
+          if (existing) {
+            newMap.set(tempId, { ...existing, retryCount: existing.retryCount + 1 });
+          }
+          return newMap;
+        });
+      }
+    }
+  }, [pendingSends]);
+
+  // **NOVA: Retry automático a cada 5 segundos**
+  useEffect(() => {
+    if (pendingSends.size === 0) return;
+
+    const interval = setInterval(retryPendingSends, 5000);
+    return () => clearInterval(interval);
+  }, [pendingSends.size, retryPendingSends]);
+
   // Load initial messages for a specific conversation (últimas 20)
   const loadMessages = useCallback(async (conversationId: string) => {
     if (!conversationId) return;
@@ -149,12 +289,15 @@ export const useChat = (clientId?: string) => {
     }
   }, [user, isAdmin, activeConversation, loadMessages]);
 
-  // Send a message
+  // Send a message (MELHORADO COM PERSISTÊNCIA)
   const handleSendMessage = useCallback(async (content: string) => {
     if (!user || !activeConversation) return;
     
     const senderType = isAdmin ? 'admin' : 'client';
     const tempId = `temp-${Date.now()}-${Math.random()}`;
+    const startTime = performance.now();
+    
+    console.log('🚀 Iniciando envio de mensagem no frontend:', { tempId, contentLength: content.length });
     
     // Optimistic update - adicionar mensagem imediatamente na UI
     const optimisticMessage: Message = {
@@ -176,26 +319,50 @@ export const useChat = (clientId?: string) => {
     try {
       setIsSending(true);
       
+      // Adicionar à lista de pendentes ANTES de enviar
+      setPendingSends(prev => {
+        const newMap = new Map(prev);
+        newMap.set(tempId, {
+          conversationId: activeConversation.id,
+          content,
+          senderId: user.id,
+          senderType,
+          retryCount: 0
+        });
+        return newMap;
+      });
+      
       // Enviar para o servidor
-      const sentMessage = await sendMessage(
+      await sendMessage(
         activeConversation.id,
         content,
         user.id,
         senderType
       );
       
+      const duration = performance.now() - startTime;
+      console.log(`✅ Frontend: Mensagem enviada com sucesso em ${duration.toFixed(2)}ms`);
+      
+      // Sucesso - remover dos pendentes
+      setPendingSends(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(tempId);
+        return newMap;
+      });
+      
       // Substituir a mensagem temporária pela real quando chegar via subscription
       // Não fazemos nada aqui - deixamos a subscription handle
       
     } catch (error) {
-      console.error('Error sending message:', error);
+      const duration = performance.now() - startTime;
+      console.error(`❌ Frontend: Erro ao enviar mensagem após ${duration.toFixed(2)}ms:`, error);
       
-      // Remover a mensagem temporária em caso de erro
-      setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      // NÃO remover a mensagem temporária - deixar para o sistema de retry
+      // A mensagem ficará marcada como "Enviando..." e será tentada novamente
       
       toast({
-        title: 'Erro',
-        description: 'Não foi possível enviar a mensagem',
+        title: 'Erro no envio',
+        description: 'A mensagem será reenviada automaticamente',
         variant: 'destructive'
       });
     } finally {

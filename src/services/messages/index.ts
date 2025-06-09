@@ -224,42 +224,67 @@ export const fetchOlderMessages = async (conversationId: string, beforeDate: str
   return fetchMessages(conversationId, 20, beforeDate);
 };
 
-// Send a message (COM INVALIDAÇÃO DE CACHE)
+// Send a message (OTIMIZADO - COM PERFORMANCE MONITORING)
 export const sendMessage = async (
   conversationId: string, 
   content: string, 
   senderId: string, 
   senderType: 'admin' | 'client'
 ): Promise<Message> => {
-  // Also update the conversation's updated_at time
-  await supabase
-    .from('conversations')
-    .update({ updated_at: new Date().toISOString() })
-    .eq('id', conversationId);
+  const startTime = performance.now();
+  console.log('📤 Iniciando envio de mensagem:', { conversationId, senderType, contentLength: content.length });
 
-  const { data, error } = await supabase
-    .from('messages')
-    .insert([
-      {
-        conversation_id: conversationId,
-        content,
-        sender_id: senderId,
-        sender_type: senderType,
-        is_read: false  // Garantir que sempre seja inserido como false
-      }
-    ])
-    .select()
-    .single();
+  try {
+    // **OTIMIZAÇÃO: Usar transação para ambas operações**
+    const now = new Date().toISOString();
+    
+    // Executar ambas operações em paralelo usando Promise.all
+    const [conversationResult, messageResult] = await Promise.all([
+      supabase
+        .from('conversations')
+        .update({ updated_at: now })
+        .eq('id', conversationId),
+      supabase
+        .from('messages')
+        .insert([
+          {
+            conversation_id: conversationId,
+            content,
+            sender_id: senderId,
+            sender_type: senderType,
+            is_read: false,
+            created_at: now
+          }
+        ])
+        .select()
+        .single()
+    ]);
 
-  if (error) {
-    console.error('Error sending message:', error);
+    if (conversationResult.error) {
+      console.error('Error updating conversation:', conversationResult.error);
+      // Não falhar se a atualização da conversa falhar - não é crítico
+    }
+
+    if (messageResult.error) {
+      console.error('Error sending message:', messageResult.error);
+      throw messageResult.error;
+    }
+
+    const duration = performance.now() - startTime;
+    console.log(`✅ Mensagem enviada com sucesso em ${duration.toFixed(2)}ms`);
+
+    // **OTIMIZAÇÃO: Invalidar cache de forma assíncrona**
+    setTimeout(() => {
+      chatCache.invalidateConversation(conversationId);
+    }, 0);
+
+    return messageResult.data;
+
+  } catch (error) {
+    const duration = performance.now() - startTime;
+    console.error(`❌ Erro ao enviar mensagem após ${duration.toFixed(2)}ms:`, error);
     throw error;
   }
-
-  // **CACHE: Invalidar cache relacionado**
-  chatCache.invalidateConversation(conversationId);
-
-  return data;
 };
 
 // Mark all messages as read (função original mantida para compatibilidade)

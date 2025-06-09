@@ -489,7 +489,12 @@ const AdminMessages = () => {
                               {msg.sender_type === "admin" ? "Você" : "Cliente"}
                             </span>
                             <span className="text-xs text-muted-foreground ml-2">
-                              {msg.id.startsWith('temp-') ? 'Enviando...' : formatDate(msg.created_at)}
+                              {msg.id.startsWith('temp-') ? (
+                                <span className="flex items-center space-x-1">
+                                  <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+                                  <span>Enviando...</span>
+                                </span>
+                              ) : formatDate(msg.created_at)}
                             </span>
                           </div>
                           <p className="text-sm whitespace-pre-wrap break-words">
