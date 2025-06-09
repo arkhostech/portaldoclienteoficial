@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useDocuments } from "@/hooks/documents/useDocuments";
@@ -19,6 +20,7 @@ export default function Documents() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const { clients, isLoading: isClientsLoading } = useClients();
+  const navigate = useNavigate();
   
   const {
     documents,
@@ -55,8 +57,20 @@ export default function Documents() {
     return client?.full_name || "Cliente desconhecido";
   };
 
+  const getClientProcessType = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    return client?.process_type || undefined;
+  };
+
+  const handleClientClick = (clientId: string) => {
+    navigate(`/admin/documents/${clientId}`);
+  };
+
+  // Get all client IDs (including those without documents)
+  const allClientIds = clients.map(client => client.id);
+
   // Filter clients and documents based on search term
-  const filteredClientIds = Object.keys(groupedDocuments).filter(clientId => {
+  const filteredClientIds = allClientIds.filter(clientId => {
     const clientName = getClientName(clientId).toLowerCase();
     const clientDocs = groupedDocuments[clientId] || [];
     
@@ -72,8 +86,36 @@ export default function Documents() {
     return searchTerm === "" || matchesClientName || hasMatchingDocs;
   });
 
-  // Sort clients alphabetically by name
+  // Sort clients: first those with documents (by latest document date), then empty ones (by client creation date)
   const sortedClientIds = filteredClientIds.sort((a, b) => {
+    const docsA = groupedDocuments[a] || [];
+    const docsB = groupedDocuments[b] || [];
+    
+    const hasDocsA = docsA.length > 0;
+    const hasDocsB = docsB.length > 0;
+    
+    // If one has documents and other doesn't, prioritize the one with documents
+    if (hasDocsA && !hasDocsB) return -1;
+    if (!hasDocsA && hasDocsB) return 1;
+    
+    // If both have documents, sort by latest document date (newest first)
+    if (hasDocsA && hasDocsB) {
+      const latestDateA = Math.max(...docsA.map(doc => new Date(doc.created_at).getTime()));
+      const latestDateB = Math.max(...docsB.map(doc => new Date(doc.created_at).getTime()));
+      return latestDateB - latestDateA; // Newest first
+    }
+    
+    // If both are empty, sort by client creation date (newest first)
+    const clientA = clients.find(c => c.id === a);
+    const clientB = clients.find(c => c.id === b);
+    
+    if (clientA && clientB) {
+      const dateA = new Date(clientA.created_at).getTime();
+      const dateB = new Date(clientB.created_at).getTime();
+      return dateB - dateA; // Newest first
+    }
+    
+    // Fallback to alphabetical if no dates available
     const nameA = getClientName(a).toLowerCase();
     const nameB = getClientName(b).toLowerCase();
     return nameA.localeCompare(nameB);
@@ -122,15 +164,14 @@ export default function Documents() {
                 <div className="h-12 bg-muted animate-pulse rounded-md" />
               </div>
             ) : sortedClientIds.length > 0 ? (
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {sortedClientIds.map(clientId => (
                   <ClientDocuments
                     key={clientId}
                     clientName={getClientName(clientId)}
-                    documents={groupedDocuments[clientId]}
-                    onEdit={handleEditDocument}
-                    onDelete={handleConfirmDelete}
-                    onDownload={handleDownloadDocument}
+                    processType={getClientProcessType(clientId)}
+                    documents={groupedDocuments[clientId] || []}
+                    onClick={() => handleClientClick(clientId)}
                     highlightMatch={highlightMatch}
                     searchTerm={searchTerm}
                   />
@@ -139,11 +180,13 @@ export default function Documents() {
             ) : (
               <div className="py-12 text-center">
                 <FilePlus className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-2 text-lg font-semibold">Nenhum documento encontrado</h3>
+                <h3 className="mt-2 text-lg font-semibold">
+                  {searchTerm ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"}
+                </h3>
                 <p className="text-muted-foreground">
                   {searchTerm ? 
-                    "Não foram encontrados documentos correspondentes à sua pesquisa." : 
-                    "Comece adicionando um novo documento."
+                    "Não foram encontrados clientes correspondentes à sua pesquisa." : 
+                    "Cadastre clientes primeiro para gerenciar seus documentos."
                   }
                 </p>
               </div>

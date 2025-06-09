@@ -39,11 +39,17 @@ export const ProcessTypeField = ({ form }: ProcessTypeFieldProps) => {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {processTypes.map((type) => (
-                  <SelectItem key={type.id} value={type.name}>
-                    {type.name}
-                  </SelectItem>
-                ))}
+                {isLoading ? (
+                  <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                ) : processTypes.length > 0 ? (
+                  processTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-results" disabled>Nenhum tipo de processo encontrado</SelectItem>
+                )}
               </SelectContent>
             </Select>
             <FormMessage />

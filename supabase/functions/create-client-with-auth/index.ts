@@ -38,6 +38,9 @@ serve(async (req) => {
 
     // Parse the request body
     const formData: ClientFormData = await req.json();
+    
+    console.log("Edge function received data:", formData);
+    console.log("Process type ID received:", formData.process_type_id);
 
     // Validate required fields
     if (!formData.full_name || !formData.email || !formData.password) {
@@ -74,16 +77,21 @@ serve(async (req) => {
 
     console.log("User created successfully. Creating client record.");
 
+    // Prepare client data for insertion
+    const clientInsertData = {
+      id: userData.user.id,
+      full_name: formData.full_name,
+      email: formData.email,
+      phone: formData.phone || null,
+      status: formData.status || "documentacao",
+      process_type_id: formData.process_type_id || null
+    };
+    
+    console.log("Inserting client data:", clientInsertData);
+
     // Create an entry in the clients table
     const { data: clientData, error: clientError } = await supabaseAdmin.from("clients").insert([
-      {
-        id: userData.user.id,
-        full_name: formData.full_name,
-        email: formData.email,
-        phone: formData.phone || null,
-        status: formData.status || "active",
-        process_type_id: formData.process_type_id || null
-      },
+      clientInsertData
     ]).select().single();
 
     if (clientError) {

@@ -1,96 +1,98 @@
-
-import { useState } from "react";
-import { ChevronDown, ChevronRight, Pencil, Trash, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Folder, Calendar } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { Document } from "@/services/documents";
 
 interface ClientDocumentsProps {
   clientName: string;
+  processType?: string;
   documents: Document[];
-  onEdit: (document: Document) => void;
-  onDelete: (document: Document) => void;
-  onDownload: (document: Document) => void;
+  onClick: () => void;
   highlightMatch?: (text: string, term: string) => React.ReactNode;
   searchTerm?: string;
 }
 
 const ClientDocuments = ({ 
-  clientName, 
+  clientName,
+  processType,
   documents, 
-  onEdit, 
-  onDelete, 
-  onDownload,
+  onClick,
   highlightMatch,
   searchTerm = ""
 }: ClientDocumentsProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const toggleOpen = () => setIsOpen(!isOpen);
+  const latestDate = documents.length > 0 
+    ? formatDate(new Date(Math.max(...documents.map(doc => new Date(doc.created_at).getTime()))).toISOString())
+    : null;
 
+  const isEmpty = documents.length === 0;
+  
   return (
-    <div className="border rounded-md mb-2 overflow-hidden">
-      <div
-        className="flex justify-between items-center px-4 py-2 bg-muted cursor-pointer hover:bg-muted/80 transition"
-        onClick={toggleOpen}
-      >
-        <div className="flex items-center gap-2 font-medium">
-          {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-          <span>
+    <Card 
+      className="w-full hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-105 border-0 shadow-md"
+      onClick={onClick}
+    >
+      <CardContent className="p-0">
+        {/* Folder Icon Section */}
+        <div className={`p-8 rounded-t-lg flex flex-col items-center justify-center relative min-h-[200px] ${
+          isEmpty 
+            ? "bg-gradient-to-br from-gray-400 to-gray-500" 
+            : "bg-gradient-to-br from-blue-500 to-blue-600"
+        }`}>
+          <Badge 
+            variant="secondary" 
+            className={`absolute top-3 left-3 border-white/30 text-xs ${
+              isEmpty 
+                ? "bg-white/20 text-white" 
+                : "bg-white/20 text-white"
+            }`}
+          >
+            {isEmpty ? "Vazia" : "Padrão"}
+          </Badge>
+          
+          <Folder 
+            className="h-20 w-20 text-white drop-shadow-lg" 
+            fill="currentColor" 
+            strokeWidth={1}
+          />
+          
+          {isEmpty && (
+            <div className="mt-2 text-center">
+              <p className="text-white/80 text-xs font-medium">Pasta vazia</p>
+            </div>
+          )}
+        </div>
+
+        {/* Client Info Section */}
+        <div className="p-4 bg-white rounded-b-lg">
+          <h3 className="font-semibold text-gray-900 text-sm mb-1 truncate">
             {highlightMatch 
               ? highlightMatch(clientName, searchTerm)
               : clientName
             }
-          </span>
-          <span className="text-muted-foreground text-sm">({documents.length} documento{documents.length !== 1 ? "s" : ""})</span>
-        </div>
-      </div>
-
-      {isOpen && (
-        <div className="px-4 py-2 bg-white">
-          {documents.length > 0 ? (
-            documents.map((doc) => (
-              <div key={doc.id} className="flex justify-between items-center py-2 border-b last:border-none">
-                <div>
-                  <p className="text-sm font-medium">
-                    {highlightMatch 
-                      ? highlightMatch(doc.title, searchTerm)
-                      : doc.title
-                    }
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Enviado em: {formatDate(doc.created_at)}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="icon" variant="ghost" onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(doc);
-                  }} title="Editar">
-                    <Pencil size={16} />
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={(e) => {
-                    e.stopPropagation();
-                    onDownload(doc);
-                  }} title="Download">
-                    <Download size={16} />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="hover:bg-destructive/10 hover:text-destructive" onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(doc);
-                  }} title="Excluir">
-                    <Trash size={16} />
-                  </Button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="py-4 text-center text-sm text-muted-foreground">
-              Nenhum documento encontrado.
+          </h3>
+          
+          {processType && (
+            <p className="text-sm text-gray-600 mb-2">
+              {processType}
+            </p>
+          )}
+          
+          {isEmpty ? (
+            <div className="text-xs text-gray-500 italic">
+              Nenhum documento ainda
             </div>
+          ) : (
+            latestDate && (
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Calendar className="h-3 w-3" />
+                <span>Criado em {latestDate}</span>
+              </div>
+            )
           )}
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

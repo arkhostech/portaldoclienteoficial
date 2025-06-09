@@ -67,7 +67,6 @@ export const ProcessTypeTable = ({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>ID</TableHead>
           <TableHead>Nome do Processo</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
@@ -75,7 +74,6 @@ export const ProcessTypeTable = ({
       <TableBody>
         {processTypes.map((process) => (
           <TableRow key={process.id}>
-            <TableCell className="font-medium">{process.id}</TableCell>
             <TableCell>
               {editingProcess?.id === process.id ? (
                 <Input

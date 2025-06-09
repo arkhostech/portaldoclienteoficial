@@ -47,7 +47,8 @@ export const useClients = () => {
       }
       
       if (result) {
-        setClients(prevClients => [result, ...prevClients]);
+        // Instead of adding the raw result, reload all clients to get proper process_type data
+        await loadClients();
         return true;
       }
       return false;
@@ -77,9 +78,8 @@ export const useClients = () => {
       const result = await updateClient(id, data);
       
       if (result) {
-        setClients(prevClients => 
-          prevClients.map(c => c.id === result.id ? result : c)
-        );
+        // Reload all clients to get proper process_type data
+        await loadClients();
         return true;
       }
       return false;

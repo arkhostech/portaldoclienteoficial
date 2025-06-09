@@ -59,21 +59,16 @@ const ClientStages = () => {
     try {
       const result = await updateClient(clientId, { status: statusToUpdate });
       if (result) {
-        // Move the client to the top of the new column
-        setClients((prevClients) => {
-          // Remove the client from the array
-          const updatedClient = prevClients.find(c => c.id === clientId);
-          const filteredClients = prevClients.filter(c => c.id !== clientId);
-          
-          if (updatedClient) {
-            // Place the client at the beginning of the array with updated status
-            return [
-              { ...updatedClient, status: statusToUpdate },
-              ...filteredClients
-            ];
-          }
-          return prevClients;
-        });
+        // Reload all clients to get proper process_type data
+        setIsLoading(true);
+        try {
+          const data = await fetchClients();
+          setClients(data);
+        } catch (error) {
+          console.error('Error reloading clients:', error);
+        } finally {
+          setIsLoading(false);
+        }
       }
     } catch (error) {
       console.error('Error updating client status:', error);
