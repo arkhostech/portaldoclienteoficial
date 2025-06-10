@@ -31,20 +31,20 @@ const ProcessTracker = ({ currentStatus, className }: ProcessTrackerProps) => {
   };
 
   const getLineColor = (stepIndex: number) => {
-    // Se o processo está concluído, todas as linhas devem ser azuis
+    // Se o processo está concluído, todas as linhas devem ser Deep Teal
     if (currentStatus === "concluido") {
-      return "bg-[#3b82f6]";
+      return "bg-[#053D38]";
     }
     
-    // Linha entre step 1 e 2: azul se step 1 está completo
+    // Linha entre step 1 e 2: Deep Teal se step 1 está completo
     if (stepIndex === 0) {
       const step1Status = getStepStatus("documentacao");
-      return step1Status === "complete" ? "bg-[#3b82f6]" : "bg-[#e5e7eb]";
+      return step1Status === "complete" ? "bg-[#053D38]" : "bg-[#e5e7eb]";
     }
-    // Linha entre step 2 e 3: azul se step 2 está completo
+    // Linha entre step 2 e 3: Deep Teal se step 2 está completo
     if (stepIndex === 1) {
       const step2Status = getStepStatus("em_andamento");
-      return step2Status === "complete" ? "bg-[#3b82f6]" : "bg-[#e5e7eb]";
+      return step2Status === "complete" ? "bg-[#053D38]" : "bg-[#e5e7eb]";
     }
     return "bg-[#e5e7eb]";
   };

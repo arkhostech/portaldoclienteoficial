@@ -98,16 +98,26 @@ const ClientStages = () => {
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row gap-4 justify-between items-start">
           <div>
-            <h2 className="text-3xl font-bold">Estágios dos Clientes</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-3xl font-bold" style={{ color: '#14140F' }}>Estágios dos Clientes</h2>
+            <p style={{ color: '#34675C' }}>
               Gerencie e acompanhe os clientes por estágios do processo
             </p>
           </div>
           <div className="relative w-full md:w-64">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2 top-2.5 h-4 w-4" style={{ color: '#34675C' }} />
             <Input
               placeholder="Buscar cliente..."
               className="pl-8"
+              style={{ borderColor: '#e5e7eb' }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#053D38';
+                e.target.style.outline = 'none';
+                e.target.style.boxShadow = '0 0 0 1px #053D38';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.boxShadow = 'none';
+              }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

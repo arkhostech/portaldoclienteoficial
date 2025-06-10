@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, Mail, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -22,15 +23,22 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showSkeleton, setShowSkeleton] = useState(false);
 
   useEffect(() => {
-    // If user is logged in and we're done loading, redirect based on role
+    // Se user existe, mostrar skeleton por um tempo antes de redirecionar
     if (!loading && user) {
-      if (isAdmin) {
-        navigate("/admin");
-      } else {
-        navigate("/dashboard");
-      }
+      setShowSkeleton(true);
+      
+      const timer = setTimeout(() => {
+        if (isAdmin) {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
+      }, 500); // 500ms de skeleton antes do redirecionamento
+      
+      return () => clearTimeout(timer);
     }
   }, [user, isAdmin, loading, navigate]);
 
@@ -50,10 +58,61 @@ const Login = () => {
     }
   };
 
-  if (loading) {
+  if (loading || showSkeleton) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-12 w-12 border-4 border-t-[#eac066] border-gray-200 rounded-full animate-spin"></div>
+      <div className="min-h-screen flex flex-col md:flex-row">
+        {/* Left side skeleton */}
+        <div className="hidden md:flex flex-1 bg-gray-100 p-12 flex-col justify-center">
+          <div className="space-y-6">
+            <div className="flex justify-center mb-8">
+              <Skeleton className="h-48 w-48 rounded-lg" />
+            </div>
+            <Skeleton className="h-12 w-3/4 mx-auto" />
+            <Skeleton className="h-6 w-full" />
+            
+            <div className="mt-12 space-y-4">
+              <div className="flex items-start space-x-4">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right side skeleton */}
+        <div className="flex-1 flex items-center justify-center p-6">
+          <Card className="w-full max-w-md">
+            <CardHeader className="space-y-1 text-center">
+              <Skeleton className="h-8 w-48 mx-auto mb-2" />
+              <Skeleton className="h-4 w-64 mx-auto" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="text-center">
+                <Skeleton className="h-4 w-32 mx-auto" />
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-center border-t p-4">
+              <Skeleton className="h-4 w-40" />
+            </CardFooter>
+          </Card>
+        </div>
+        
+        {/* Loading indicator */}
+        <div className="fixed bottom-6 right-6 bg-white rounded-full p-3 shadow-lg border">
+          <div className="h-6 w-6 border-2 border-t-[#053D38] border-gray-200 rounded-full animate-spin"></div>
+        </div>
       </div>
     );
   }

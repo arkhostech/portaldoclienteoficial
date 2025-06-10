@@ -10,6 +10,7 @@ export function useAuthProvider(): AuthContextType {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,12 +18,15 @@ export function useAuthProvider(): AuthContextType {
 
   // Memoized function to check user role - avoids unnecessary database queries
   const checkUserRole = useCallback(async (userId: string): Promise<boolean> => {
+    setRoleLoading(true);
     try {
       const userRole = await checkUserRoleWithCache(userId);
       return userRole === 'admin';
     } catch (error) {
       console.error("Error checking user role:", error);
       return false;
+    } finally {
+      setRoleLoading(false);
     }
   }, []);
 
@@ -118,6 +122,7 @@ export function useAuthProvider(): AuthContextType {
           setSession(null);
           setUser(null);
           setIsAdmin(false);
+          setRoleLoading(false);
           setLoading(false);
         }
       }
@@ -172,6 +177,7 @@ export function useAuthProvider(): AuthContextType {
       } catch (error) {
         console.error("Error getting session:", error);
         setLoading(false);
+        setRoleLoading(false);
       }
     };
 
@@ -189,11 +195,11 @@ export function useAuthProvider(): AuthContextType {
     session,
     signIn,
     signOut,
-    loading,
+    loading: loading || roleLoading, // Incluir roleLoading no loading geral
     isAdmin
   };
   
-  console.log("Auth state:", { user: !!user, loading, isAdmin, path: location.pathname });
+  console.log("Auth state:", { user: !!user, loading: loading || roleLoading, isAdmin, roleLoading, path: location.pathname });
   
   return value;
 }

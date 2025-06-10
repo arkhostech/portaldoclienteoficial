@@ -14,24 +14,24 @@ const StatsCards = ({ stats, isLoading }: StatsCardsProps) => {
       title: "Documentos",
       value: stats.documentsCount,
       icon: FileText,
-      iconColor: "text-[#1e3a8a]",
-      bgColor: "bg-[#dbeafe]",
+      iconColor: "text-[#053D38]",
+      bgColor: "bg-[#053D38]",
       description: "Total de documentos"
     },
     {
       title: "Conversas",
       value: stats.conversationsCount,
       icon: MessageSquare,
-      iconColor: "text-[#3b82f6]",
-      bgColor: "bg-[#dbeafe]",
+      iconColor: "text-[#34675C]",
+      bgColor: "bg-[#34675C]",
       description: "Conversas ativas"
     },
     {
       title: "Última Atualização",
       value: stats.lastUpdate ? new Date(stats.lastUpdate).toLocaleDateString('pt-BR') : "--",
       icon: Clock,
-      iconColor: "text-[#6b7280]",
-      bgColor: "bg-[#f3f4f6]",
+      iconColor: "text-[#14140F]",
+      bgColor: "bg-[#14140F]",
       description: "Último update",
       isDate: true
     }
@@ -41,7 +41,7 @@ const StatsCards = ({ stats, isLoading }: StatsCardsProps) => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 3 }).map((_, index) => (
-          <Card key={index} className="bg-white border border-[#f3f4f6] shadow-sm">
+          <Card key={index} className="bg-white border border-[#e5e7eb] shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
                 <Skeleton className="h-12 w-12 rounded-lg" />
@@ -66,21 +66,21 @@ const StatsCards = ({ stats, isLoading }: StatsCardsProps) => {
         return (
           <Card 
             key={index} 
-            className="bg-white border border-[#f3f4f6] shadow-sm hover:shadow-md hover:border-[#93c5fd] transition-all duration-300 group"
+            className="bg-white border border-[#e5e7eb] shadow-sm hover:shadow-md transition-all duration-300 group"
           >
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
-                <div className={`p-3 ${stat.bgColor} rounded-lg group-hover:bg-[#dbeafe] transition-colors`}>
-                  <Icon className={`h-6 w-6 ${stat.iconColor}`} />
+                <div className={`p-3 ${stat.bgColor} rounded-lg group-hover:opacity-90 transition-opacity`}>
+                  <Icon className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-[#6b7280] uppercase tracking-wide">
+                  <p className="text-sm font-medium text-[#34675C] uppercase tracking-wide">
                     {stat.title}
                   </p>
-                  <h3 className="text-2xl font-bold text-[#000000] mt-1">
+                  <h3 className="text-2xl font-bold text-[#14140F] mt-1">
                     {stat.isDate ? stat.value : stat.value}
                   </h3>
-                  <p className="text-xs text-[#6b7280] mt-1">
+                  <p className="text-xs text-[#34675C] mt-1">
                     {stat.description}
                   </p>
                 </div>

@@ -11,9 +11,10 @@ export const NewMessageBadge = ({ show, className }: NewMessageBadgeProps) => {
   return (
     <span 
       className={cn(
-        "inline-flex items-center px-2 py-1 text-xs font-medium bg-green-500 text-white rounded-full",
+        "inline-flex items-center px-2 py-1 text-xs font-medium text-white rounded-full",
         className
       )}
+      style={{ backgroundColor: '#F26800' }}
     >
       Novo
     </span>

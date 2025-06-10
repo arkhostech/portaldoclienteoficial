@@ -13,39 +13,39 @@ const ProcessStep = ({ id, label, step, status }: ProcessStepProps) => {
     switch (status) {
       case "complete":
         return {
-          bgColor: "bg-[#1e3a8a]",
-          borderColor: "border border-[#1e3a8a]",
+          bgColor: "bg-[#053D38]",
+          borderColor: "border border-[#053D38]",
           iconBg: "bg-white/20",
           iconColor: "text-white",
           textColor: "text-white",
-          badgeColor: "bg-white text-[#1e3a8a]",
+          badgeColor: "bg-white text-[#053D38]",
           badgeText: "Concluído",
-          shadow: "shadow-lg shadow-[#1e3a8a]/25",
-          hoverShadow: "hover:shadow-xl hover:shadow-[#1e3a8a]/30",
+          shadow: "shadow-lg shadow-[#053D38]/25",
+          hoverShadow: "hover:shadow-xl hover:shadow-[#053D38]/30",
           stepLabelColor: "text-white",
           icon: Check
         };
       case "current":
         return {
-          bgColor: "bg-[#dbeafe]",
-          borderColor: "border-2 border-[#3b82f6]",
-          iconBg: "bg-white/80",
-          iconColor: "text-[#3b82f6]",
-          textColor: "text-[#1e3a8a]",
-          badgeColor: "bg-[#3b82f6] text-white",
+          bgColor: "bg-[#F26800]",
+          borderColor: "border-2 border-[#F26800]",
+          iconBg: "bg-white/20",
+          iconColor: "text-white",
+          textColor: "text-white",
+          badgeColor: "bg-white text-[#F26800]",
           badgeText: "Em Progresso",
-          shadow: "shadow-lg shadow-[#3b82f6]/25",
-          hoverShadow: "hover:shadow-xl hover:shadow-[#3b82f6]/30",
-          stepLabelColor: "text-[#3b82f6]",
+          shadow: "shadow-lg shadow-[#F26800]/25",
+          hoverShadow: "hover:shadow-xl hover:shadow-[#F26800]/30",
+          stepLabelColor: "text-white",
           icon: TrendingUp
         };
       default:
         return {
-          bgColor: "bg-white",
+          bgColor: "bg-[#e5e7eb]",
           borderColor: "border border-[#e5e7eb]",
-          iconBg: "bg-[#f3f4f6]",
+          iconBg: "bg-white",
           iconColor: "text-[#9ca3af]",
-          textColor: "text-[#6b7280]",
+          textColor: "text-[#34675C]",
           badgeColor: "bg-[#f3f4f6] text-[#374151]",
           badgeText: "Pendente",
           shadow: "shadow-sm",
@@ -142,7 +142,7 @@ const ProcessStep = ({ id, label, step, status }: ProcessStepProps) => {
         <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 hidden lg:block">
           <div className={cn(
             "w-4 h-1 rounded-full",
-            step === 1 && status === "complete" ? "bg-[#3b82f6]" : "bg-[#e5e7eb]"
+            step === 1 && status === "complete" ? "bg-[#053D38]" : "bg-[#e5e7eb]"
           )} />
         </div>
       )}

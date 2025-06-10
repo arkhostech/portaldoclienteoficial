@@ -32,27 +32,40 @@ const ClientCard = ({ client, onDragStart }: ClientCardProps) => {
 
   return (
     <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }} className="cursor-grab">
-      <Card className="mb-3 hover:shadow-md transition-shadow">
+      <Card 
+        className="mb-3 transition-all duration-200 bg-white"
+        style={{
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+          e.currentTarget.style.transform = 'translateY(-2px)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
+      >
         <CardHeader className="p-3 pb-0">
           <div className="flex justify-between items-center">
-            <h3 className="font-medium text-sm">{client.full_name}</h3>
+            <h3 className="font-medium text-sm" style={{ color: '#14140F' }}>{client.full_name}</h3>
           </div>
         </CardHeader>
         <CardContent className="p-3 pt-2">
-          <div className="text-xs space-y-1.5 text-muted-foreground">
+          <div className="text-xs space-y-1.5">
             <div className="flex items-center gap-1">
-              <User className="h-3.5 w-3.5" />
-              <span>{client.email}</span>
+              <User className="h-3.5 w-3.5" style={{ color: '#34675C' }} />
+              <span style={{ color: '#34675C' }}>{client.email}</span>
             </div>
             {client.process_type && (
               <div className="flex items-center gap-1">
-                <FileText className="h-3.5 w-3.5" />
-                <span>{client.process_type}</span>
+                <FileText className="h-3.5 w-3.5" style={{ color: '#34675C' }} />
+                <span style={{ color: '#34675C' }}>{client.process_type}</span>
               </div>
             )}
             <div className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
-              <span>Cadastrado em: {createdDate}</span>
+              <Calendar className="h-3.5 w-3.5" style={{ color: '#34675C' }} />
+              <span style={{ color: '#34675C' }}>Cadastrado em: {createdDate}</span>
             </div>
           </div>
         </CardContent>

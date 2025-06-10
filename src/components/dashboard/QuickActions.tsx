@@ -51,25 +51,25 @@ const QuickActions = () => {
   const getButtonStyles = (variant: string) => {
     switch (variant) {
       case "primary":
-        return "bg-[#1e3a8a] border-[#1e3a8a] text-white hover:bg-[#1e40af] hover:border-[#1e40af] shadow-sm hover:shadow-md";
+        return "bg-[#053D38] border-[#053D38] text-white hover:bg-[#042f2b] hover:border-[#042f2b] shadow-sm hover:shadow-md";
       case "secondary":
-        return "bg-[#3b82f6] border-[#3b82f6] text-white hover:bg-[#2563eb] hover:border-[#2563eb] shadow-sm hover:shadow-md";
+        return "bg-[#34675C] border-[#34675C] text-white hover:bg-[#2d5950] hover:border-[#2d5950] shadow-sm hover:shadow-md";
       case "tertiary":
-        return "bg-[#93c5fd] border-[#93c5fd] text-[#1e3a8a] hover:bg-[#60a5fa] hover:border-[#60a5fa] hover:text-white shadow-sm hover:shadow-md";
+        return "bg-[#A3CCAB] border-[#A3CCAB] text-[#14140F] hover:bg-[#8fbf99] hover:border-[#8fbf99] shadow-sm hover:shadow-md";
       case "quaternary":
-        return "bg-[#dbeafe] border-[#dbeafe] text-[#1e3a8a] hover:bg-[#93c5fd] hover:border-[#93c5fd] shadow-sm hover:shadow-md";
+        return "bg-[#F26800] border-[#F26800] text-white hover:bg-[#e05f00] hover:border-[#e05f00] shadow-sm hover:shadow-md";
       case "muted":
-        return "bg-[#f3f4f6] border-[#f3f4f6] text-[#6b7280] hover:bg-[#dbeafe] hover:border-[#dbeafe] hover:text-[#1e3a8a] shadow-sm hover:shadow-md";
+        return "bg-[#14140F] border-[#14140F] text-white hover:bg-[#0f0f0a] hover:border-[#0f0f0a] shadow-sm hover:shadow-md";
       default:
         return "";
     }
   };
 
   return (
-    <Card className="bg-white border border-[#f3f4f6] shadow-sm">
+    <Card className="bg-white border border-[#e5e7eb] shadow-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold text-[#000000] flex items-center">
-          <Calendar className="mr-2 h-5 w-5 text-[#3b82f6]" />
+        <CardTitle className="text-xl font-bold text-[#14140F] flex items-center">
+          <Calendar className="mr-2 h-5 w-5 text-[#053D38]" />
           Ações Rápidas
         </CardTitle>
       </CardHeader>

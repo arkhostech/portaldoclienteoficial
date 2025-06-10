@@ -113,7 +113,19 @@ const NewConversationModal = ({ onClientSelect }: { onClientSelect: (clientId: s
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="mb-4">
+        <Button 
+          size="sm" 
+          className="mb-4 text-white"
+          style={{
+            backgroundColor: '#053D38'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#34675C';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#053D38';
+          }}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Nova Conversa
         </Button>
@@ -124,15 +136,25 @@ const NewConversationModal = ({ onClientSelect }: { onClientSelect: (clientId: s
         </DialogHeader>
         
         <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome, email ou telefone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+                      <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: '#34675C' }} />
+              <Input
+                placeholder="Buscar por nome, email ou telefone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                style={{ borderColor: '#e5e7eb' }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#053D38';
+                  e.target.style.outline = 'none';
+                  e.target.style.boxShadow = '0 0 0 1px #053D38';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e5e7eb';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
           
           <ScrollArea className="h-96">
             {isLoading ? (
@@ -142,28 +164,39 @@ const NewConversationModal = ({ onClientSelect }: { onClientSelect: (clientId: s
             ) : filteredClients.length > 0 ? (
               <div className="space-y-2">
                 {filteredClients.map((client) => (
-                  <Card
+                                    <Card
                     key={client.id}
-                    className="cursor-pointer hover:bg-accent transition-colors"
+                    className="cursor-pointer transition-colors"
                     onClick={() => handleSelectClient(client.id)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(163, 204, 171, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'white';
+                    }}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
                         <Avatar>
-                          <AvatarFallback>
+                          <AvatarFallback
+                            style={{
+                              backgroundColor: '#34675C',
+                              color: 'white'
+                            }}
+                          >
                             {getInitials(client.full_name)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{client.full_name}</p>
-                          <p className="text-sm text-muted-foreground truncate">{client.email}</p>
+                          <p className="font-medium truncate" style={{ color: '#14140F' }}>{client.full_name}</p>
+                          <p className="text-sm truncate" style={{ color: '#34675C' }}>{client.email}</p>
                           {client.phone && (
-                            <p className="text-sm text-muted-foreground">{client.phone}</p>
+                            <p className="text-sm" style={{ color: '#34675C' }}>{client.phone}</p>
                           )}
                         </div>
-                                                 <Badge variant="secondary">
-                           {client.status}
-                         </Badge>
+                        <Badge variant="secondary">
+                          {client.status}
+                        </Badge>
                       </div>
                     </CardContent>
                   </Card>
@@ -191,8 +224,38 @@ const ClientInfoModal = ({ activeConversation }: { activeConversation: any }) =>
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <User className="h-4 w-4 mr-2" />
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="border-0 transition-all duration-200 ease-in-out"
+          style={{
+            backgroundColor: '#A3CCAB',
+            color: '#14140F',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            fontWeight: '500'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#34675C';
+            e.currentTarget.style.color = '#ffffff';
+            const icon = e.currentTarget.querySelector('svg');
+            if (icon) {
+              (icon as unknown as HTMLElement).style.color = '#ffffff';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#A3CCAB';
+            e.currentTarget.style.color = '#14140F';
+            const icon = e.currentTarget.querySelector('svg');
+            if (icon) {
+              (icon as unknown as HTMLElement).style.color = '#14140F';
+            }
+          }}
+        >
+          <User 
+            className="h-4 w-4 mr-2 transition-colors duration-200" 
+            style={{ color: '#14140F' }}
+          />
           Informações do Cliente
         </Button>
       </DialogTrigger>
@@ -201,15 +264,21 @@ const ClientInfoModal = ({ activeConversation }: { activeConversation: any }) =>
           <DialogTitle>Informações do Cliente</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
+                <div className="space-y-4">
           <div className="flex items-center space-x-3">
             <Avatar className="h-12 w-12">
-              <AvatarFallback className="text-lg">
+              <AvatarFallback 
+                className="text-lg"
+                style={{
+                  backgroundColor: '#34675C',
+                  color: 'white'
+                }}
+              >
                 {client.full_name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-semibold text-lg">{client.full_name}</h3>
+              <h3 className="font-semibold text-lg" style={{ color: '#14140F' }}>{client.full_name}</h3>
             </div>
           </div>
           
@@ -217,31 +286,31 @@ const ClientInfoModal = ({ activeConversation }: { activeConversation: any }) =>
           
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{client.email}</span>
+              <Mail className="h-4 w-4" style={{ color: '#34675C' }} />
+              <span className="text-sm" style={{ color: '#34675C' }}>{client.email}</span>
             </div>
             
             {client.phone && (
               <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">{client.phone}</span>
+                <Phone className="h-4 w-4" style={{ color: '#34675C' }} />
+                <span className="text-sm" style={{ color: '#34675C' }}>{client.phone}</span>
               </div>
             )}
             
             <div className="flex items-center space-x-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">
+              <FileText className="h-4 w-4" style={{ color: '#34675C' }} />
+              <span className="text-sm" style={{ color: '#34675C' }}>
                 Tipo de Processo: {client.process_type?.name || "Não definido"}
               </span>
             </div>
             
             <div className="flex items-center space-x-2">
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">
+              <AlertCircle className="h-4 w-4" style={{ color: '#34675C' }} />
+              <span className="text-sm" style={{ color: '#34675C' }}>
                 Status: 
-                                 <Badge variant="secondary" className="ml-2">
-                   {client.status}
-                 </Badge>
+                <Badge variant="secondary" className="ml-2">
+                  {client.status}
+                </Badge>
               </span>
             </div>
           </div>
@@ -351,11 +420,18 @@ const AdminMessages = () => {
 
   return (
     <MainLayout title="Central de Mensagens">
-      <div className="flex h-[calc(100vh-200px)] max-w-7xl mx-auto gap-4">
+      <style>{`
+        input::placeholder, textarea::placeholder { color: #34675C !important; }
+        main { padding: 1rem !important; }
+        @media (min-width: 768px) {
+          main { padding: 1.5rem !important; }
+        }
+      `}</style>
+      <div className="flex h-[calc(100vh-80px)] max-w-7xl mx-auto gap-4">
         {/* Lista de conversas */}
         <div className="w-80 flex-shrink-0 bg-background border rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Conversas</h2>
+            <h2 className="text-lg font-semibold" style={{ color: '#14140F' }}>Conversas</h2>
             <NewConversationModal onClientSelect={handleNewConversation} />
           </div>
           
@@ -364,28 +440,61 @@ const AdminMessages = () => {
               {conversations.map((conv) => (
                 <Card
                   key={conv.id}
-                  className={`cursor-pointer transition-colors relative ${
-                    activeConversation?.id === conv.id 
-                      ? 'bg-accent border-primary' 
-                      : 'hover:bg-accent/50'
-                  }`}
+                  className="cursor-pointer transition-colors relative"
+                  style={{
+                    backgroundColor: activeConversation?.id === conv.id 
+                      ? '#053D38' 
+                      : 'white',
+                    color: activeConversation?.id === conv.id 
+                      ? 'white' 
+                      : 'inherit'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeConversation?.id !== conv.id) {
+                      e.currentTarget.style.backgroundColor = 'rgba(163, 204, 171, 0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeConversation?.id !== conv.id) {
+                      e.currentTarget.style.backgroundColor = 'white';
+                    }
+                  }}
                   onClick={() => handleSelectConversation(conv)}
                 >
                   <CardContent className="p-3">
                     <div className="flex items-start space-x-3">
                       <Avatar>
-                        <AvatarFallback>
+                        <AvatarFallback 
+                          style={{
+                            backgroundColor: '#34675C',
+                            color: 'white'
+                          }}
+                        >
                           {getInitials(conv.client?.full_name || 'Cliente')}
                         </AvatarFallback>
                       </Avatar>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="font-medium text-sm truncate">
+                          <p 
+                            className="font-medium text-sm truncate"
+                            style={{ 
+                              color: activeConversation?.id === conv.id 
+                                ? 'white' 
+                                : '#14140F' 
+                            }}
+                          >
                             {conv.client?.full_name || 'Cliente'}
                           </p>
                           <div className="flex flex-col items-end gap-1">
-                            <span className="text-xs text-muted-foreground flex-shrink-0">
+                            <span 
+                              className="text-xs flex-shrink-0"
+                              style={{ 
+                                color: activeConversation?.id === conv.id 
+                                  ? 'rgba(255,255,255,0.7)' 
+                                  : 'rgba(52, 103, 92, 0.7)' 
+                              }}
+                            >
                               {formatLastMessageTime(conv.updated_at)}
                             </span>
                             <NewMessageBadge 
@@ -394,12 +503,26 @@ const AdminMessages = () => {
                           </div>
                         </div>
                         
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p 
+                          className="text-xs truncate"
+                          style={{ 
+                            color: activeConversation?.id === conv.id 
+                              ? 'rgba(255,255,255,0.8)' 
+                              : '#34675C' 
+                          }}
+                        >
                           {conv.client?.process_type?.name || "Tipo não definido"}
                         </p>
                         
                         <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-muted-foreground">
+                          <span 
+                            className="text-xs"
+                            style={{ 
+                              color: activeConversation?.id === conv.id 
+                                ? 'rgba(255,255,255,0.8)' 
+                                : '#34675C' 
+                            }}
+                          >
                             {conv.client?.email}
                           </span>
                         </div>
@@ -424,16 +547,40 @@ const AdminMessages = () => {
           {activeConversation ? (
             <>
               {/* Header da conversa */}
-              <div className="p-4 border-b flex items-center justify-between bg-muted/30">
-                <div className="flex items-center space-x-3">
-                  <Avatar>
-                    <AvatarFallback>
+              <div 
+                className="p-5 border-b flex items-center justify-between" 
+                style={{ 
+                  backgroundColor: '#14140F',
+                  borderBottomColor: 'rgba(163, 204, 171, 0.2)'
+                }}
+              >
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback
+                      style={{
+                        backgroundColor: '#A3CCAB',
+                        color: '#14140F'
+                      }}
+                    >
                       {getInitials(activeConversation.client?.full_name || 'Cliente')}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h3 className="font-semibold">{activeConversation.client?.full_name}</h3>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex flex-col justify-center">
+                    <h3 
+                      className="font-semibold text-base leading-tight" 
+                      style={{ 
+                        color: '#ffffff',
+                        fontWeight: '600'
+                      }}
+                    >
+                      {activeConversation.client?.full_name}
+                    </h3>
+                    <p 
+                      className="text-sm leading-tight mt-0.5" 
+                      style={{ 
+                        color: 'rgba(255, 255, 255, 0.8)'
+                      }}
+                    >
                       {activeConversation.client?.process_type?.name || "Tipo não definido"}
                     </p>
                   </div>
@@ -445,7 +592,17 @@ const AdminMessages = () => {
                       variant="default"
                       size="sm"
                       onClick={handleMarkAsRead}
-                      className="gap-2 bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                      className="gap-2 text-white"
+                      style={{ 
+                        backgroundColor: '#F26800',
+                        borderColor: '#F26800'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#E55A00';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F26800';
+                      }}
                     >
                       <Check className="h-3 w-3" />
                       Marcar como lida
@@ -470,35 +627,115 @@ const AdminMessages = () => {
                 )}
                 
                 {messages.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {messages.map((msg) => (
-                      <Card
+                      <div
                         key={msg.id}
-                        className={`max-w-xs sm:max-w-sm md:max-w-md ${
-                          msg.sender_type === "admin"
-                            ? "ml-auto bg-primary/5 border-primary/10"
-                            : "mr-auto bg-secondary/10"
-                        } ${msg.id.startsWith('temp-') ? 'opacity-70' : ''}`}
+                        className={`flex ${
+                          msg.sender_type === "admin" ? "justify-end" : "justify-start"
+                        }`}
                       >
-                        <CardContent className="p-3">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="font-medium text-sm">
-                              {msg.sender_type === "admin" ? "Você" : "Cliente"}
-                            </span>
-                            <span className="text-xs text-muted-foreground ml-2">
-                              {msg.id.startsWith('temp-') ? (
-                                <span className="flex items-center space-x-1">
-                                  <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
-                                  <span>Enviando...</span>
-                                </span>
-                              ) : formatDate(msg.created_at)}
+                        <div
+                          className={`relative inline-block px-4 py-2 rounded-2xl shadow-sm ${
+                            msg.id.startsWith('temp-') ? 'opacity-70' : ''
+                          }`}
+                          style={{
+                            backgroundColor: msg.sender_type === "admin" 
+                              ? '#053D38' 
+                              : '#ffffff',
+                            color: msg.sender_type === "admin" 
+                              ? 'white' 
+                              : '#14140F',
+                            maxWidth: msg.content.length > 50 ? '85%' : 
+                                    msg.content.length > 20 ? '60%' : 
+                                    'fit-content',
+                            minWidth: '80px',
+                            border: msg.sender_type === "admin" ? 'none' : '1px solid #e5e7eb',
+                            borderRadius: msg.sender_type === "admin" 
+                              ? '18px 18px 4px 18px' 
+                              : '18px 18px 18px 4px'
+                          }}
+                        >
+                          {/* Triangular tail for WhatsApp style */}
+                          <div
+                            className="absolute w-0 h-0"
+                            style={{
+                              ...(msg.sender_type === "admin" ? {
+                                right: '-6px',
+                                bottom: '2px',
+                                borderLeft: '8px solid #053D38',
+                                borderTop: '8px solid transparent',
+                                borderBottom: '2px solid transparent'
+                              } : {
+                                left: '-6px',
+                                bottom: '2px',
+                                borderRight: '8px solid #ffffff',
+                                borderTop: '8px solid transparent',
+                                borderBottom: '2px solid transparent'
+                              })
+                            }}
+                          />
+                          
+                          <div className="flex justify-between items-start gap-3">
+                            <span 
+                              className="font-medium text-xs"
+                              style={{
+                                color: msg.sender_type === "admin" 
+                                  ? 'rgba(255,255,255,0.9)' 
+                                  : '#34675C'
+                              }}
+                            >
+                              {msg.sender_type === "admin" ? "Você" : activeConversation?.client?.full_name?.split(' ')[0] || "Cliente"}
                             </span>
                           </div>
-                          <p className="text-sm whitespace-pre-wrap break-words">
+                          
+                          <p 
+                            className="text-sm whitespace-pre-wrap break-words mt-1 leading-relaxed"
+                            style={{
+                              color: msg.sender_type === "admin" 
+                                ? 'white' 
+                                : '#14140F'
+                            }}
+                          >
                             {msg.content}
                           </p>
-                        </CardContent>
-                      </Card>
+                          
+                          <div className="flex justify-end items-center mt-2 gap-1">
+                            <span 
+                              className="text-xs"
+                              style={{
+                                color: msg.sender_type === "admin" 
+                                  ? 'rgba(255,255,255,0.7)' 
+                                  : '#34675C'
+                              }}
+                            >
+                              {msg.id.startsWith('temp-') ? (
+                                <span className="flex items-center gap-1">
+                                  <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div>
+                                  <span>Enviando</span>
+                                </span>
+                              ) : (
+                                new Date(msg.created_at).toLocaleTimeString('pt-BR', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })
+                              )}
+                            </span>
+                            {msg.sender_type === "admin" && !msg.id.startsWith('temp-') && (
+                              <div className="flex space-x-0.5">
+                                <div 
+                                  className="w-1 h-1 rounded-full"
+                                  style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}
+                                />
+                                <div 
+                                  className="w-1 h-1 rounded-full"
+                                  style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     ))}
                     <div ref={messagesEndRef} />
                   </div>
@@ -521,13 +758,38 @@ const AdminMessages = () => {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    className="flex-1 resize-none min-h-[120px] max-h-[200px]"
+                    className="flex-1 resize-none min-h-[120px] max-h-[200px] border-gray-200"
+                    style={{ 
+                      borderColor: '#e5e7eb'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#053D38';
+                      e.target.style.outline = 'none';
+                      e.target.style.boxShadow = '0 0 0 1px #053D38';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                      e.target.style.boxShadow = 'none';
+                    }}
                     rows={5}
                   />
                   <Button 
                     onClick={handleSend} 
                     disabled={isSending || !newMessage.trim() || !activeConversation}
-                    className="h-[120px]"
+                    className="h-[120px] text-white"
+                    style={{
+                      backgroundColor: '#053D38'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!e.currentTarget.disabled) {
+                        e.currentTarget.style.backgroundColor = '#34675C';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!e.currentTarget.disabled) {
+                        e.currentTarget.style.backgroundColor = '#053D38';
+                      }
+                    }}
                   >
                     <Send className="h-4 w-4 mr-2" />
                     Enviar

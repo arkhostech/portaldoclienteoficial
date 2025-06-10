@@ -30,7 +30,14 @@ const Header = ({ title, toggleSidebar }: HeaderProps) => {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="text-base sm:text-lg md:text-xl font-semibold truncate">{title}</h1>
+        <h1 
+          className="text-base sm:text-lg md:text-xl font-semibold truncate"
+          style={{ 
+            color: title === "Central de Mensagens" ? '#14140F' : 'inherit' 
+          }}
+        >
+          {title}
+        </h1>
       </div>
       
       <div className="flex items-center gap-2 sm:gap-4">

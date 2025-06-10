@@ -1,13 +1,13 @@
 import { FileText, Image, File } from "lucide-react";
 import { useDocumentDownload } from "@/hooks/documents/operations/useDocumentDownload";
 
-export const getFileIcon = (fileType: string) => {
-  if (!fileType) return <File className="h-10 w-10 text-gray-500" />;
+export const getFileIcon = (fileType: string, className: string = "h-10 w-10 text-gray-500") => {
+  if (!fileType) return <File className={className} />;
   
   const lowerType = fileType.toLowerCase();
   
   if (lowerType.includes("pdf") || lowerType === "application/pdf") {
-    return <FileText className="h-10 w-10 text-red-500" />;
+    return <FileText className={className} />;
   } else if (
     lowerType.includes("jpg") || 
     lowerType.includes("jpeg") || 
@@ -17,9 +17,9 @@ export const getFileIcon = (fileType: string) => {
     lowerType === "image/png" ||
     lowerType === "image/jpg"
   ) {
-    return <Image className="h-10 w-10 text-blue-500" />;
+    return <Image className={className} />;
   } else {
-    return <File className="h-10 w-10 text-gray-500" />;
+    return <File className={className} />;
   }
 };
 

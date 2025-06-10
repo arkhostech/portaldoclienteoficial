@@ -71,87 +71,85 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
 
   return (
     <>
-      <Card className="group overflow-hidden bg-white border border-[#f3f4f6] shadow-sm hover:shadow-md hover:border-[#93c5fd] transition-all duration-300">
-        <CardContent className="p-5">
-          <div className="flex items-start space-x-4">
-            <div className="p-3 bg-[#dbeafe] rounded-lg group-hover:bg-[#93c5fd] transition-colors duration-300">
-              {getFileIcon(document.type)}
+      <Card className="group relative overflow-hidden bg-[#053D38] border-0 shadow-lg hover:shadow-xl rounded-2xl transition-all duration-300 hover:-translate-y-1 h-80 flex flex-col">
+        <CardContent className="p-6 flex flex-col h-full text-white">
+          {/* Icon Section - Top Center Large */}
+          <div className="flex justify-center items-center flex-1 mb-4">
+            <div className="p-6 bg-white/10 backdrop-blur-sm rounded-2xl group-hover:bg-white/20 transition-all duration-300 shadow-lg">
+              {getFileIcon(document.type, "text-white h-16 w-16")}
             </div>
-            
-            <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-semibold text-[#000000] truncate mb-2 group-hover:text-[#1e3a8a] transition-colors duration-300">
+          </div>
+          
+          {/* Bottom Section - Document Info and Actions */}
+          <div className="mt-auto">
+            {/* Document Name */}
+            <div className="text-center mb-4">
+              <h4 className="text-sm font-bold text-white line-clamp-2 leading-tight mb-2">
                 {document.name}
               </h4>
-              
-              <div className="flex items-center space-x-2 mb-3">
+              <p className="text-xs text-white/70 font-medium">{document.category}</p>
+            </div>
+            
+            {/* Signature Badge if needed */}
+            {document.needsSignature && (
+              <div className="flex justify-center mb-3">
                 <Badge 
-                  variant="outline" 
-                  className="text-xs border-[#e5e7eb] text-[#6b7280] bg-[#f3f4f6] hover:bg-[#dbeafe] hover:text-[#1e3a8a] hover:border-[#93c5fd] transition-colors duration-200"
+                  variant="outline"
+                  className={`text-xs font-medium ${
+                    document.signed 
+                      ? "bg-emerald-500/20 text-emerald-100 border-emerald-300/30" 
+                      : "bg-red-500/20 text-red-100 border-red-300/30"
+                  } backdrop-blur-sm`}
                 >
-                  {document.category}
+                  {document.signed ? "✓ Assinado" : "⚠ Requer Assinatura"}
                 </Badge>
-                
-                {document.needsSignature && (
-                  <Badge 
-                    variant={document.signed ? "outline" : "destructive"} 
-                    className={`text-xs ${
-                      document.signed 
-                        ? "border-[#10b981] text-[#10b981] bg-[#f0fdf4]" 
-                        : "border-[#ef4444] text-[#ef4444] bg-[#fef2f2]"
-                    }`}
-                  >
-                    {document.signed ? "Assinado" : "Requer Assinatura"}
-                  </Badge>
-                )}
               </div>
+            )}
+
+            {/* Date and Size info */}
+            <div className="flex justify-center items-center text-xs text-white/70 mb-3">
+              <span>{formatDate(document.uploadDate)} • {document.size}</span>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex flex-col space-y-2">
+              {document.needsSignature && !document.signed && (
+                <Button 
+                  size="sm" 
+                  className="w-full text-xs py-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition-all duration-200 border-white/30 font-semibold"
+                  variant="outline"
+                >
+                  ✍️ Assinar
+                </Button>
+              )}
               
-              <div className="flex justify-between items-center text-xs text-[#6b7280] mb-4">
-                <span>{formatDate(document.uploadDate)}</span>
-                <span className="font-medium">{document.size}</span>
-              </div>
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 text-xs py-2 bg-[#F26800] hover:bg-[#e05f00] text-white border-0 transition-all duration-200 font-semibold" 
+                  onClick={handleDownload}
+                  disabled={isLoading || !document.filePath}
+                >
+                  <Download className="h-3 w-3 mr-1" />
+                  Baixar
+                </Button>
 
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-[#6b7280]">
-                  Enviado por: <span className="font-medium text-[#000000]">{document.uploadedBy}</span>
-                </span>
-                
-                <div className="flex space-x-2">
-                  {document.needsSignature && !document.signed && (
-                    <Button 
-                      size="sm" 
-                      className="text-xs py-1.5 px-3 h-auto bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow-sm hover:shadow-md transition-all duration-200"
-                    >
-                      Assinar
-                    </Button>
-                  )}
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs py-1.5 px-3 h-auto border-[#e5e7eb] text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#000000] hover:border-[#93c5fd] transition-all duration-200" 
-                    onClick={handleDownload}
-                    disabled={isLoading || !document.filePath}
-                  >
-                    <Download className="h-3 w-3 mr-1" />
-                    Download
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className={`text-xs py-1.5 px-3 h-auto transition-all duration-200 ${
-                      canPreview && !isLoading && document.filePath
-                        ? "border-[#e5e7eb] text-[#6b7280] hover:bg-[#dbeafe] hover:text-[#1e3a8a] hover:border-[#3b82f6]"
-                        : "border-[#f3f4f6] text-[#9ca3af] cursor-not-allowed"
-                    }`}
-                    onClick={canPreview ? handlePreview : undefined}
-                    disabled={!canPreview || isLoading || !document.filePath}
-                    title={!canPreview ? "Visualização não disponível para este tipo de arquivo" : ""}
-                  >
-                    <Eye className="h-3 w-3 mr-1" />
-                    Visualizar
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className={`flex-1 text-xs py-2 transition-all duration-200 font-semibold ${
+                    canPreview && !isLoading && document.filePath
+                      ? "bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm"
+                      : "bg-white/10 border-white/20 text-white/50 cursor-not-allowed"
+                  }`}
+                  onClick={canPreview ? handlePreview : undefined}
+                  disabled={!canPreview || isLoading || !document.filePath}
+                  title={!canPreview ? "Visualização não disponível para este tipo de arquivo" : ""}
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  Ver
+                </Button>
               </div>
             </div>
           </div>

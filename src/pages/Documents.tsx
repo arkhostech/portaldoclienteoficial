@@ -144,15 +144,15 @@ const Documents = () => {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between gap-4">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold tracking-tight text-[#000000]">Documentos</h1>
-            <p className="text-[#6b7280]">
+            <h1 className="text-3xl font-bold tracking-tight text-[#14140F]">Documentos</h1>
+            <p className="text-[#34675C] mt-1">
               Gerencie e visualize seus documentos.
             </p>
           </div>
           <div>
             <Button 
               onClick={() => setOpenUploadDialog(true)}
-              className="w-full md:w-auto bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow-sm hover:shadow-md transition-all duration-200"
+              className="w-full md:w-auto bg-[#053D38] hover:bg-[#34675C] text-white shadow-sm hover:shadow-md transition-all duration-200"
             >
               <Upload className="mr-2 h-4 w-4" />
               Enviar Documentos
@@ -162,44 +162,44 @@ const Documents = () => {
 
         {/* Stats Cards */}
         {!isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-white border border-[#f3f4f6] shadow-sm hover:shadow-md hover:border-[#93c5fd] transition-all duration-300">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-[#dbeafe] rounded-lg">
-                    <FileText className="h-5 w-5 text-[#3b82f6]" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-white border-l-4 border-[#053D38] rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-5">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-[#053D38] rounded-lg">
+                    <FileText className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-[#000000]">{totalDocuments}</p>
-                    <p className="text-sm text-[#6b7280]">Total de Documentos</p>
+                    <p className="text-3xl font-bold text-[#14140F]">{totalDocuments}</p>
+                    <p className="text-sm font-medium text-[#34675C]">Total de Documentos</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-white border border-[#f3f4f6] shadow-sm hover:shadow-md hover:border-[#93c5fd] transition-all duration-300">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-[#dbeafe] rounded-lg">
-                    <FolderOpen className="h-5 w-5 text-[#3b82f6]" />
+            <Card className="bg-white border-l-4 border-[#34675C] rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-5">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-[#34675C] rounded-lg">
+                    <FolderOpen className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-[#000000]">{documentsFromAdmin}</p>
-                    <p className="text-sm text-[#6b7280]">Do Escritório</p>
+                    <p className="text-3xl font-bold text-[#14140F]">{documentsFromAdmin}</p>
+                    <p className="text-sm font-medium text-[#34675C]">Do Escritório</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-white border border-[#f3f4f6] shadow-sm hover:shadow-md hover:border-[#93c5fd] transition-all duration-300">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-[#dbeafe] rounded-lg">
-                    <Upload className="h-5 w-5 text-[#3b82f6]" />
+            <Card className="bg-white border-l-4 border-[#A3CCAB] rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-5">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-[#A3CCAB] rounded-lg">
+                    <Upload className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-[#000000]">{documentsFromClient}</p>
-                    <p className="text-sm text-[#6b7280]">Seus Envios</p>
+                    <p className="text-3xl font-bold text-[#14140F]">{documentsFromClient}</p>
+                    <p className="text-sm font-medium text-[#34675C]">Seus Envios</p>
                   </div>
                 </div>
               </CardContent>
@@ -208,26 +208,26 @@ const Documents = () => {
         )}
 
         {/* Main Content */}
-        <Card className="bg-white border border-[#f3f4f6] shadow-sm">
-          <CardHeader>
+        <Card className="bg-white border border-[#e5e7eb] shadow-sm rounded-xl">
+          <CardHeader className="pb-4">
             <div className="flex flex-col md:flex-row justify-between gap-4">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#6b7280]" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#34675C]" />
                 <Input 
                   placeholder="Buscar documentos..." 
-                  className="pl-10 border-[#e5e7eb] focus:border-[#3b82f6] focus:ring-[#3b82f6] transition-colors"
+                  className="pl-10 border-[#e5e7eb] focus:border-[#053D38] focus:ring-[#053D38] rounded-lg transition-colors"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5">
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[1, 2, 3].map((i) => (
-                  <Card key={i} className="border border-[#f3f4f6]">
-                    <CardContent className="p-4 space-y-3">
+                  <Card key={i} className="border border-[#e5e7eb] rounded-xl">
+                    <CardContent className="p-5 space-y-3">
                       <Skeleton className="h-6 w-3/4 mb-2" />
                       <Skeleton className="h-4 w-1/2" />
                       <Skeleton className="h-4 w-1/4" />
@@ -237,11 +237,11 @@ const Documents = () => {
               </div>
             ) : documents.length > 0 ? (
               <Tabs defaultValue="all" className="w-full">
-                <div className="flex items-center justify-between mb-4">
-                  <TabsList className="bg-[#f3f4f6] border border-[#e5e7eb]">
+                <div className="flex items-center justify-between mb-6">
+                  <TabsList className="bg-transparent border border-[#e5e7eb] rounded-lg p-1">
                     <TabsTrigger 
                       value="all" 
-                      className="data-[state=active]:bg-white data-[state=active]:text-[#1e3a8a] data-[state=active]:border-[#3b82f6] text-[#6b7280]"
+                      className="data-[state=active]:bg-[#053D38] data-[state=active]:text-white text-[#34675C] hover:bg-[#A3CCAB] hover:bg-opacity-20 rounded-md transition-all duration-200"
                     >
                       Todos ({filteredDocuments.length})
                     </TabsTrigger>
@@ -249,7 +249,7 @@ const Documents = () => {
                       <TabsTrigger 
                         key={category} 
                         value={category}
-                        className="data-[state=active]:bg-white data-[state=active]:text-[#1e3a8a] data-[state=active]:border-[#3b82f6] text-[#6b7280]"
+                        className="data-[state=active]:bg-[#053D38] data-[state=active]:text-white text-[#34675C] hover:bg-[#A3CCAB] hover:bg-opacity-20 rounded-md transition-all duration-200"
                       >
                         {category} ({filteredDocuments.filter(doc => doc.category === category).length})
                       </TabsTrigger>
@@ -258,7 +258,7 @@ const Documents = () => {
                 </div>
                 
                 <TabsContent value="all" className="mt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredDocuments.map(doc => (
                       <DocumentCard key={doc.id} document={doc} />
                     ))}
@@ -267,7 +267,7 @@ const Documents = () => {
                 
                 {categories.map(category => (
                   <TabsContent key={category} value={category} className="mt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filteredDocuments
                         .filter(doc => doc.category === category)
                         .map(doc => (
@@ -280,13 +280,13 @@ const Documents = () => {
             ) : (
               <div className="py-12 text-center">
                 <div className="mx-auto w-16 h-16 bg-[#f3f4f6] rounded-full flex items-center justify-center mb-4">
-                  <FilePlus className="h-8 w-8 text-[#6b7280]" />
+                  <FilePlus className="h-8 w-8 text-[#34675C]" />
                 </div>
-                <h3 className="text-lg font-medium text-[#000000] mb-2">Nenhum documento disponível</h3>
-                <p className="text-[#6b7280] mb-4">Não existem documentos associados a sua conta.</p>
+                <h3 className="text-lg font-medium text-[#14140F] mb-2">Nenhum documento disponível</h3>
+                <p className="text-[#34675C] mb-4">Não existem documentos associados a sua conta.</p>
                 <Button 
                   onClick={() => setOpenUploadDialog(true)}
-                  className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white"
+                  className="bg-[#053D38] hover:bg-[#34675C] text-white"
                 >
                   <Upload className="mr-2 h-4 w-4" />
                   Enviar Primeiro Documento

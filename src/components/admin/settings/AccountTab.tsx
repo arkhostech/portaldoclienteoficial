@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -7,6 +6,7 @@ import { toast } from "sonner";
 import { Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -94,119 +94,225 @@ const AccountTab = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h3 className="text-xl font-semibold mb-4">Alterar Email</h3>
-        <Form {...emailForm}>
-          <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-4">
-            <FormField
-              control={emailForm.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <FormControl>
-                      <Input 
-                        placeholder="seu@email.com" 
-                        className="pl-10" 
-                        {...field} 
+    <div className="space-y-6">
+      {/* Card para Alterar Email */}
+      <Card style={{ 
+        borderRadius: '12px',
+        backgroundColor: 'white',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+      }}>
+        <CardContent style={{ padding: '24px' }}>
+          <h3 
+            className="text-xl font-semibold mb-6" 
+            style={{ color: '#14140F' }}
+          >
+            Alterar Email
+          </h3>
+          <Form {...emailForm}>
+            <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-4">
+              <FormField
+                control={emailForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem style={{ marginBottom: '16px' }}>
+                    <FormLabel 
+                      style={{ 
+                        color: '#14140F', 
+                        fontWeight: 600 
+                      }}
+                    >
+                      Email
+                    </FormLabel>
+                    <div className="relative">
+                      <Mail 
+                        className="absolute left-3 top-3 h-4 w-4" 
+                        style={{ color: '#34675C' }}
                       />
-                    </FormControl>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button 
-              type="submit" 
-              className="w-full sm:w-auto"
-              disabled={isEmailUpdating}
-            >
-              {isEmailUpdating ? "Salvando..." : "Atualizar Email"}
-            </Button>
-          </form>
-        </Form>
-      </div>
+                      <FormControl>
+                        <Input 
+                          placeholder="seu@email.com" 
+                          className="pl-10 focus:border-[#053D38] max-w-md" 
+                          style={{
+                            borderColor: '#e5e7eb',
+                          }}
+                          {...field} 
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button 
+                type="submit" 
+                disabled={isEmailUpdating}
+                style={{
+                  backgroundColor: '#053D38',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  fontWeight: 500,
+                  border: 'none',
+                  transition: 'background-color 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  (e.target as HTMLElement).style.backgroundColor = '#042d2a';
+                }}
+                onMouseLeave={(e) => {
+                  (e.target as HTMLElement).style.backgroundColor = '#053D38';
+                }}
+                className="hover:opacity-90"
+              >
+                {isEmailUpdating ? "Salvando..." : "Atualizar Email"}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
 
-      <div>
-        <h3 className="text-xl font-semibold mb-4">Alterar Senha</h3>
-        <Form {...passwordForm}>
-          <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-            <FormField
-              control={passwordForm.control}
-              name="currentPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Senha Atual</FormLabel>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Senha atual" 
-                        className="pl-10" 
-                        {...field} 
+      {/* Card para Alterar Senha */}
+      <Card style={{ 
+        borderRadius: '12px',
+        backgroundColor: 'white',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+      }}>
+        <CardContent style={{ padding: '24px' }}>
+          <h3 
+            className="text-xl font-semibold mb-6" 
+            style={{ color: '#14140F' }}
+          >
+            Alterar Senha
+          </h3>
+          <Form {...passwordForm}>
+            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
+              <FormField
+                control={passwordForm.control}
+                name="currentPassword"
+                render={({ field }) => (
+                  <FormItem style={{ marginBottom: '16px' }}>
+                    <FormLabel 
+                      style={{ 
+                        color: '#14140F', 
+                        fontWeight: 600 
+                      }}
+                    >
+                      Senha Atual
+                    </FormLabel>
+                    <div className="relative">
+                      <Lock 
+                        className="absolute left-3 top-3 h-4 w-4" 
+                        style={{ color: '#34675C' }}
                       />
-                    </FormControl>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={passwordForm.control}
-              name="newPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nova Senha</FormLabel>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Nova senha" 
-                        className="pl-10" 
-                        {...field} 
+                      <FormControl>
+                        <Input 
+                          type="password" 
+                          placeholder="Senha atual" 
+                          className="pl-10 focus:border-[#053D38] max-w-md" 
+                          style={{
+                            borderColor: '#e5e7eb',
+                          }}
+                          {...field} 
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={passwordForm.control}
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem style={{ marginBottom: '16px' }}>
+                    <FormLabel 
+                      style={{ 
+                        color: '#14140F', 
+                        fontWeight: 600 
+                      }}
+                    >
+                      Nova Senha
+                    </FormLabel>
+                    <div className="relative">
+                      <Lock 
+                        className="absolute left-3 top-3 h-4 w-4" 
+                        style={{ color: '#34675C' }}
                       />
-                    </FormControl>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={passwordForm.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirmar Nova Senha</FormLabel>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Confirmar nova senha" 
-                        className="pl-10" 
-                        {...field} 
+                      <FormControl>
+                        <Input 
+                          type="password" 
+                          placeholder="Nova senha" 
+                          className="pl-10 focus:border-[#053D38] max-w-md" 
+                          style={{
+                            borderColor: '#e5e7eb',
+                          }}
+                          {...field} 
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={passwordForm.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem style={{ marginBottom: '16px' }}>
+                    <FormLabel 
+                      style={{ 
+                        color: '#14140F', 
+                        fontWeight: 600 
+                      }}
+                    >
+                      Confirmar Nova Senha
+                    </FormLabel>
+                    <div className="relative">
+                      <Lock 
+                        className="absolute left-3 top-3 h-4 w-4" 
+                        style={{ color: '#34675C' }}
                       />
-                    </FormControl>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button 
-              type="submit" 
-              className="w-full sm:w-auto"
-              disabled={isPasswordUpdating}
-            >
-              {isPasswordUpdating ? "Salvando..." : "Alterar Senha"}
-            </Button>
-          </form>
-        </Form>
-      </div>
+                      <FormControl>
+                        <Input 
+                          type="password" 
+                          placeholder="Confirmar nova senha" 
+                          className="pl-10 focus:border-[#053D38] max-w-md" 
+                          style={{
+                            borderColor: '#e5e7eb',
+                          }}
+                          {...field} 
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button 
+                type="submit" 
+                disabled={isPasswordUpdating}
+                style={{
+                  backgroundColor: '#34675C',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  fontWeight: 500,
+                  border: 'none',
+                  transition: 'background-color 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  (e.target as HTMLElement).style.backgroundColor = '#2a5249';
+                }}
+                onMouseLeave={(e) => {
+                  (e.target as HTMLElement).style.backgroundColor = '#34675C';
+                }}
+                className="hover:opacity-90"
+              >
+                {isPasswordUpdating ? "Salvando..." : "Alterar Senha"}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

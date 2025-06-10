@@ -38,41 +38,55 @@ const StageColumn = ({
     }
   };
 
-  const getBadgeColor = () => {
+  const getHeaderStyle = () => {
     switch (type) {
       case 'documentacao':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
+        return { backgroundColor: '#053D38', color: 'white' };
       case 'em_andamento':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+        return { backgroundColor: '#F26800', color: 'white' };
       case 'concluido':
-        return 'bg-green-100 text-green-800 border-green-300';
+        return { backgroundColor: '#A3CCAB', color: '#14140F' };
       default:
-        return '';
+        return {};
     }
   };
 
-  const getBackgroundColor = () => {
+  const getBadgeStyle = () => {
     switch (type) {
       case 'documentacao':
-        return 'bg-blue-25'; // Soft blue from Tailwind config
+        return { backgroundColor: '#34675C', color: 'white' };
       case 'em_andamento':
-        return 'bg-amber-25'; // Soft yellow from Tailwind config
+        return { backgroundColor: '#14140F', color: 'white' };
       case 'concluido':
-        return 'bg-green-25'; // Soft green from Tailwind config
+        return { backgroundColor: '#34675C', color: 'white' };
       default:
-        return '';
+        return {};
+    }
+  };
+
+  const getBorderStyle = () => {
+    switch (type) {
+      case 'documentacao':
+        return { borderLeft: '4px solid #053D38' };
+      case 'em_andamento':
+        return { borderLeft: '4px solid #F26800' };
+      case 'concluido':
+        return { borderLeft: '4px solid #A3CCAB' };
+      default:
+        return {};
     }
   };
 
   return (
     <Card 
-      className={`h-full ${isOver ? 'bg-muted/30' : ''} ${getBackgroundColor()}`}
+      className={`h-full ${isOver ? 'bg-muted/30' : ''}`}
+      style={getBorderStyle()}
       ref={drop}
     >
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2" style={getHeaderStyle()}>
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">{title}</CardTitle>
-          <Badge className={getBadgeColor()}>
+          <Badge className="border-0" style={getBadgeStyle()}>
             <div className="flex items-center">
               {getIcon()}
               <span>{clients.length}</span>

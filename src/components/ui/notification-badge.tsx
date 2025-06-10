@@ -18,10 +18,11 @@ export const NotificationBadge = ({ show, className, size = 'sm' }: Notification
   return (
     <div 
       className={cn(
-        "absolute rounded-full bg-green-500 animate-pulse",
+        "absolute rounded-full animate-pulse",
         sizeClasses[size],
         className
       )}
+      style={{ backgroundColor: '#F26800' }}
       aria-label="Nova mensagem"
     />
   );
