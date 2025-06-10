@@ -66,8 +66,8 @@ const SidebarDesktop = ({
                           {!isCollapsed && <span className="text-sm font-medium ml-3">{item.title}</span>}
                           <NotificationBadge 
                             show={!!item.hasNotification} 
-                            className={`${isCollapsed ? 'top-1 right-1' : 'top-2 right-2'}`}
-                            size="sm"
+                            className={`${isCollapsed ? 'top-1 right-1' : 'top-2.5 right-3'}`}
+                            size="md"
                           />
                         </Link>
                       </TooltipTrigger>

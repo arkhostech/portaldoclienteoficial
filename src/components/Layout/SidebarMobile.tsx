@@ -66,8 +66,8 @@ const SidebarMobile = ({
                     <span className="text-sm font-medium ml-3">{item.title}</span>
                     <NotificationBadge 
                       show={!!item.hasNotification} 
-                      className="top-2 right-2"
-                      size="sm"
+                      className="top-2.5 right-3"
+                      size="md"
                     />
                   </Link>
                 </li>

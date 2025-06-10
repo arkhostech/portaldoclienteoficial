@@ -17,57 +17,8 @@ const MainLayout = ({ children, title }: MainLayoutProps) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [redirectAttempted, setRedirectAttempted] = useState(false);
-  
-  const isAdminPath = (path: string): boolean => {
-    return path === '/admin-login' || path.startsWith('/admin');
-  };
-
-  const isClientPath = (path: string): boolean => {
-    return path === '/' || path === '/dashboard' || 
-           path === '/documents' || path === '/payments' || 
-           path === '/knowledge' || path === '/messages';
-  };
-  
-
-  
   useEffect(() => {
     window.scrollTo(0, 0);
-    
-    if (!loading && !redirectAttempted) {
-      if (!user) {
-        console.log("No authenticated user detected, redirecting to login");
-        if (isAdminPath(location.pathname)) {
-          setRedirectAttempted(true);
-          navigate('/admin-login');
-        } else {
-          setRedirectAttempted(true);
-          navigate('/');
-        }
-        return;
-      }
-      
-      const currentPath = location.pathname;
-      
-      if (isAdmin && isClientPath(currentPath) && currentPath !== '/' && !redirectAttempted) {
-        console.log("Admin trying to access client section, redirecting to admin dashboard");
-        setRedirectAttempted(true);
-        navigate('/admin');
-        return;
-      }
-      
-      if (!isAdmin && isAdminPath(currentPath) && currentPath !== '/admin-login' && !redirectAttempted) {
-        console.log("Client trying to access admin section, redirecting to client dashboard");
-        setRedirectAttempted(true);
-        navigate('/dashboard');
-        return;
-      }
-    }
-  }, [user, loading, navigate, isAdmin, location.pathname, redirectAttempted]);
-
-  // Reset the redirect flag when location changes
-  useEffect(() => {
-    setRedirectAttempted(false);
   }, [location.pathname]);
 
   if (loading) {

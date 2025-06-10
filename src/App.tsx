@@ -6,7 +6,7 @@ import { ToastProvider } from "@/hooks/toast/toast-context";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { LogoutHandler } from "@/components/LogoutHandler";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "@/pages/Index";
+import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Documents from "@/pages/Documents";
 import Messages from "@/pages/Messages";
@@ -16,6 +16,7 @@ import AdminMessages from "@/pages/admin/Messages";
 import AdminDocuments from "@/pages/admin/Documents";
 import AdminClientDocuments from "@/pages/admin/ClientDocuments";
 import AdminClientStages from "@/pages/admin/ClientStages";
+import AdminSettings from "@/pages/admin/Settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,8 +38,10 @@ function App() {
                 <NotificationProvider>
                   <LogoutHandler />
                   <Routes>
+                  {/* Unified Login Route */}
+                  <Route path="/" element={<Login />} />
+                  
                   {/* Client Routes */}
-                  <Route path="/" element={<Index />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/documents" element={<Documents />} />
                   <Route path="/messages" element={<Messages />} />
@@ -51,9 +54,13 @@ function App() {
                   <Route path="/admin/documents" element={<AdminDocuments />} />
                   <Route path="/admin/documents/:clientId" element={<AdminClientDocuments />} />
                   <Route path="/admin/client-stages" element={<AdminClientStages />} />
+                  <Route path="/admin/settings" element={<AdminSettings />} />
                   
-                  {/* Catch all - redirect to appropriate dashboard */}
-                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  {/* Legacy routes - redirect to main login */}
+                  <Route path="/admin-login" element={<Navigate to="/" replace />} />
+                  
+                  {/* Catch all - redirect to login */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </NotificationProvider>
               </CentralizedRealtimeProvider>

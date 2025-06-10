@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase, checkUserRoleWithCache, clearUserRoleCache } from "@/integrations/supabase/client";
@@ -14,7 +13,6 @@ export function useAuthProvider(): AuthContextType {
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [sessionChecked, setSessionChecked] = useState(false);
   const redirectInProgress = useRef(false);
 
   // Memoized function to check user role - avoids unnecessary database queries
@@ -56,12 +54,8 @@ export function useAuthProvider(): AuthContextType {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // Redirect based on current path
-      if (isAdminPath(location.pathname)) {
-        navigate("/admin-login");
-      } else {
-        navigate("/");
-      }
+      // Always redirect to main login
+      navigate("/");
       
       toast.success("Desconectado com sucesso!");
     } catch (error: any) {
@@ -81,7 +75,7 @@ export function useAuthProvider(): AuthContextType {
     // Reset the flag after a delay to allow navigation to complete
     setTimeout(() => {
       redirectInProgress.current = false;
-    }, 1000);
+    }, 100);
   }, [navigate]);
 
   // Initialize auth state
@@ -89,7 +83,7 @@ export function useAuthProvider(): AuthContextType {
     console.log("AuthProvider: Initializing");
     let mounted = true;
     
-    // Set up auth state listener FIRST
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         console.log("Auth state changed:", event, newSession?.user?.id);
@@ -100,42 +94,26 @@ export function useAuthProvider(): AuthContextType {
           setSession(newSession);
           setUser(newSession.user);
           
-          // Use setTimeout to avoid potential deadlocks
-          setTimeout(async () => {
-            if (mounted && newSession.user) {
-              const isUserAdmin = await checkUserRole(newSession.user.id);
-              console.log("User is admin:", isUserAdmin);
-              setIsAdmin(isUserAdmin);
-              
-              // Only handle redirection for new sign-ins, not for refreshed sessions
-              if (event === 'SIGNED_IN') {
-                const currentPath = window.location.pathname;
-                
-                if (currentPath === '/admin-login') {
-                  if (!isUserAdmin) {
-                    toast.error("Apenas administradores podem acessar este portal.");
-                    safeNavigate('/');
-                    return;
-                  } else {
-                    safeNavigate("/admin");
-                    return;
-                  }
-                } 
-                
-                if (currentPath === '/') {
-                  if (isUserAdmin) {
-                    toast.error("Administradores devem acessar pelo portal administrativo.");
-                    safeNavigate('/admin-login');
-                    return;
-                  } else {
-                    safeNavigate("/dashboard");
-                    return;
-                  }
-                }
+          // Check user role and handle redirection
+          const isUserAdmin = await checkUserRole(newSession.user.id);
+          console.log("User is admin:", isUserAdmin);
+          setIsAdmin(isUserAdmin);
+          
+          // Handle redirection after successful sign-in
+          if (event === 'SIGNED_IN') {
+            const currentPath = window.location.pathname;
+            
+            // If on login page, redirect to appropriate dashboard
+            if (currentPath === '/') {
+              if (isUserAdmin) {
+                safeNavigate("/admin");
+              } else {
+                safeNavigate("/dashboard");
               }
-              setLoading(false);
             }
-          }, 0);
+          }
+          
+          setLoading(false);
         } else {
           setSession(null);
           setUser(null);
@@ -145,88 +123,66 @@ export function useAuthProvider(): AuthContextType {
       }
     );
 
-    // THEN check for existing session (only once)
-    if (!sessionChecked) {
-      const checkSession = async () => {
-        try {
-          console.log("Checking existing session");
-          const { data: { session } } = await supabase.auth.getSession();
+    // Check for existing session
+    const checkSession = async () => {
+      try {
+        console.log("Checking existing session");
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        if (session) {
+          console.log("Found existing session for user:", session.user.id);
+          setSession(session);
+          setUser(session.user);
           
-          if (!mounted) return;
+          const isUserAdmin = await checkUserRole(session.user.id);
+          console.log("User is admin (from existing session):", isUserAdmin);
+          setIsAdmin(isUserAdmin);
           
-          if (session) {
-            console.log("Found existing session for user:", session.user.id);
-            setSession(session);
-            setUser(session.user);
-            
-            const isUserAdmin = await checkUserRole(session.user.id);
-            console.log("User is admin (from existing session):", isUserAdmin);
-            
-            if (mounted) {
-              setIsAdmin(isUserAdmin);
-              setLoading(false);
-              
-              // Only redirect in specific cases to avoid loops
-              const currentPath = window.location.pathname;
-              
-              // Only redirect on login pages or if trying to access wrong section
-              if (currentPath === '/admin-login') {
-                if (isUserAdmin) {
-                  safeNavigate('/admin');
-                  return;
-                }
-                // If not admin, let them see the login page
-              } else if (currentPath === '/') {
-                if (!isUserAdmin && session) {
-                  safeNavigate('/dashboard');
-                  return;
-                }
-                // If admin, let them see the client login page
-              } else if (isAdminPath(currentPath) && !isUserAdmin) {
-                // Only redirect if not on admin login page
-                if (currentPath !== '/admin-login') {
-                  toast.error("Apenas administradores podem acessar este portal.");
-                  safeNavigate('/');
-                  return;
-                }
-              } else if (isClientPath(currentPath) && isUserAdmin && currentPath !== '/') {
-                toast.error("Administradores devem acessar pelo portal administrativo.");
-                safeNavigate('/admin-login');
-                return;
-              }
+          const currentPath = window.location.pathname;
+          
+          // Redirect based on user role and current path
+          if (currentPath === '/') {
+            // On login page with valid session, redirect to appropriate dashboard
+            if (isUserAdmin) {
+              safeNavigate('/admin');
+            } else {
+              safeNavigate('/dashboard');
             }
-          } else {
-            // Handle not logged in - redirect to appropriate login page if trying to access protected path
-            const currentPath = window.location.pathname;
-            
-            if (isAdminPath(currentPath) && currentPath !== '/admin-login') {
-              safeNavigate('/admin-login');
-              return;
-            }
-            
-            if (isClientPath(currentPath) && currentPath !== '/') {
-              safeNavigate('/');
-              return;
-            }
-            
-            setLoading(false);
+          } else if (isAdminPath(currentPath) && !isUserAdmin) {
+            // Non-admin trying to access admin area
+            toast.error("Apenas administradores podem acessar este portal.");
+            safeNavigate('/');
+          } else if (isClientPath(currentPath) && isUserAdmin) {
+            // Admin trying to access client area
+            toast.error("Administradores devem acessar pelo portal administrativo.");
+            safeNavigate('/admin');
           }
-        } catch (error) {
-          console.error("Error getting session:", error);
-          setLoading(false);
+        } else {
+          // No session, redirect protected paths to login
+          const currentPath = window.location.pathname;
+          
+          if (isAdminPath(currentPath) || isClientPath(currentPath)) {
+            safeNavigate('/');
+          }
         }
-        setSessionChecked(true);
-      };
+        
+        setLoading(false);
+      } catch (error) {
+        console.error("Error getting session:", error);
+        setLoading(false);
+      }
+    };
 
-      checkSession();
-    }
+    checkSession();
 
     return () => {
       console.log("AuthProvider: Cleaning up");
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, location.pathname, sessionChecked, checkUserRole, safeNavigate]);
+  }, [checkUserRole, safeNavigate]);
 
   const value = {
     user,
