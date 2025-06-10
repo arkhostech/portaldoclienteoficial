@@ -126,15 +126,24 @@ export default function Documents() {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex flex-col md:flex-row justify-between gap-4">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold tracking-tight">Documentos</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#14140F' }}>Documentos</h1>
+            <p style={{ color: '#34675C' }}>
               Gerencie os documentos dos clientes.
             </p>
           </div>
           <div>
             <Button 
               onClick={() => setOpenUploadDialog(true)}
-              className="w-full md:w-auto"
+              className="w-full md:w-auto text-white"
+              style={{
+                backgroundColor: '#053D38'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#34675C';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#053D38';
+              }}
             >
               <FilePlus className="mr-2 h-4 w-4" />
               Adicionar Documento
@@ -146,10 +155,22 @@ export default function Documents() {
           <CardHeader>
             <div className="flex flex-col md:flex-row justify-between gap-4">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: '#34675C' }} />
                 <Input 
                   placeholder="Buscar por cliente ou documento..." 
-                  className="pl-10"
+                  className="pl-10 border-gray-200"
+                  style={{ 
+                    borderColor: '#e5e7eb'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#053D38';
+                    e.target.style.outline = 'none';
+                    e.target.style.boxShadow = '0 0 0 1px #053D38';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = 'none';
+                  }}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />

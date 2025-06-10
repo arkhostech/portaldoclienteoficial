@@ -81,21 +81,35 @@ const AdminDashboardSummary = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Total Clients */}
-      <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-blue-50 to-indigo-50">
-        <CardContent className="p-6">
+      <Card 
+        className="group transition-all duration-300 bg-white"
+        style={{ 
+          borderRadius: '12px',
+          borderLeft: '4px solid #053D38',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          border: 'none'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+        }}
+      >
+        <CardContent style={{ padding: '24px' }}>
           <div className="flex items-start justify-between">
-            <div className="space-y-3 flex-1">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
-                  <Users className="h-5 w-5 text-blue-600" />
+            <div className="space-y-4 flex-1">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <Users className="h-6 w-6" style={{ color: '#053D38' }} />
                 </div>
-                <p className="text-sm font-semibold text-blue-900/70 uppercase tracking-wide">
+                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
                   Total de Clientes
                 </p>
               </div>
               
               <div className="space-y-2">
-                <h3 className="text-4xl font-bold text-gray-900 tracking-tight">
+                <h3 className="text-4xl font-bold tracking-tight" style={{ color: '#14140F' }}>
                   {isLoading ? (
                     <div className="h-10 w-16 bg-gray-200 rounded-md animate-pulse"></div>
                   ) : (
@@ -104,15 +118,17 @@ const AdminDashboardSummary = () => {
                 </h3>
                 
                 <div className="flex items-center space-x-2">
-                  <div className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    stats.clients.trend === "up"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}>
+                  <div 
+                    className="flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                    style={{ 
+                      backgroundColor: '#A3CCAB',
+                      color: '#14140F'
+                    }}
+                  >
                     {stats.clients.trend === "up" ? (
-                      <TrendingUp className="h-3 w-3 mr-1" />
+                      <TrendingUp className="h-4 w-4 mr-1" />
                     ) : (
-                      <TrendingDown className="h-3 w-3 mr-1" />
+                      <TrendingDown className="h-4 w-4 mr-1" />
                     )}
                     <span>
                       {isLoading ? "..." : `+${stats.clients.growth}`} esta semana
@@ -126,21 +142,35 @@ const AdminDashboardSummary = () => {
       </Card>
 
       {/* Active Processes */}
-      <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-amber-50 to-orange-50">
-        <CardContent className="p-6">
+      <Card 
+        className="group transition-all duration-300 bg-white"
+        style={{ 
+          borderRadius: '12px',
+          borderLeft: '4px solid #053D38',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          border: 'none'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+        }}
+      >
+        <CardContent style={{ padding: '24px' }}>
           <div className="flex items-start justify-between">
-            <div className="space-y-3 flex-1">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 bg-amber-500/10 rounded-lg group-hover:bg-amber-500/20 transition-colors">
-                  <FileText className="h-5 w-5 text-amber-600" />
+            <div className="space-y-4 flex-1">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <FileText className="h-6 w-6" style={{ color: '#34675C' }} />
                 </div>
-                <p className="text-sm font-semibold text-amber-900/70 uppercase tracking-wide">
+                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
                   Processos Ativos
                 </p>
               </div>
               
               <div className="space-y-2">
-                <h3 className="text-4xl font-bold text-gray-900 tracking-tight">
+                <h3 className="text-4xl font-bold tracking-tight" style={{ color: '#14140F' }}>
                   {isLoading ? (
                     <div className="h-10 w-16 bg-gray-200 rounded-md animate-pulse"></div>
                   ) : (
@@ -149,8 +179,14 @@ const AdminDashboardSummary = () => {
                 </h3>
                 
                 <div className="flex items-center space-x-2">
-                  <div className="flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                    <AlertCircle className="h-3 w-3 mr-1" />
+                  <div 
+                    className="flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                    style={{ 
+                      backgroundColor: '#F26800',
+                      color: 'white'
+                    }}
+                  >
+                    <AlertCircle className="h-4 w-4 mr-1" />
                     <span>
                       {isLoading ? "..." : stats.processes.awaiting} aguardando documentação
                     </span>

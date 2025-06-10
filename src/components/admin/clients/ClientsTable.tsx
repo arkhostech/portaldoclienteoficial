@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { 
   Table, 
@@ -57,25 +56,29 @@ const ClientsTable = ({
       case "documentacao":
         return { 
           label: "Documentação", 
-          color: "bg-[#006494] text-white", 
+          color: "rgba(255,255,255,0.8)", 
+          bgColor: "#053D38",
           icon: <FileText className="h-3 w-3 mr-1" /> 
         };
       case "em_andamento":
         return { 
           label: "Em Andamento", 
-          color: "bg-[#F5D547] text-black", 
+          color: "text-white", 
+          bgColor: "#F26800",
           icon: <Clock className="h-3 w-3 mr-1" /> 
         };
       case "concluido":
         return { 
           label: "Concluído", 
-          color: "bg-[#5B8C5A] text-white", 
+          color: "#14140F", 
+          bgColor: "#A3CCAB",
           icon: <CheckCircle className="h-3 w-3 mr-1" /> 
         };
       default:
         return { 
           label: status, 
-          color: "bg-gray-100 text-gray-700", 
+          color: "text-gray-700", 
+          bgColor: "#f3f4f6",
           icon: null 
         };
     }
@@ -100,27 +103,39 @@ const ClientsTable = ({
   return (
     <Table>
       <TableHeader>
-        <TableRow>
-          <TableHead>Nome</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Telefone</TableHead>
-          <TableHead>Tipo de Processo</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Ações</TableHead>
+        <TableRow style={{ backgroundColor: '#f8fafc' }} className="hover:bg-gray-50">
+          <TableHead className="font-semibold text-gray-900">Nome</TableHead>
+          <TableHead className="font-semibold text-gray-900">Email</TableHead>
+          <TableHead className="font-semibold text-gray-900">Telefone</TableHead>
+          <TableHead className="font-semibold text-gray-900">Tipo de Processo</TableHead>
+          <TableHead className="font-semibold text-gray-900">Status</TableHead>
+          <TableHead className="text-right font-semibold text-gray-900">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {filteredClients.map((client) => {
+        {filteredClients.map((client, index) => {
           const statusDetails = getStatusDetails(client.status);
           
           return (
-            <TableRow key={client.id}>
+            <TableRow 
+              key={client.id}
+              className={`
+                ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} 
+                hover:bg-blue-50 transition-colors duration-200
+              `}
+            >
               <TableCell className="font-medium">{client.full_name}</TableCell>
               <TableCell>{client.email}</TableCell>
               <TableCell>{client.phone || "-"}</TableCell>
               <TableCell>{client.process_type || "-"}</TableCell>
               <TableCell>
-                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusDetails.color}`}>
+                <div 
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                  style={{ 
+                    backgroundColor: statusDetails.bgColor,
+                    color: statusDetails.color
+                  }}
+                >
                   {statusDetails.icon}
                   {statusDetails.label}
                 </div>

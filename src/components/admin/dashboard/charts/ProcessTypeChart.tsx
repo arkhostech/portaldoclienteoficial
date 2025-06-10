@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
-import { ChartPie, Palette } from "lucide-react";
+import { Palette } from "lucide-react";
 import { CustomTooltip } from "./CustomTooltip";
 import { ChartLoadingState } from './shared/ChartLoadingState';
 import { ChartEmptyState } from './shared/ChartEmptyState';
-import { ChartContainer } from "./shared/ChartContainer";
 
-const PROCESS_TYPE_COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
+const PROCESS_TYPE_COLORS = ["#053D38", "#34675C", "#A3CCAB", "#F26800", "#14140F"];
 
 interface ProcessTypeChartProps {
   data: { name: string; value: number; total: number }[];
@@ -22,7 +21,19 @@ export const ProcessTypeChart = ({ data, isLoading }: ProcessTypeChartProps) => 
       variant="outline"
       size="sm"
       onClick={() => setShowLegend(!showLegend)}
-      className="flex items-center gap-2"
+      className="flex items-center gap-2 border-none transition-all duration-200 ease-in-out hover:text-white"
+      style={{
+        backgroundColor: '#A3CCAB',
+        color: '#14140F'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = '#34675C';
+        e.currentTarget.style.color = '#ffffff';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = '#A3CCAB';
+        e.currentTarget.style.color = '#14140F';
+      }}
     >
       <Palette className="h-4 w-4" />
       {showLegend ? 'Ocultar Legenda' : 'Ver Legenda'}
@@ -30,11 +41,13 @@ export const ProcessTypeChart = ({ data, isLoading }: ProcessTypeChartProps) => 
   );
 
   return (
-    <ChartContainer 
-      title="Distribuição por Tipo de Processo"
-      icon={ChartPie}
-      action={legendToggleButton}
-    >
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h5 className="text-base font-medium" style={{ color: '#14140F' }}>
+          Distribuição por Tipo de Processo
+        </h5>
+        {legendToggleButton}
+      </div>
       <div className="h-64">
         {isLoading ? (
           <ChartLoadingState />
@@ -79,6 +92,6 @@ export const ProcessTypeChart = ({ data, isLoading }: ProcessTypeChartProps) => 
           </div>
         )}
       </div>
-    </ChartContainer>
+    </div>
   );
 };

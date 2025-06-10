@@ -34,14 +34,20 @@ const ClientDocuments = ({
     >
       <CardContent className="p-0">
         {/* Folder Icon Section */}
-        <div className={`p-6 rounded-t-lg flex flex-col items-center justify-center relative min-h-[140px] ${
-          isEmpty 
-            ? "bg-gradient-to-br from-gray-400 to-gray-500" 
-            : "bg-gradient-to-br from-blue-500 to-blue-600"
-        }`}>
+        <div 
+          className="p-6 rounded-t-lg flex flex-col items-center justify-center relative min-h-[140px]"
+          style={{
+            background: isEmpty 
+              ? 'linear-gradient(135deg, #14140F 0%, #6b7280 100%)'
+              : 'linear-gradient(135deg, #053D38 0%, #34675C 100%)'
+          }}
+        >
           <Badge 
             variant="secondary" 
-            className="absolute top-2 left-2 bg-white/20 text-white border-white/30 text-xs font-medium"
+            className="absolute top-2 left-2 text-xs font-medium text-white border-none"
+            style={{
+              backgroundColor: isEmpty ? 'rgba(0,0,0,0.3)' : '#34675C'
+            }}
           >
             {documents.length}
           </Badge>
@@ -54,14 +60,29 @@ const ClientDocuments = ({
           
           {isEmpty && (
             <div className="mt-1 text-center">
-              <p className="text-white/80 text-xs font-medium">Pasta vazia</p>
+              <p 
+                className="text-xs font-medium"
+                style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+              >
+                Pasta vazia
+              </p>
             </div>
           )}
         </div>
 
         {/* Client Info Section */}
-        <div className="p-3 bg-white rounded-b-lg">
-          <h3 className="font-semibold text-gray-900 text-sm mb-1 truncate">
+        <div 
+          className="p-3 rounded-b-lg"
+          style={{
+            background: isEmpty 
+              ? '#ffffff'
+              : 'linear-gradient(135deg, #053D38 0%, #34675C 100%)'
+          }}
+        >
+          <h3 
+            className="font-semibold text-sm mb-1 truncate"
+            style={{ color: isEmpty ? '#6b7280' : 'rgba(255,255,255,0.8)' }}
+          >
             {highlightMatch 
               ? highlightMatch(clientName, searchTerm)
               : clientName
@@ -69,18 +90,27 @@ const ClientDocuments = ({
           </h3>
           
           {processType && (
-            <p className="text-sm text-gray-600 mb-2">
+            <p 
+              className="text-sm mb-2"
+              style={{ color: isEmpty ? '#9ca3af' : 'rgba(255,255,255,0.8)' }}
+            >
               {processType}
             </p>
           )}
           
           {isEmpty ? (
-            <div className="text-xs text-gray-500 italic">
+            <div 
+              className="text-xs italic"
+              style={{ color: '#9ca3af' }}
+            >
               Nenhum documento ainda
             </div>
           ) : (
             latestDate && (
-              <div className="flex items-center gap-1 text-xs text-gray-500">
+              <div 
+                className="flex items-center gap-1 text-xs"
+                style={{ color: 'rgba(255,255,255,0.8)' }}
+              >
                 <Calendar className="h-3 w-3" />
                 <span>Criado em {latestDate}</span>
               </div>

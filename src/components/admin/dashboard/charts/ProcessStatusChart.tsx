@@ -1,7 +1,6 @@
-import { FileText, ArrowsUpFromLine, CheckCircle, BarChart3 } from 'lucide-react';
+import { FileText, ArrowsUpFromLine, CheckCircle } from 'lucide-react';
 import { ChartLoadingState } from './shared/ChartLoadingState';
 import { ChartEmptyState } from './shared/ChartEmptyState';
-import { ChartContainer } from './shared/ChartContainer';
 
 interface ProcessStatusChartProps {
   data: { name: string; value: number; total: number }[];
@@ -10,25 +9,25 @@ interface ProcessStatusChartProps {
 
 const STATUS_CONFIG = {
   'Doc': {
-    color: '#006494',
+    color: '#053D38',
     icon: FileText,
-    bgClass: 'bg-[#006494]',
+    bgClass: 'bg-[#053D38]',
     textColorClass: 'text-white',
     dbValue: 'documentacao',
     description: 'Clientes que ainda faltam documentações para início do processo'
   },
   'Em andam': {
-    color: '#e8c064',
+    color: '#F26800',
     icon: ArrowsUpFromLine,
-    bgClass: 'bg-[#e8c064]',
-    textColorClass: 'text-black',
+    bgClass: 'bg-[#F26800]',
+    textColorClass: 'text-white',
     dbValue: 'em_andamento',
     description: 'Processos em Andamento'
   },
   'Concluído': {
-    color: '#5B8C5A',
+    color: '#A3CCAB',
     icon: CheckCircle,
-    bgClass: 'bg-[#5B8C5A]',
+    bgClass: 'bg-[#A3CCAB]',
     textColorClass: 'text-white',
     dbValue: 'concluido',
     description: 'Processos finalizados'
@@ -45,10 +44,10 @@ export const ProcessStatusChart = ({ data, isLoading }: ProcessStatusChartProps)
   };
 
   return (
-    <ChartContainer 
-      title="Status dos Processos"
-      icon={BarChart3}
-    >
+    <div className="space-y-4">
+      <h5 className="text-base font-medium" style={{ color: '#14140F' }}>
+        Status dos Processos
+      </h5>
       {isLoading ? (
         <ChartLoadingState />
       ) : data.length === 0 ? (
@@ -78,15 +77,15 @@ export const ProcessStatusChart = ({ data, isLoading }: ProcessStatusChartProps)
             })}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-sm text-muted-foreground">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2 text-sm">
             {Object.entries(STATUS_CONFIG).map(([statusKey, config]) => (
-              <div key={`legend-${statusKey}`} className="text-center px-2">
+              <div key={`legend-${statusKey}`} className="text-center px-2" style={{ color: '#34675C' }}>
                 <p className="text-xs">{config.description}</p>
               </div>
             ))}
           </div>
         </div>
       )}
-    </ChartContainer>
+    </div>
   );
 };

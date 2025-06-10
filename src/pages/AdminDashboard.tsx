@@ -19,12 +19,12 @@ const AdminDashboard = () => {
 
   return (
     <MainLayout title="Dashboard">
-      <div className="flex-1 space-y-8">
+      <div className="flex-1 space-y-8 bg-gray-50 min-h-screen p-6">
         {/* Stats Section */}
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            <h2 className="text-2xl font-bold text-gray-900">Resumo Executivo</h2>
+            <TrendingUp className="h-5 w-5" style={{ color: '#053D38' }} />
+            <h2 className="text-2xl font-bold" style={{ color: '#14140F' }}>Resumo Executivo</h2>
           </div>
           
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
