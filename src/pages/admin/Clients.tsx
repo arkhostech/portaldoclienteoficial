@@ -75,9 +75,7 @@ const Clients = () => {
           <div className="flex flex-col lg:flex-row gap-6 justify-between items-start">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl shadow-lg">
-                  <Users className="h-6 w-6" style={{ color: '#053D38' }} />
-                </div>
+                <Users className="h-8 w-8" style={{ color: '#053D38' }} />
                 <div>
                   <h1 className="text-4xl font-bold" style={{ color: '#14140F' }}>
                     Clientes
@@ -131,45 +129,39 @@ const Clients = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="border-0 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total de Clientes</p>
                     <p className="text-3xl font-bold" style={{ color: '#14140F' }}>{totalClients}</p>
                   </div>
-                  <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg">
-                    <Users className="h-6 w-6" style={{ color: '#053D38' }} />
-                  </div>
+                  <Users className="h-6 w-6" style={{ color: '#053D38' }} />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-0 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Em Andamento</p>
                     <p className="text-3xl font-bold" style={{ color: '#14140F' }}>{activeClients}</p>
                   </div>
-                  <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg">
-                    <Clock className="h-6 w-6" style={{ color: '#F26800' }} />
-                  </div>
+                  <Clock className="h-6 w-6" style={{ color: '#F26800' }} />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-0 shadow-lg bg-white hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Documentação</p>
                     <p className="text-3xl font-bold" style={{ color: '#14140F' }}>{pendingClients}</p>
                   </div>
-                  <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg">
-                    <FileText className="h-6 w-6" style={{ color: '#34675C' }} />
-                  </div>
+                  <FileText className="h-6 w-6" style={{ color: '#34675C' }} />
                 </div>
               </CardContent>
             </Card>

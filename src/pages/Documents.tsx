@@ -142,14 +142,23 @@ const Documents = () => {
     <MainLayout title="Documentos">
       <div className="container mx-auto py-6 space-y-6">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between gap-4">
+        <div className="flex flex-col md:flex-row justify-between gap-4 items-center">
           <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight text-[#14140F]">Documentos</h1>
             <p className="text-[#34675C] mt-1">
               Gerencie e visualize seus documentos.
             </p>
           </div>
-          <div>
+          <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto items-center justify-end">
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#34675C]" />
+              <Input 
+                placeholder="Buscar documentos..." 
+                className="pl-10 border-[#e5e7eb] focus:border-[#053D38] focus:ring-[#053D38] rounded-lg transition-colors"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
             <Button 
               onClick={() => setOpenUploadDialog(true)}
               className="w-full md:w-auto bg-[#053D38] hover:bg-[#34675C] text-white shadow-sm hover:shadow-md transition-all duration-200"
@@ -209,22 +218,9 @@ const Documents = () => {
 
         {/* Main Content */}
         <Card className="bg-white border border-[#e5e7eb] shadow-sm rounded-xl">
-          <CardHeader className="pb-4">
-            <div className="flex flex-col md:flex-row justify-between gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#34675C]" />
-                <Input 
-                  placeholder="Buscar documentos..." 
-                  className="pl-10 border-[#e5e7eb] focus:border-[#053D38] focus:ring-[#053D38] rounded-lg transition-colors"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-          </CardHeader>
           <CardContent className="p-5">
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[1, 2, 3].map((i) => (
                   <Card key={i} className="border border-[#e5e7eb] rounded-xl">
                     <CardContent className="p-5 space-y-3">
@@ -236,47 +232,11 @@ const Documents = () => {
                 ))}
               </div>
             ) : documents.length > 0 ? (
-              <Tabs defaultValue="all" className="w-full">
-                <div className="flex items-center justify-between mb-6">
-                  <TabsList className="bg-transparent border border-[#e5e7eb] rounded-lg p-1">
-                    <TabsTrigger 
-                      value="all" 
-                      className="data-[state=active]:bg-[#053D38] data-[state=active]:text-white text-[#34675C] hover:bg-[#A3CCAB] hover:bg-opacity-20 rounded-md transition-all duration-200"
-                    >
-                      Todos ({filteredDocuments.length})
-                    </TabsTrigger>
-                    {categories.map(category => (
-                      <TabsTrigger 
-                        key={category} 
-                        value={category}
-                        className="data-[state=active]:bg-[#053D38] data-[state=active]:text-white text-[#34675C] hover:bg-[#A3CCAB] hover:bg-opacity-20 rounded-md transition-all duration-200"
-                      >
-                        {category} ({filteredDocuments.filter(doc => doc.category === category).length})
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </div>
-                
-                <TabsContent value="all" className="mt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredDocuments.map(doc => (
-                      <DocumentCard key={doc.id} document={doc} />
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                {categories.map(category => (
-                  <TabsContent key={category} value={category} className="mt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredDocuments
-                        .filter(doc => doc.category === category)
-                        .map(doc => (
-                          <DocumentCard key={doc.id} document={doc} />
-                        ))}
-                    </div>
-                  </TabsContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredDocuments.map(doc => (
+                  <DocumentCard key={doc.id} document={doc} />
                 ))}
-              </Tabs>
+              </div>
             ) : (
               <div className="py-12 text-center">
                 <div className="mx-auto w-16 h-16 bg-[#f3f4f6] rounded-full flex items-center justify-center mb-4">

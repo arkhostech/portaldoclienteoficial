@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DocumentUploadDialogProps } from "./types";
 import { useFileSelection } from "./upload/useFileSelection";
@@ -50,9 +49,11 @@ const DocumentUploadDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh]">
+      <DialogContent 
+        className="sm:max-w-[650px] max-h-[90vh] bg-white rounded-[18px] shadow-[0_12px_40px_rgba(5,61,56,0.13)] border border-[#053D38]/10 outline outline-1 outline-[#053D38]/10"
+      >
         <DialogHeader>
-          <DialogTitle>Enviar Documento</DialogTitle>
+          <DialogTitle className="text-[#14140F] text-[1.5rem] font-bold">Enviar Documento</DialogTitle>
         </DialogHeader>
 
         <UploadDialogContent

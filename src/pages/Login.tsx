@@ -121,99 +121,80 @@ const Login = () => {
   if (user) return null;
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Left side - Branding */}
-      <div className="hidden md:flex flex-1 bg-[#111111] text-white p-12 flex-col justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#222222] to-[#111111] opacity-90"></div>
-        <div className="relative z-10 space-y-6">
-          <div className="flex justify-center mb-8">
-            <img 
-              src="/images/logo.png" 
-              alt="Logo da empresa" 
-              className="h-48 w-auto"
-            />
-          </div>
-          <h1 className="text-4xl font-bold">Portal de Acesso</h1>
-          <p className="text-xl">Entre com suas credenciais para acessar o sistema.</p>
-          
-          <div className="mt-12 space-y-4">
-            <div className="flex items-start space-x-4">
-              <div className="bg-[#EAC066] rounded-full p-2">
-                <ShieldCheck className="h-6 w-6 text-[#111111]" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">Acesso Seguro</h3>
-                <p className="text-white/80">O sistema redirecionará você automaticamente para a área correta.</p>
-              </div>
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden" style={{
+      background: "linear-gradient(135deg, #f0f9f4 0%, #ffffff 100%)"
+    }}>
+      {/* Formas geométricas decorativas */}
+      <div className="absolute -top-24 -left-24 w-72 h-72 bg-[#053D38] opacity-5 rounded-full animate-float-slow z-0" />
+      <div className="absolute bottom-0 right-0 w-60 h-60 bg-[#A3CCAB] opacity-10 rounded-full animate-float-medium z-0" />
+      <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-[#34675C] opacity-5 rounded-full animate-float-fast z-0" style={{transform: 'translate(-50%, -50%)'}} />
+      <div className="flex flex-col items-center justify-center w-full z-10">
+        <Card className="w-full max-w-[420px] bg-white rounded-[20px] shadow-[0_20px_60px_rgba(5,61,56,0.15)] p-0 border-0">
+          <CardHeader className="text-center pt-12 pb-4 px-10">
+            <div className="mb-10 flex flex-col items-center">
+              <span className="text-4xl mb-2" style={{color:'#053D38'}} role="img" aria-label="user">👤</span>
+              <span className="text-[32px] font-bold text-[#14140F] font-sans leading-tight">Portal do Cliente</span>
+              <span className="text-[16px] text-[#34675C] font-medium mt-2">Acesse sua conta</span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-3xl font-bold">Entrar no Sistema</CardTitle>
-            <CardDescription>
-              Digite suas credenciais para acessar o portal
-            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-10 pb-0 pt-2">
             {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <div className="mb-4 text-[15px] font-medium text-[#F26800] text-center bg-[#fff7f0] rounded-lg py-2 px-3">{error}</div>
             )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+              <div className="mb-2">
+                <label className="block text-[#14140F] font-semibold mb-3 text-left text-[15px]">Email</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl text-[#34675C] opacity-80 select-none pointer-events-none">📧</span>
                   <Input
                     type="email"
-                    placeholder="Email"
-                    className="pl-10"
+                    placeholder="Digite seu email"
+                    className="pl-12 py-4 bg-white border-2 border-[#e5e7eb] focus:border-[#053D38] focus:ring-2 focus:ring-[#A3CCAB]/40 focus:outline-none rounded-lg text-[16px] placeholder:text-[#34675C]/70 font-normal mb-0 transition-all duration-200 shadow-none focus:shadow-[0_0_0_3px_rgba(163,204,171,0.15)]"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="mb-2">
+                <label className="block text-[#14140F] font-semibold mb-3 text-left text-[15px]">Senha</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl text-[#34675C] opacity-80 select-none pointer-events-none">🔒</span>
                   <Input
                     type="password"
-                    placeholder="Senha"
-                    className="pl-10"
+                    placeholder="Digite sua senha"
+                    className="pl-12 py-4 bg-white border-2 border-[#e5e7eb] focus:border-[#053D38] focus:ring-2 focus:ring-[#A3CCAB]/40 focus:outline-none rounded-lg text-[16px] placeholder:text-[#34675C]/70 font-normal mb-0 transition-all duration-200 shadow-none focus:shadow-[0_0_0_3px_rgba(163,204,171,0.15)]"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
               </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-[#EAC066] hover:bg-[#d9af5c] text-[#111111]"
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#053D38] to-[#34675C] hover:scale-105 text-white font-semibold py-4 rounded-lg text-[16px] mt-2 transition-all duration-200 flex items-center justify-center gap-2 shadow-md"
                 disabled={isLoading}
               >
-                {isLoading ? "Entrando..." : "Entrar"}
+                {isLoading ? "Entrando..." : <><span>Entrar</span><span className="text-lg ml-1">→</span></>}
               </Button>
             </form>
-            <div className="mt-4 text-center text-sm">
-              <a href="#" className="text-[#EAC066] hover:underline">
-                Esqueceu sua senha?
-              </a>
+            <div className="flex justify-between items-center mt-6 mb-2">
+              <a href="/forgot-password" className="text-[#34675C] hover:text-[#053D38] text-[15px] font-medium transition-colors duration-200">Esqueceu a senha?</a>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-center border-t p-4">
-            <div className="flex items-center text-xs text-muted-foreground">
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              Conexão segura e encriptada
-            </div>
+          <CardFooter className="flex flex-col items-center gap-2 pt-2 pb-8 px-10">
           </CardFooter>
         </Card>
       </div>
+      {/* Animações flutuantes */}
+      <style>{`
+        @keyframes float-slow { 0%{transform:translateY(0);} 50%{transform:translateY(20px);} 100%{transform:translateY(0);} }
+        @keyframes float-medium { 0%{transform:translateY(0);} 50%{transform:translateY(-16px);} 100%{transform:translateY(0);} }
+        @keyframes float-fast { 0%{transform:translateY(0);} 50%{transform:translateY(12px);} 100%{transform:translateY(0);} }
+        .animate-float-slow { animation: float-slow 7s ease-in-out infinite; }
+        .animate-float-medium { animation: float-medium 5s ease-in-out infinite; }
+        .animate-float-fast { animation: float-fast 3.5s ease-in-out infinite; }
+      `}</style>
     </div>
   );
 };

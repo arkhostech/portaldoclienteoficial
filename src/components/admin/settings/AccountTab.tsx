@@ -3,7 +3,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,12 +29,18 @@ const passwordFormSchema = z.object({
   path: ["confirmPassword"],
 });
 
+const nameFormSchema = z.object({
+  name: z.string().min(3, "O nome deve ter pelo menos 3 caracteres")
+});
+
 type EmailFormValues = z.infer<typeof emailFormSchema>;
 type PasswordFormValues = z.infer<typeof passwordFormSchema>;
+type NameFormValues = z.infer<typeof nameFormSchema>;
 
 const AccountTab = () => {
   const [isEmailUpdating, setIsEmailUpdating] = useState(false);
   const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
+  const [isNameUpdating, setIsNameUpdating] = useState(false);
 
   const emailForm = useForm<EmailFormValues>({
     resolver: zodResolver(emailFormSchema),
@@ -50,6 +56,13 @@ const AccountTab = () => {
       newPassword: "",
       confirmPassword: "",
     },
+  });
+
+  const nameForm = useForm<NameFormValues>({
+    resolver: zodResolver(nameFormSchema),
+    defaultValues: {
+      name: "Administrador"
+    }
   });
 
   const onEmailSubmit = async (data: EmailFormValues) => {
@@ -93,8 +106,96 @@ const AccountTab = () => {
     }
   };
 
+  const onNameSubmit = async (data: NameFormValues) => {
+    setIsNameUpdating(true);
+    try {
+      // Simular API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success("Nome atualizado com sucesso");
+    } catch (error) {
+      toast.error("Erro ao atualizar nome");
+      console.error(error);
+    } finally {
+      setIsNameUpdating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Card para Editar Nome */}
+      <Card style={{ 
+        borderRadius: '12px',
+        backgroundColor: 'white',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+      }}>
+        <CardContent style={{ padding: '24px' }}>
+          <h3 
+            className="text-xl font-semibold mb-6" 
+            style={{ color: '#14140F' }}
+          >
+            Editar Nome da Conta
+          </h3>
+          <Form {...nameForm}>
+            <form onSubmit={nameForm.handleSubmit(onNameSubmit)} className="space-y-4">
+              <FormField
+                control={nameForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem style={{ marginBottom: '16px' }}>
+                    <FormLabel 
+                      style={{ 
+                        color: '#14140F', 
+                        fontWeight: 600 
+                      }}
+                    >
+                      Nome
+                    </FormLabel>
+                    <div className="relative">
+                      <User 
+                        className="absolute left-3 top-3 h-4 w-4" 
+                        style={{ color: '#34675C' }}
+                      />
+                      <FormControl>
+                        <Input 
+                          placeholder="Seu nome completo" 
+                          className="pl-10 focus:border-[#053D38] max-w-md" 
+                          style={{
+                            borderColor: '#e5e7eb',
+                          }}
+                          {...field} 
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button 
+                type="submit" 
+                disabled={isNameUpdating}
+                style={{
+                  backgroundColor: '#053D38',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  fontWeight: 500,
+                  border: 'none',
+                  transition: 'background-color 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  (e.target as HTMLElement).style.backgroundColor = '#042d2a';
+                }}
+                onMouseLeave={(e) => {
+                  (e.target as HTMLElement).style.backgroundColor = '#053D38';
+                }}
+                className="hover:opacity-90"
+              >
+                {isNameUpdating ? "Salvando..." : "Salvar Nome"}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
       {/* Card para Alterar Email */}
       <Card style={{ 
         borderRadius: '12px',
@@ -164,150 +265,6 @@ const AccountTab = () => {
                 className="hover:opacity-90"
               >
                 {isEmailUpdating ? "Salvando..." : "Atualizar Email"}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      {/* Card para Alterar Senha */}
-      <Card style={{ 
-        borderRadius: '12px',
-        backgroundColor: 'white',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-      }}>
-        <CardContent style={{ padding: '24px' }}>
-          <h3 
-            className="text-xl font-semibold mb-6" 
-            style={{ color: '#14140F' }}
-          >
-            Alterar Senha
-          </h3>
-          <Form {...passwordForm}>
-            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-              <FormField
-                control={passwordForm.control}
-                name="currentPassword"
-                render={({ field }) => (
-                  <FormItem style={{ marginBottom: '16px' }}>
-                    <FormLabel 
-                      style={{ 
-                        color: '#14140F', 
-                        fontWeight: 600 
-                      }}
-                    >
-                      Senha Atual
-                    </FormLabel>
-                    <div className="relative">
-                      <Lock 
-                        className="absolute left-3 top-3 h-4 w-4" 
-                        style={{ color: '#34675C' }}
-                      />
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Senha atual" 
-                          className="pl-10 focus:border-[#053D38] max-w-md" 
-                          style={{
-                            borderColor: '#e5e7eb',
-                          }}
-                          {...field} 
-                        />
-                      </FormControl>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={passwordForm.control}
-                name="newPassword"
-                render={({ field }) => (
-                  <FormItem style={{ marginBottom: '16px' }}>
-                    <FormLabel 
-                      style={{ 
-                        color: '#14140F', 
-                        fontWeight: 600 
-                      }}
-                    >
-                      Nova Senha
-                    </FormLabel>
-                    <div className="relative">
-                      <Lock 
-                        className="absolute left-3 top-3 h-4 w-4" 
-                        style={{ color: '#34675C' }}
-                      />
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Nova senha" 
-                          className="pl-10 focus:border-[#053D38] max-w-md" 
-                          style={{
-                            borderColor: '#e5e7eb',
-                          }}
-                          {...field} 
-                        />
-                      </FormControl>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={passwordForm.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem style={{ marginBottom: '16px' }}>
-                    <FormLabel 
-                      style={{ 
-                        color: '#14140F', 
-                        fontWeight: 600 
-                      }}
-                    >
-                      Confirmar Nova Senha
-                    </FormLabel>
-                    <div className="relative">
-                      <Lock 
-                        className="absolute left-3 top-3 h-4 w-4" 
-                        style={{ color: '#34675C' }}
-                      />
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Confirmar nova senha" 
-                          className="pl-10 focus:border-[#053D38] max-w-md" 
-                          style={{
-                            borderColor: '#e5e7eb',
-                          }}
-                          {...field} 
-                        />
-                      </FormControl>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button 
-                type="submit" 
-                disabled={isPasswordUpdating}
-                style={{
-                  backgroundColor: '#34675C',
-                  color: 'white',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  fontWeight: 500,
-                  border: 'none',
-                  transition: 'background-color 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  (e.target as HTMLElement).style.backgroundColor = '#2a5249';
-                }}
-                onMouseLeave={(e) => {
-                  (e.target as HTMLElement).style.backgroundColor = '#34675C';
-                }}
-                className="hover:opacity-90"
-              >
-                {isPasswordUpdating ? "Salvando..." : "Alterar Senha"}
               </Button>
             </form>
           </Form>

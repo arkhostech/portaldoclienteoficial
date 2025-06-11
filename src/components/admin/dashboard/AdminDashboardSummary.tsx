@@ -79,12 +79,12 @@ const AdminDashboardSummary = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Total Clients */}
       <Card 
         className="group transition-all duration-300 bg-white"
         style={{ 
-          borderRadius: '12px',
+          borderRadius: '8px',
           borderLeft: '4px solid #053D38',
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
           border: 'none'
@@ -96,22 +96,20 @@ const AdminDashboardSummary = () => {
           e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
         }}
       >
-        <CardContent style={{ padding: '24px' }}>
-          <div className="flex items-start justify-between">
-            <div className="space-y-4 flex-1">
+        <CardContent style={{ padding: '16px' }}>
+          <div className="flex items-center justify-between">
+            <div className="space-y-3 flex-1">
               <div className="flex items-center space-x-3">
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <Users className="h-6 w-6" style={{ color: '#053D38' }} />
-                </div>
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                <Users className="h-5 w-5" style={{ color: '#053D38' }} />
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   Total de Clientes
                 </p>
               </div>
               
               <div className="space-y-2">
-                <h3 className="text-4xl font-bold tracking-tight" style={{ color: '#14140F' }}>
+                <h3 className="text-2xl font-bold tracking-tight" style={{ color: '#14140F' }}>
                   {isLoading ? (
-                    <div className="h-10 w-16 bg-gray-200 rounded-md animate-pulse"></div>
+                    <div className="h-8 w-12 bg-gray-200 rounded-md animate-pulse"></div>
                   ) : (
                     stats.clients.total
                   )}
@@ -119,16 +117,16 @@ const AdminDashboardSummary = () => {
                 
                 <div className="flex items-center space-x-2">
                   <div 
-                    className="flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                    className="flex items-center px-2 py-1 rounded-full text-xs font-medium"
                     style={{ 
                       backgroundColor: '#A3CCAB',
                       color: '#14140F'
                     }}
                   >
                     {stats.clients.trend === "up" ? (
-                      <TrendingUp className="h-4 w-4 mr-1" />
+                      <TrendingUp className="h-3 w-3 mr-1" />
                     ) : (
-                      <TrendingDown className="h-4 w-4 mr-1" />
+                      <TrendingDown className="h-3 w-3 mr-1" />
                     )}
                     <span>
                       {isLoading ? "..." : `+${stats.clients.growth}`} esta semana
@@ -145,7 +143,7 @@ const AdminDashboardSummary = () => {
       <Card 
         className="group transition-all duration-300 bg-white"
         style={{ 
-          borderRadius: '12px',
+          borderRadius: '8px',
           borderLeft: '4px solid #053D38',
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
           border: 'none'
@@ -157,14 +155,12 @@ const AdminDashboardSummary = () => {
           e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
         }}
       >
-        <CardContent style={{ padding: '24px' }}>
-          <div className="flex items-start justify-between">
-            <div className="space-y-4 flex-1">
+        <CardContent style={{ padding: '16px' }}>
+          <div className="flex items-center justify-between">
+            <div className="space-y-3 flex-1">
               <div className="flex items-center space-x-3">
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <FileText className="h-6 w-6" style={{ color: '#34675C' }} />
-                </div>
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                <FileText className="h-5 w-5" style={{ color: '#34675C' }} />
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   Processos Ativos
                 </p>
               </div>

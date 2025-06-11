@@ -71,58 +71,48 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
 
   return (
     <>
-      <Card className="group relative overflow-hidden bg-[#053D38] border-0 shadow-lg hover:shadow-xl rounded-2xl transition-all duration-300 hover:-translate-y-1 h-80 flex flex-col">
-        <CardContent className="p-6 flex flex-col h-full text-white">
+      <Card className="w-full hover:shadow-lg transition-all duration-200 border-0 shadow-md rounded-lg bg-transparent">
+        <CardContent className="p-0">
           {/* Icon Section - Top Center Large */}
-          <div className="flex justify-center items-center flex-1 mb-4">
-            <div className="p-6 bg-white/10 backdrop-blur-sm rounded-2xl group-hover:bg-white/20 transition-all duration-300 shadow-lg">
-              {getFileIcon(document.type, "text-white h-16 w-16")}
-            </div>
+          <div
+            className="p-6 rounded-t-lg flex flex-col items-center justify-center min-h-[140px]"
+            style={{ background: 'linear-gradient(135deg, #053D38 0%, #34675C 100%)' }}
+          >
+            {getFileIcon(document.type, "text-white h-12 w-12")}
           </div>
-          
-          {/* Bottom Section - Document Info and Actions */}
-          <div className="mt-auto">
-            {/* Document Name */}
-            <div className="text-center mb-4">
-              <h4 className="text-sm font-bold text-white line-clamp-2 leading-tight mb-2">
-                {document.name}
-              </h4>
-              <p className="text-xs text-white/70 font-medium">{document.category}</p>
-            </div>
-            
-            {/* Signature Badge if needed */}
+          {/* Info Section */}
+          <div className="p-3 rounded-b-lg" style={{ background: 'linear-gradient(135deg, #053D38 0%, #34675C 100%)' }}>
+            <h4 className="font-semibold text-sm mb-1 text-center text-white truncate">
+              {document.name}
+            </h4>
+            <p className="text-xs text-white/70 font-medium text-center mb-1">{document.category}</p>
             {document.needsSignature && (
-              <div className="flex justify-center mb-3">
+              <div className="flex justify-center mb-2">
                 <Badge 
                   variant="outline"
                   className={`text-xs font-medium ${
                     document.signed 
                       ? "bg-emerald-500/20 text-emerald-100 border-emerald-300/30" 
                       : "bg-red-500/20 text-red-100 border-red-300/30"
-                  } backdrop-blur-sm`}
+                  }`}
                 >
                   {document.signed ? "✓ Assinado" : "⚠ Requer Assinatura"}
                 </Badge>
               </div>
             )}
-
-            {/* Date and Size info */}
-            <div className="flex justify-center items-center text-xs text-white/70 mb-3">
+            <div className="flex justify-center items-center text-xs text-white/70 mb-2">
               <span>{formatDate(document.uploadDate)} • {document.size}</span>
             </div>
-            
-            {/* Action Buttons */}
             <div className="flex flex-col space-y-2">
               {document.needsSignature && !document.signed && (
                 <Button 
                   size="sm" 
-                  className="w-full text-xs py-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition-all duration-200 border-white/30 font-semibold"
+                  className="w-full text-xs py-2 bg-white/20 hover:bg-white/30 text-white transition-all duration-200 border-white/30 font-semibold"
                   variant="outline"
                 >
                   ✍️ Assinar
                 </Button>
               )}
-              
               <div className="flex space-x-2">
                 <Button 
                   variant="outline" 
@@ -134,13 +124,12 @@ const DocumentCard = ({ document }: DocumentCardProps) => {
                   <Download className="h-3 w-3 mr-1" />
                   Baixar
                 </Button>
-
                 <Button 
                   variant="outline" 
                   size="sm" 
                   className={`flex-1 text-xs py-2 transition-all duration-200 font-semibold ${
                     canPreview && !isLoading && document.filePath
-                      ? "bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm"
+                      ? "bg-white/20 border-white/30 text-white hover:bg-white/30"
                       : "bg-white/10 border-white/20 text-white/50 cursor-not-allowed"
                   }`}
                   onClick={canPreview ? handlePreview : undefined}

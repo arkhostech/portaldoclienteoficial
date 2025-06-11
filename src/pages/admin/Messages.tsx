@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth";
 import { useChat } from "@/hooks/useChat";
-import { Send, User, Phone, Mail, FileText, Clock, AlertCircle, Plus, Search, Loader2, Check } from "lucide-react";
+import { Send, User, Phone, Mail, FileText, Clock, AlertCircle, Plus, Search, Loader2, Check, CheckCircle } from "lucide-react";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { useScrollToBottom } from "@/hooks/useScrollToBottom";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
@@ -20,6 +20,39 @@ import { Client } from "@/services/clients/types";
 import { NotificationBadge } from "@/components/ui/notification-badge";
 import { NewMessageBadge } from "@/components/ui/new-message-badge";
 import { useNotifications } from "@/contexts/NotificationContext";
+
+const getStatusDetails = (status) => {
+  switch (status) {
+    case "documentacao":
+      return {
+        label: "Documentação",
+        color: "rgba(255,255,255,0.8)",
+        bgColor: "#053D38",
+        icon: <FileText className="h-3 w-3 mr-1" />,
+      };
+    case "em_andamento":
+      return {
+        label: "Em Andamento",
+        color: "#fff",
+        bgColor: "#F26800",
+        icon: <Clock className="h-3 w-3 mr-1" />,
+      };
+    case "concluido":
+      return {
+        label: "Concluído",
+        color: "#14140F",
+        bgColor: "#A3CCAB",
+        icon: <CheckCircle className="h-3 w-3 mr-1" />,
+      };
+    default:
+      return {
+        label: status,
+        color: "#374151",
+        bgColor: "#e5e7eb",
+        icon: null,
+      };
+  }
+};
 
 // Componente EmptyState
 const EmptyState = () => (
@@ -194,9 +227,18 @@ const NewConversationModal = ({ onClientSelect }: { onClientSelect: (clientId: s
                             <p className="text-sm" style={{ color: '#34675C' }}>{client.phone}</p>
                           )}
                         </div>
-                        <Badge variant="secondary">
-                          {client.status}
-                        </Badge>
+                        {(() => {
+                          const statusDetails = getStatusDetails(client.status);
+                          return (
+                            <div
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                              style={{ backgroundColor: statusDetails.bgColor, color: statusDetails.color }}
+                            >
+                              {statusDetails.icon}
+                              {statusDetails.label}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </CardContent>
                   </Card>

@@ -9,11 +9,11 @@ const VisualizationSection = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-3">
-        <div className="p-2 bg-gray-100 rounded-lg">
-          <BarChart3 className="h-5 w-5" style={{ color: '#053D38' }} />
-        </div>
+        <BarChart3 className="h-5 w-5" style={{ color: '#053D38' }} />
         <div>
-          <h3 className="text-2xl font-bold" style={{ color: '#14140F' }}>Análise de Dados</h3>
+          <h3 className="text-2xl font-bold" style={{ color: '#14140F' }}>
+            Análise de Dados
+          </h3>
           <p className="text-gray-600 text-sm">Visualizações em tempo real dos seus processos</p>
         </div>
       </div>
