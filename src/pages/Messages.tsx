@@ -10,7 +10,7 @@ import { useNotifications } from "@/contexts/NotificationContext";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { useScrollToBottom } from "@/hooks/useScrollToBottom";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
-import { Send, PaperclipIcon, Loader2, Check, Headphones } from "lucide-react";
+import { Send, PaperclipIcon, Loader2, Check, Headphones, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -37,6 +37,7 @@ const Messages = () => {
     registerScrollContainer,
     handleSelectConversation,
     handleMarkAsRead,
+    handleStartNewConversation,
   } = useChatClient();
   
   const { hasNotification, markAsRead } = useNotifications();
@@ -157,15 +158,35 @@ const Messages = () => {
                 </div>
               </div>
             ) : !activeConversation ? (
-              <div className="flex items-center justify-center h-32 text-[#34675C]">
+              <div className="flex flex-col items-center justify-center h-32 text-[#34675C]">
                 <div className="text-center">
-                  <p className="mb-2">Você ainda não tem conversas ativas.</p>
-                  <p className="text-sm">Entre em contato conosco através dos outros canais de atendimento.</p>
+                  <p className="mb-4">Você ainda não tem conversas ativas.</p>
+                  <Button
+                    onClick={handleStartNewConversation}
+                    disabled={isLoading}
+                    className="bg-[#053D38] hover:bg-[#34675C] text-white"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Iniciando conversa...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Iniciar conversa com suporte
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
             ) : messages.length === 0 ? (
-              <div className="flex items-center justify-center h-32 text-[#34675C]">
-                <p>Nenhuma mensagem ainda. Envie uma mensagem para começar a conversa!</p>
+              <div className="flex flex-col items-center justify-center h-32 text-[#34675C]">
+                <div className="text-center">
+                  <p className="mb-2">💬</p>
+                  <p className="text-lg font-medium mb-2">Conversa iniciada!</p>
+                  <p className="text-sm">Envie sua primeira mensagem para começar a conversar com nosso suporte.</p>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">

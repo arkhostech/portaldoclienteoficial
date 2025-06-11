@@ -196,6 +196,41 @@ export const useChatClient = () => {
     }
   }, [activeConversation, markAsRead]);
 
+  // Start a new conversation for client
+  const handleStartNewConversation = useCallback(async () => {
+    if (!user || isAdmin) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Check if conversation already exists for this client
+      const existingConversation = conversations.find(conv => conv.client_id === user.id);
+      if (existingConversation) {
+        setActiveConversation(existingConversation);
+        resetScrollState();
+        await loadMessages(existingConversation.id);
+        return;
+      }
+      
+      // Create new conversation for the client
+      const newConversation = await createConversation(user.id, null);
+      
+      // Add the new conversation to the list
+      setConversations(prev => [newConversation, ...prev]);
+      setActiveConversation(newConversation);
+      setMessages([]);
+      resetScrollState();
+      
+      // Invalidar cache
+      const cacheKey = `conversations_${user.id}`;
+      chatCache.delete(cacheKey);
+    } catch (error) {
+      console.error('Error starting new conversation:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, isAdmin, conversations, loadMessages, resetScrollState]);
+
   // Subscribe to messages for active conversation only
   useEffect(() => {
     if (!activeConversation) {
@@ -337,6 +372,7 @@ export const useChatClient = () => {
     },
     // Notificações
     hasNotification,
-    handleMarkAsRead
+    handleMarkAsRead,
+    handleStartNewConversation
   };
 }; 
