@@ -66,22 +66,22 @@ export default function ClientDocuments() {
             variant="outline"
             size="sm"
             onClick={handleBackClick}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 text-[#34675C] border-[#34675C] hover:bg-[#053D38] hover:text-white hover:border-[#053D38] transition-colors duration-200 rounded-lg"
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-2xl font-bold tracking-tight text-[#14140F]" style={{ fontWeight: 700 }}>
               Documentos de {clientName}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-[#34675C] mt-1">
               Gerencie os documentos deste cliente.
             </p>
           </div>
         </div>
 
-        <Card className="bg-white border border-[#f3f4f6] shadow-sm">
+        <Card className="bg-white border border-[#e5e7eb] shadow-lg rounded-lg">
           <CardContent className="pt-6">
             <ClientDocumentsContent
               documents={filteredDocuments}

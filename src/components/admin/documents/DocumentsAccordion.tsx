@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Document as DocumentType } from "@/services/documents/types";
@@ -83,6 +82,7 @@ export function DocumentsAccordion({
                 <Button 
                   size="sm" 
                   variant="outline" 
+                  className="border-[#E5D5C8] text-[#053D38] hover:bg-[#F5F1EB] hover:text-[#053D38] hover:border-[#E5D5C8] transition-colors duration-200"
                   onClick={() => handleOpenUploadForClient(clientId)}
                 >
                   <Plus className="h-4 w-4 mr-1" /> Adicionar

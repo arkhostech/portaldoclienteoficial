@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -72,18 +71,21 @@ export default function DocumentsTable({
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#053D38]" />
       </div>
     );
   }
   
   if (filteredDocuments.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        {searchTerm
-          ? "Nenhum documento encontrado para a busca."
-          : "Nenhum documento cadastrado."
-        }
+      <div className="text-center py-8 text-[#34675C] bg-[#fafbfc] rounded-lg border border-[#e5e7eb]">
+        <FileText className="h-8 w-8 mx-auto mb-2 text-[#34675C]" />
+        <p className="font-medium">
+          {searchTerm
+            ? "Nenhum documento encontrado para a busca."
+            : "Nenhum documento cadastrado."
+          }
+        </p>
       </div>
     );
   }
@@ -91,59 +93,65 @@ export default function DocumentsTable({
   return (
     <Table>
       <TableHeader>
-        <TableRow>
-          <TableHead>Título</TableHead>
-          {!hideClientColumn && <TableHead>Cliente</TableHead>}
-          <TableHead>Enviado por</TableHead>
-          <TableHead>Data</TableHead>
-          <TableHead className="text-right">Ações</TableHead>
+        <TableRow className="bg-[#f8fafc] hover:bg-[#f8fafc]">
+          <TableHead className="text-[#14140F] font-semibold" style={{ fontWeight: 600 }}>Título</TableHead>
+          {!hideClientColumn && <TableHead className="text-[#14140F] font-semibold" style={{ fontWeight: 600 }}>Cliente</TableHead>}
+          <TableHead className="text-[#14140F] font-semibold" style={{ fontWeight: 600 }}>Enviado por</TableHead>
+          <TableHead className="text-[#14140F] font-semibold" style={{ fontWeight: 600 }}>Data</TableHead>
+          <TableHead className="text-right text-[#14140F] font-semibold" style={{ fontWeight: 600 }}>Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {filteredDocuments.map(doc => (
-          <TableRow key={doc.id} className="cursor-pointer">
+        {filteredDocuments.map((doc, index) => (
+          <TableRow 
+            key={doc.id} 
+            className={`cursor-pointer border-b border-[#e5e7eb] transition-colors duration-200 ${
+              index % 2 === 0 ? 'bg-white' : 'bg-[#fafbfc]'
+            } hover:bg-[#A3CCAB] hover:bg-opacity-10`}
+          >
             <TableCell 
-              className="font-medium hover:bg-muted/50"
+              className="font-medium transition-colors duration-200"
+              style={{ fontWeight: 500 }}
               onClick={() => handleCellClick(doc)}
             >
               <div className="flex items-center">
-                <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="truncate max-w-[200px]" title={doc.title}>
+                <FileText className="h-4 w-4 mr-2 flex-shrink-0 text-[#053D38]" />
+                <span className="truncate max-w-[200px] text-[#14140F]" title={doc.title}>
                   {searchTerm ? highlightMatch(doc.title, searchTerm) : doc.title}
                 </span>
-                <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
+                <Pencil className="h-3 w-3 ml-2 text-[#34675C] opacity-50" />
               </div>
             </TableCell>
             {!hideClientColumn && (
               <TableCell 
-                className="hover:bg-muted/50"
+                className="transition-colors duration-200"
                 onClick={() => handleCellClick(doc)}
               >
                 <div className="flex items-center">
-                  <User className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <User className="h-4 w-4 mr-2 flex-shrink-0 text-[#053D38]" />
                   <span className="truncate max-w-[150px]">
                     {searchTerm ? highlightMatch(getClientName(doc.client_id), searchTerm) : getClientName(doc.client_id)}
                   </span>
-                  <Pencil className="h-3 w-3 ml-2 text-muted-foreground opacity-50" />
+                  <Pencil className="h-3 w-3 ml-2 text-[#34675C] opacity-50" />
                 </div>
               </TableCell>
             )}
             <TableCell>
               <div className="flex items-center">
-                <User className="h-3 w-3 mr-1 text-muted-foreground" />
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                <User className="h-3 w-3 mr-1 text-[#34675C]" />
+                <span className={`px-2 py-1 rounded-xl text-xs font-medium ${
                   doc.uploaded_by === 'client' 
-                    ? 'bg-blue-100 text-blue-800' 
-                    : 'bg-green-100 text-green-800'
-                }`}>
+                    ? 'bg-[#A3CCAB] text-[#14140F]' 
+                    : 'bg-[#053D38] text-white'
+                }`} style={{ borderRadius: '12px', padding: '4px 8px', fontSize: '12px' }}>
                   {doc.uploaded_by === 'client' ? 'Cliente' : 'Admin'}
                 </span>
               </div>
             </TableCell>
             <TableCell>
               <div className="flex items-center">
-                <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
-                {formatDate(doc.created_at)}
+                <Clock className="h-3 w-3 mr-1 text-[#34675C]" />
+                <span className="text-[#34675C] text-sm">{formatDate(doc.created_at)}</span>
               </div>
             </TableCell>
             <TableCell className="text-right">
@@ -152,6 +160,7 @@ export default function DocumentsTable({
                   <Button 
                     variant="ghost" 
                     size="icon" 
+                    className="text-[#34675C] hover:text-[#053D38] hover:bg-[#F5F1EB] transition-all duration-200 hover:scale-105"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -165,7 +174,7 @@ export default function DocumentsTable({
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="text-[#F26800] hover:text-[#e55d00] hover:bg-[#FFF3E0] transition-all duration-200 hover:scale-105"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();

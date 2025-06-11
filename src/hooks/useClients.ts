@@ -6,6 +6,7 @@ import {
   createClientWithAuth,
   updateClient, 
   deleteClient,
+  deleteClientWithCascade,
   resetClientPassword,
   ClientFormData,
   ClientWithAuthFormData,
@@ -111,11 +112,13 @@ export const useClients = () => {
     }
   };
 
-  const handleDeleteClient = async (id: string) => {
+  const handleDeleteClient = async (id: string, cascade = false) => {
     setIsSubmitting(true);
     
     try {
-      const success = await deleteClient(id);
+      const success = cascade 
+        ? await deleteClientWithCascade(id)
+        : await deleteClient(id);
       
       if (success) {
         setClients(prevClients => prevClients.filter(c => c.id !== id));

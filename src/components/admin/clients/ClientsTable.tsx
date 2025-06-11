@@ -121,7 +121,7 @@ const ClientsTable = ({
               key={client.id}
               className={`
                 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} 
-                hover:bg-blue-50 transition-colors duration-200
+                hover:bg-[#F5F1EB] transition-colors duration-200
               `}
             >
               <TableCell className="font-medium">{client.full_name}</TableCell>
@@ -143,23 +143,36 @@ const ClientsTable = ({
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 p-0 hover:bg-[#F5F1EB] hover:text-[#053D38] transition-colors duration-200"
+                    >
                       <span className="sr-only">Abrir menu</span>
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEdit(client)}>
+                  <DropdownMenuContent 
+                    align="end"
+                    className="w-48 bg-white border border-[#E5D5C8] shadow-lg"
+                  >
+                    <DropdownMenuItem 
+                      onClick={() => onEdit(client)}
+                      className="hover:bg-[#F5F1EB] hover:text-[#053D38] focus:bg-[#F5F1EB] focus:text-[#053D38] transition-colors duration-150"
+                    >
                       <Pencil className="mr-2 h-4 w-4" />
                       Editar
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onViewDocuments(client.id)}>
+                    <DropdownMenuItem 
+                      onClick={() => onViewDocuments(client.id)}
+                      className="hover:bg-[#F5F1EB] hover:text-[#053D38] focus:bg-[#F5F1EB] focus:text-[#053D38] transition-colors duration-150"
+                    >
                       <File className="mr-2 h-4 w-4" />
                       Documentos
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => onDelete(client)} 
-                      className="text-red-600 focus:text-red-600"
+                      className="text-red-600 hover:bg-[#FFEBEE] hover:text-red-700 focus:bg-[#FFEBEE] focus:text-red-700 transition-colors duration-150"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Excluir
