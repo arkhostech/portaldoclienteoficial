@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { 
   FileText, 
   MessageSquare, 
-  Upload,
   Calendar,
   HelpCircle 
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 const QuickActions = () => {
   const actions = [
@@ -16,39 +16,40 @@ const QuickActions = () => {
       description: "Visualizar e gerenciar documentos",
       icon: FileText,
       href: "/documents",
-      variant: "primary"
-    },
-    {
-      title: "Upload",
-      description: "Enviar novos documentos",
-      icon: Upload,
-      href: "/documents/upload",
-      variant: "secondary"
+      variant: "primary",
+      enabled: true
     },
     {
       title: "Chat",
       description: "Conversar com a equipe",
       icon: MessageSquare,
-      href: "/chat",
-      variant: "tertiary"
+      href: "/messages",
+      variant: "tertiary",
+      enabled: true
     },
     {
       title: "Agenda",
       description: "Ver compromissos",
       icon: Calendar,
-      href: "/schedule",
-      variant: "quaternary"
+      href: "#",
+      variant: "quaternary",
+      enabled: false
     },
     {
       title: "Ajuda",
       description: "Central de ajuda",
       icon: HelpCircle,
-      href: "/help",
-      variant: "muted"
+      href: "#",
+      variant: "muted",
+      enabled: false
     }
   ];
 
-  const getButtonStyles = (variant: string) => {
+  const getButtonStyles = (variant: string, enabled: boolean) => {
+    if (!enabled) {
+      return "bg-gray-50 border-gray-200 text-gray-500 cursor-pointer opacity-60 hover:opacity-80";
+    }
+    
     switch (variant) {
       case "primary":
         return "bg-[#053D38] border-[#053D38] text-white hover:bg-[#042f2b] hover:border-[#042f2b] shadow-sm hover:shadow-md";
@@ -65,6 +66,10 @@ const QuickActions = () => {
     }
   };
 
+  const handleDisabledClick = (actionTitle: string) => {
+    toast.info(`${actionTitle} estará disponível em breve! 🚀`);
+  };
+
   return (
     <Card className="bg-white border border-[#e5e7eb] shadow-sm">
       <CardHeader className="pb-4">
@@ -74,29 +79,49 @@ const QuickActions = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {actions.map((action, index) => {
             const Icon = action.icon;
             
-            return (
-              <Link key={index} to={action.href}>
-                <Button
-                  variant="outline"
-                  className={`
-                    w-full h-auto p-4 flex-col space-y-2 border transition-all duration-300 group
-                    ${getButtonStyles(action.variant)}
-                  `}
-                >
-                  <Icon className="h-6 w-6 group-hover:scale-110 transition-transform duration-200" />
-                  <div className="text-center">
-                    <div className="font-semibold text-xs">{action.title}</div>
-                    <div className="text-xs mt-1 leading-tight opacity-90">
-                      {action.description}
-                    </div>
+            const ButtonContent = (
+              <Button
+                variant="outline"
+                className={`
+                  w-full h-auto p-4 flex-col space-y-2 border transition-all duration-300 group relative
+                  ${getButtonStyles(action.variant, action.enabled)}
+                `}
+                onClick={action.enabled ? undefined : () => handleDisabledClick(action.title)}
+              >
+                <Icon className={`h-6 w-6 transition-transform duration-200 ${action.enabled ? 'group-hover:scale-110' : ''}`} />
+                <div className="text-center">
+                  <div className="font-semibold text-xs">{action.title}</div>
+                  <div className="text-xs mt-1 leading-tight opacity-90">
+                    {action.description}
                   </div>
-                </Button>
-              </Link>
+                </div>
+                {!action.enabled && (
+                  <div className="absolute -top-1 -right-1">
+                    <span className="text-xs font-bold text-white bg-orange-500 px-2 py-1 rounded-full shadow-sm border-2 border-white">
+                      Em Breve!
+                    </span>
+                  </div>
+                )}
+              </Button>
             );
+            
+            if (action.enabled) {
+              return (
+                <Link key={index} to={action.href}>
+                  {ButtonContent}
+                </Link>
+              );
+            } else {
+              return (
+                <div key={index}>
+                  {ButtonContent}
+                </div>
+              );
+            }
           })}
         </div>
       </CardContent>

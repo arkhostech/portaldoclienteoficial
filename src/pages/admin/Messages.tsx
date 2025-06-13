@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth";
 import { useChat } from "@/hooks/useChat";
-import { Send, User, Phone, Mail, FileText, Clock, AlertCircle, Plus, Search, Loader2, Check, CheckCircle } from "lucide-react";
+import { Send, User, Phone, Mail, FileText, Clock, AlertCircle, Plus, Search, Loader2, Check, CheckCircle, Download } from "lucide-react";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { useScrollToBottom } from "@/hooks/useScrollToBottom";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
@@ -20,6 +20,8 @@ import { Client } from "@/services/clients/types";
 import { NotificationBadge } from "@/components/ui/notification-badge";
 import { NewMessageBadge } from "@/components/ui/new-message-badge";
 import { useNotifications } from "@/contexts/NotificationContext";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const getStatusDetails = (status) => {
   switch (status) {
@@ -420,6 +422,79 @@ const AdminMessages = () => {
     await handleStartConversation(clientId);
   };
 
+  const handleExportChat = async () => {
+    if (!activeConversation || messages.length === 0) {
+      return;
+    }
+
+    try {
+      const pdf = new jsPDF();
+      
+      // Configurações do PDF
+      const margin = 20;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const maxLineWidth = pageWidth - (2 * margin);
+      
+      // Título
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Histórico de Conversa', margin, 30);
+      
+      // Informações do cliente
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Cliente: ${activeConversation.client?.full_name || 'Nome não informado'}`, margin, 45);
+      pdf.text(`Email: ${activeConversation.client?.email || 'Email não informado'}`, margin, 55);
+      pdf.text(`Data de Exportação: ${new Date().toLocaleDateString('pt-BR')}`, margin, 65);
+      
+      let yPosition = 80;
+      
+      // Mensagens
+      pdf.setFontSize(10);
+      
+      for (const message of messages) {
+        // Verificar se precisa de nova página
+        if (yPosition > pageHeight - 40) {
+          pdf.addPage();
+          yPosition = 30;
+        }
+        
+        // Informações da mensagem
+        const sender = message.sender_type === 'admin' ? 'Admin' : activeConversation.client?.full_name || 'Cliente';
+        const date = new Date(message.created_at).toLocaleString('pt-BR');
+        
+        // Cabeçalho da mensagem
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`${sender} - ${date}`, margin, yPosition);
+        yPosition += 8;
+        
+        // Conteúdo da mensagem
+        pdf.setFont('helvetica', 'normal');
+        const lines = pdf.splitTextToSize(message.content, maxLineWidth);
+        
+        for (const line of lines) {
+          if (yPosition > pageHeight - 30) {
+            pdf.addPage();
+            yPosition = 30;
+          }
+          pdf.text(line, margin, yPosition);
+          yPosition += 6;
+        }
+        
+        yPosition += 10; // Espaço entre mensagens
+      }
+      
+      // Salvar o PDF
+      const fileName = `conversa_${activeConversation.client?.full_name || 'cliente'}_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+      
+    } catch (error) {
+      console.error('Erro ao exportar chat:', error);
+      alert('Erro ao exportar conversa. Tente novamente.');
+    }
+  };
+
   // Hooks de scroll
   useScrollToTop({
     containerRef: messagesContainerRef,
@@ -650,6 +725,46 @@ const AdminMessages = () => {
                       Marcar como lida
                     </Button>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportChat}
+                    disabled={!messages.length}
+                    className="border-0 transition-all duration-200 ease-in-out"
+                    style={{
+                      backgroundColor: '#A3CCAB',
+                      color: '#14140F',
+                      borderRadius: '8px',
+                      padding: '12px 16px',
+                      fontWeight: '500'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!e.currentTarget.disabled) {
+                        e.currentTarget.style.backgroundColor = '#34675C';
+                        e.currentTarget.style.color = '#ffffff';
+                        const icon = e.currentTarget.querySelector('svg');
+                        if (icon) {
+                          (icon as unknown as HTMLElement).style.color = '#ffffff';
+                        }
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!e.currentTarget.disabled) {
+                        e.currentTarget.style.backgroundColor = '#A3CCAB';
+                        e.currentTarget.style.color = '#14140F';
+                        const icon = e.currentTarget.querySelector('svg');
+                        if (icon) {
+                          (icon as unknown as HTMLElement).style.color = '#14140F';
+                        }
+                      }
+                    }}
+                  >
+                    <Download 
+                      className="h-4 w-4 mr-2 transition-colors duration-200" 
+                      style={{ color: '#14140F' }}
+                    />
+                    Exportar
+                  </Button>
                   <ClientInfoModal activeConversation={activeConversation} />
                 </div>
               </div>
